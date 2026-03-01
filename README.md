@@ -48,7 +48,7 @@ AI-powered Rubik's Cube tutoring with Google Gemini Live API - real-time voice +
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - npm or yarn
 - Gemini API Key (optional for demo mode)
 
@@ -142,7 +142,7 @@ Gemini-Rubiks-Tutor/
 
 ```bash
 # Using deploy script
-./deploy.sh
+./deploy.sh YOUR_GCP_PROJECT_ID
 
 # Manual
 gcloud builds submit --config cloudbuild.yaml
@@ -174,6 +174,40 @@ terraform apply
 
 ---
 
+## 🏗️ Architecture Diagram
+
+```mermaid
+graph TB
+    User["User (Browser)"]
+    Webcam["Webcam + Mic"]
+    Frontend["React Frontend + Three.js"]
+    Backend["Node.js Backend (Express + WS)"]
+    GeminiLive["Gemini Live API"]
+    SecretMgr["Secret Manager"]
+    CloudBuild["Cloud Build / Deploy"]
+
+    User --> Webcam
+    Webcam --> Frontend
+    Frontend -->|"WebSocket: audio + video frames"| Backend
+    Backend -->|"@google/genai live.connect"| GeminiLive
+    GeminiLive -->|"audio + text responses"| Backend
+    Backend -->|"WebSocket tutor events"| Frontend
+    SecretMgr -->|"GEMINI_API_KEY"| Backend
+    CloudBuild -->|"build + deploy"| Backend
+```
+
+---
+
+## 📋 Submission Checklist (Code Repo)
+
+- ✅ Public repo includes full spin-up steps.
+- ✅ Gemini model usage shown in code: [`backend/src/geminiLiveClient.js`](backend/src/geminiLiveClient.js).
+- ✅ Google Cloud usage shown in code: [`terraform/main.tf`](terraform/main.tf), [`cloudbuild.yaml`](cloudbuild.yaml), [`deploy.sh`](deploy.sh).
+- ✅ Architecture diagram included in this README.
+- ✅ Health endpoint and runtime checks available (`GET /health`, WebSocket `/ws`).
+
+---
+
 ## 🔬 Technical Deep Dive
 
 ### Audio Processing
@@ -185,7 +219,7 @@ terraform apply
 
 ### Video Processing
 
-- Canvas frame capture at 1fps
+- Canvas frame capture at ~4fps with motion-based frame skipping
 - JPEG compression for efficiency
 - Multimodal content delivery to Gemini
 
@@ -194,12 +228,6 @@ terraform apply
 - Kociemba algorithm for solution verification
 - CFOP method tutoring (Cross → F2L → OLL → PLL)
 - Real-time 3D rendering with Three.js
-
----
-
-## 📄 License
-
-MIT License - See LICENSE file for details.
 
 ---
 

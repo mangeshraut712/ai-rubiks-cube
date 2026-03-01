@@ -62,6 +62,7 @@ class LocalDemoGeminiClient {
     this.audioCallback = null;
     this.textCallback = null;
     this.interruptionCallback = null;
+    this.thinkingCallback = null;
   }
 
   async startSession() {
@@ -78,6 +79,10 @@ class LocalDemoGeminiClient {
 
   onInterruption(callback) {
     this.interruptionCallback = callback;
+  }
+
+  onThinkingChange(callback) {
+    this.thinkingCallback = callback;
   }
 
   sendAudioChunk() {
@@ -139,9 +144,16 @@ class LocalDemoGeminiClient {
   }
 
   #emitText(text) {
+    if (this.thinkingCallback) {
+      this.thinkingCallback(true);
+    }
+
     setTimeout(() => {
       if (!this.closed && this.textCallback) {
         this.textCallback(text);
+      }
+      if (!this.closed && this.thinkingCallback) {
+        this.thinkingCallback(false);
       }
     }, 180);
   }

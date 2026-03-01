@@ -6,7 +6,7 @@ import { FACE_ORDER, colorForFaceLetter, faceFromMove } from "../utils/cubeColor
 
 const STICKER_SIZE = 0.9;
 const GRID_STEP = 1.02;
-const FACE_OFFSET = 1.52;
+const FACE_OFFSET = 1.62;
 
 const FACE_NORMAL = {
   U: new THREE.Vector3(0, 1, 0),

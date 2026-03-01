@@ -91,6 +91,16 @@ const LiveSession = forwardRef(function LiveSession(
       return import.meta.env.VITE_WS_URL;
     }
 
+    if (import.meta.env.VITE_BACKEND_ORIGIN) {
+      const origin = String(import.meta.env.VITE_BACKEND_ORIGIN);
+      if (origin.startsWith("https://")) {
+        return `${origin.replace("https://", "wss://")}/ws`;
+      }
+      if (origin.startsWith("http://")) {
+        return `${origin.replace("http://", "ws://")}/ws`;
+      }
+    }
+
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     return `${protocol}://${window.location.host}/ws`;
   }
