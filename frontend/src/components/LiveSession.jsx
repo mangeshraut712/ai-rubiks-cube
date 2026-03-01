@@ -38,6 +38,21 @@ function pcm16ToAudioBuffer(audioContext, arrayBuffer, sampleRate = 16000) {
   return audioBuffer;
 }
 
+function parsePcmRate(mimeType, fallbackRate = 16000) {
+  const raw = String(mimeType || "");
+  const match = raw.match(/rate=(\d{4,6})/i);
+  if (!match) {
+    return fallbackRate;
+  }
+
+  const parsed = Number(match[1]);
+  if (!Number.isFinite(parsed) || parsed < 8000 || parsed > 96000) {
+    return fallbackRate;
+  }
+
+  return parsed;
+}
+
 /**
  * Handles webcam/mic capture + websocket transport for the live Gemini session.
  */
@@ -185,7 +200,11 @@ const LiveSession = forwardRef(function LiveSession(
       let decoded;
 
       if (mimeType?.includes("pcm")) {
-        decoded = pcm16ToAudioBuffer(audioContext, arrayBuffer, 16000);
+        decoded = pcm16ToAudioBuffer(
+          audioContext,
+          arrayBuffer,
+          parsePcmRate(mimeType, 16000)
+        );
       } else {
         decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
       }

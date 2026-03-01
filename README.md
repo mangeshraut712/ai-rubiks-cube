@@ -78,6 +78,13 @@ npm run dev
 
 Open http://localhost:5173
 
+### Real Gemini Mode vs Demo Mode
+
+- `DEMO_MODE=false`: real Gemini Live Agent (voice + multimodal coaching).
+- `DEMO_MODE=true`: local demo fallback (text guidance, no real Gemini voice stream).
+
+If you see transcript text like `Demo mode enabled`, you are not using the real Gemini session.
+
 ### Demo Mode (No API Key)
 
 ```bash
@@ -87,6 +94,27 @@ export DEMO_MODE=true
 # Or use contest profile
 cp contest/.env.judges.example .env
 ```
+
+---
+
+## Troubleshooting
+
+### "Connection lost... ws://localhost:5173/ws"
+
+Your backend is not reachable from frontend. Make sure backend is running on `:8080`:
+
+```bash
+curl http://localhost:8080/health
+```
+
+If this fails, restart backend and frontend.
+
+### No Gemini voice/audio
+
+1. Set `DEMO_MODE=false` in `.env`.
+2. Set a valid `GEMINI_API_KEY`.
+3. Restart backend and frontend after env changes.
+4. In browser, click `Start Session` and allow microphone/camera.
 
 ---
 

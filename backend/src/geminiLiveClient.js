@@ -3,9 +3,9 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const DEFAULT_PRIMARY_MODEL =
-  process.env.GEMINI_LIVE_MODEL || "gemini-2.0-flash-live-preview-04-09";
+  process.env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-preview-09-2025";
 const DEFAULT_FALLBACK_MODEL =
-  process.env.GEMINI_FALLBACK_MODEL || "gemini-2.0-flash-exp";
+  process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash";
 
 /**
  * Wraps Gemini Live API bidirectional streaming for audio + video tutoring.
@@ -41,12 +41,24 @@ export class GeminiLiveClient {
    * @returns {Promise<void>}
    */
   async startSession() {
-    const candidateModels = [this.model, DEFAULT_FALLBACK_MODEL].filter(Boolean);
+    const candidateModels = Array.from(new Set([
+      this.model,
+      process.env.GEMINI_LIVE_MODEL,
+      "gemini-2.5-flash-native-audio-preview-09-2025",
+      "gemini-live-2.5-flash-preview"
+    ].filter(Boolean)));
     let lastError = null;
 
     for (const candidateModel of candidateModels) {
       try {
         console.log(`[gemini-live] Attempting to connect with model: ${candidateModel}`);
+        let settled = false;
+        let resolveOpen;
+        let rejectOpen;
+        const openPromise = new Promise((resolve, reject) => {
+          resolveOpen = resolve;
+          rejectOpen = reject;
+        });
 
         this.session = await this.ai.live.connect({
           model: candidateModel,
@@ -68,21 +80,35 @@ export class GeminiLiveClient {
               this.activeModel = candidateModel;
               console.log(`[gemini-live] Connected successfully with model: ${candidateModel}`);
               this.emitter.emit("open", { model: candidateModel });
+              if (!settled) {
+                settled = true;
+                resolveOpen();
+              }
             },
             onclose: () => {
               this.isOpen = false;
               console.log("[gemini-live] Connection closed");
               this.emitter.emit("close");
+              if (!settled) {
+                settled = true;
+                rejectOpen(new Error(`Live session closed before open (${candidateModel}).`));
+              }
             },
             onerror: (errorEvent) => {
               console.error("[gemini-live] Connection error:", errorEvent?.error ?? errorEvent);
               this.emitter.emit("error", errorEvent?.error ?? errorEvent);
+              if (!settled) {
+                settled = true;
+                rejectOpen(errorEvent?.error ?? errorEvent);
+              }
             },
             onmessage: (message) => {
               this.#handleServerMessage(message);
             }
           }
         });
+
+        await openPromise;
 
         return;
       } catch (error) {
@@ -286,15 +312,16 @@ export class GeminiLiveClient {
       serverContent.output_audio_transcription?.text ||
       serverContent.outputTranscription?.text ||
       serverContent.output_transcription?.text;
+    const hasOutputTranscript = Boolean(outputTranscript?.trim());
 
-    if (outputTranscript?.trim()) {
+    if (hasOutputTranscript) {
       this.emitter.emit("text", outputTranscript.trim());
     }
 
     const parts = serverContent.modelTurn?.parts || serverContent.model_turn?.parts || [];
     for (const part of parts) {
       const text = part?.text;
-      if (text?.trim()) {
+      if (!hasOutputTranscript && text?.trim()) {
         this.emitter.emit("text", text.trim());
       }
 
