@@ -1,0 +1,52 @@
+substitutions:
+  _REGION: us-central1
+  _SERVICE: gemini-rubiks-tutor
+  _REPOSITORY: gemini-rubiks-tutor
+
+steps:
+  - id: Build Image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+      - .
+
+  - id: Push Image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+
+  - id: Deploy Cloud Run
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+      - --platform
+      - managed
+      - --region
+      - ${_REGION}
+      - --allow-unauthenticated
+      - --port
+      - "8080"
+      - --set-secrets
+      - GEMINI_API_KEY=GEMINI_API_KEY:latest
+
+  - id: Smoke Test
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        URL=$(gcloud run services describe ${_SERVICE} --region ${_REGION} --format='value(status.url)')
+        echo "Service URL: ${URL}"
+        curl -fsS "${URL}/health"
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$SHORT_SHA
