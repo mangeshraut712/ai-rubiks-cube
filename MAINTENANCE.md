@@ -122,6 +122,16 @@ cd frontend && npm run dev
 # Open http://localhost:5173
 ```
 
+### Local Cleanup
+```bash
+# Clean logs/build/runtime/cache artifacts
+./scripts/cleanup-local.sh
+
+# Optional deeper cleanup
+./scripts/cleanup-local.sh --solver-cache
+./scripts/cleanup-local.sh --node-modules
+```
+
 ### Staging (Cloud Run)
 ```bash
 # Deploy to staging environment

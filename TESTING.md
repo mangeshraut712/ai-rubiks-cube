@@ -14,6 +14,12 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:5173
 # expected: 200
 ```
 
+## 1.1) Optional Local Cleanup Before Testing
+
+```bash
+./scripts/cleanup-local.sh
+```
+
 ## 2) Standard Local Run
 
 ```bash
