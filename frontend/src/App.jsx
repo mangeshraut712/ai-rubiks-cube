@@ -25,6 +25,7 @@ export default function App() {
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [errorText, setErrorText] = useState("");
   const [startTimestamp, setStartTimestamp] = useState(null);
+  const [isThinking, setIsThinking] = useState(false);
 
   useEffect(() => {
     if (!sessionActive || !startTimestamp) {
@@ -45,6 +46,7 @@ export default function App() {
     setActiveMove("");
     setMicLevel(0);
     setIsTutorSpeaking(false);
+    setIsThinking(false);
     setLatestInstruction("Cubey is getting ready...");
     setTranscript([]);
     setHintText("");
@@ -274,6 +276,7 @@ export default function App() {
                 onCubeState={setCubeState}
                 onMoveHistory={setMoveHistory}
                 onHint={setHintText}
+                onThinkingChange={setIsThinking}
                 onChallengeUpdate={(payload) => {
                   setChallengeMessage(payload.message || "");
                 }}
@@ -296,6 +299,7 @@ export default function App() {
             timerSeconds={timerSeconds}
             moveCount={moveCount}
             isTutorSpeaking={isTutorSpeaking}
+            isThinking={isThinking}
           />
 
           <div className="flex flex-wrap gap-2">

@@ -30,6 +30,8 @@ build/
 .runtime/
 .trash/
 *.pid
+backend.log
+frontend.log
 
 # Generated solver cache tables
 cache/

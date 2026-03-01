@@ -10,14 +10,15 @@ function formatDuration(totalSeconds) {
 
 /**
  * Bottom status strip with connection, mic activity, timer, and move count.
- * @param {{connectionStatus:string,micLevel:number,timerSeconds:number,moveCount:number,isTutorSpeaking:boolean}} props
+ * @param {{connectionStatus:string,micLevel:number,timerSeconds:number,moveCount:number,isTutorSpeaking:boolean,isThinking?:boolean}} props
  */
 export default function StatusBar({
   connectionStatus,
   micLevel,
   timerSeconds,
   moveCount,
-  isTutorSpeaking
+  isTutorSpeaking,
+  isThinking = false
 }) {
   const levelPct = Math.min(100, Math.max(0, Math.round(micLevel * 250)));
   const connectionColor =
@@ -25,9 +26,18 @@ export default function StatusBar({
       ? "bg-[#34a853]"
       : connectionStatus === "demo_mode"
         ? "bg-[#4285f4]"
-      : connectionStatus === "connecting"
-        ? "bg-[#fbbc04]"
-        : "bg-[#ea4335]";
+        : connectionStatus === "connecting"
+          ? "bg-[#fbbc04]"
+          : "bg-[#ea4335]";
+
+  // Thinking indicator animation
+  const thinkingIndicator = isThinking ? (
+    <span className="flex gap-0.5">
+      <span className="h-2 w-1 animate-bounce rounded-full bg-[#9c27b0]" style={{ animationDelay: "0ms" }} />
+      <span className="h-2 w-1 animate-bounce rounded-full bg-[#9c27b0]" style={{ animationDelay: "150ms" }} />
+      <span className="h-2 w-1 animate-bounce rounded-full bg-[#9c27b0]" style={{ animationDelay: "300ms" }} />
+    </span>
+  ) : null;
 
   return (
     <div className="rounded-2xl border border-[#d2d8e3] bg-white/96 p-4 text-sm text-[#202124] shadow-[0_12px_28px_rgba(24,39,75,0.12)] backdrop-blur">
@@ -46,7 +56,18 @@ export default function StatusBar({
 
         <div className="text-[#5f6368]">Timer: {formatDuration(timerSeconds)}</div>
         <div className="text-[#5f6368]">Moves: {moveCount}</div>
-        <div className="text-[#5f6368]">Tutor: {isTutorSpeaking ? "Speaking" : "Listening"}</div>
+        <div className="flex items-center gap-1 text-[#5f6368]">
+          <span>Tutor:</span>
+          {isTutorSpeaking ? (
+            <span className="text-[#34a853] font-medium">Speaking</span>
+          ) : isThinking ? (
+            <span className="flex items-center gap-1 text-[#9c27b0]">
+              {thinkingIndicator} Thinking
+            </span>
+          ) : (
+            <span className="text-[#4285f4]">Listening</span>
+          )}
+        </div>
       </div>
     </div>
   );

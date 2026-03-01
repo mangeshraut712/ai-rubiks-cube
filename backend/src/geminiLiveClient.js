@@ -122,6 +122,14 @@ export class GeminiLiveClient {
   }
 
   /**
+   * Registers a listener for AI thinking state changes.
+   * @param {(isThinking: boolean) => void} callback
+   */
+  onThinkingChange(callback) {
+    this.emitter.on("thinking", callback);
+  }
+
+  /**
    * Sends a 16kHz PCM audio chunk.
    * @param {Buffer | Uint8Array} pcmBuffer
    */
@@ -259,6 +267,15 @@ export class GeminiLiveClient {
     if (!serverContent) {
       return;
     }
+
+    // Emit thinking state based on whether model is generating
+    const isThinking = !serverContent.interrupted && (
+      serverContent.modelTurn ||
+      serverContent.model_turn ||
+      serverContent.outputAudioTranscription ||
+      serverContent.output_audio_transcription
+    );
+    this.emitter.emit("thinking", !!isThinking);
 
     if (serverContent.interrupted) {
       this.emitter.emit("interruption", "model_interrupted");

@@ -403,6 +403,14 @@ wss.on("connection", async (ws, req) => {
       });
     });
 
+    // Handle AI thinking state changes
+    gemini.onThinkingChange((isThinking) => {
+      sendJson(ws, {
+        type: "thinking",
+        thinking: isThinking
+      });
+    });
+
     gemini.onTextResponse((text) => {
       pushTranscript(sessionRecord, "cubey", text);
 

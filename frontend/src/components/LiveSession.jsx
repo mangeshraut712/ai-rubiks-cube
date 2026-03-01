@@ -53,7 +53,8 @@ const LiveSession = forwardRef(function LiveSession(
     onTutorSpeakingChange,
     onHint,
     onChallengeUpdate,
-    onError
+    onError,
+    onThinkingChange
   },
   ref
 ) {
@@ -278,6 +279,11 @@ const LiveSession = forwardRef(function LiveSession(
 
           case "interruption":
             stopAudioPlayback();
+            break;
+
+          case "thinking":
+            // AI is thinking/processing
+            onThinkingChange?.(message.thinking === true);
             break;
 
           case "solution_response":
