@@ -10,7 +10,9 @@ This folder isolates the **Gemini Live Agent Challenge** variant so judges can r
 cp contest/.env.judges.example .env
 ```
 
-2. Edit `.env` and set a valid `GEMINI_API_KEY`.
+2. Optionally set `GEMINI_API_KEY` in `.env`:
+- With a valid key: real Gemini Live responses
+- Without a valid key: local demo fallback still works when `DEMO_MODE=true`
 
 3. Start the full local stack (backend + frontend) and open Chrome automatically:
 

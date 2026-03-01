@@ -21,9 +21,19 @@ if [[ -f "${ROOT_DIR}/.env" ]]; then
   set +a
 fi
 
-if [[ -z "${GEMINI_API_KEY:-}" || "${GEMINI_API_KEY}" == "replace_with_valid_key" ]]; then
-  echo "Missing GEMINI_API_KEY. Copy contest/.env.judges.example to .env and set a valid key."
+HAS_VALID_KEY=false
+if [[ "${GEMINI_API_KEY:-}" =~ ^AIza[A-Za-z0-9_-]{20,}$ ]]; then
+  HAS_VALID_KEY=true
+fi
+
+if [[ "${HAS_VALID_KEY}" != "true" && "${DEMO_MODE_EFFECTIVE}" != "true" ]]; then
+  echo "Missing/invalid GEMINI_API_KEY and DEMO mode is disabled."
+  echo "Set a valid GEMINI_API_KEY or run with CONTEST_DEMO_MODE=true."
   exit 1
+fi
+
+if [[ "${HAS_VALID_KEY}" != "true" && "${DEMO_MODE_EFFECTIVE}" == "true" ]]; then
+  echo "No valid GEMINI_API_KEY found. Starting in local demo fallback mode."
 fi
 
 "${ROOT_DIR}/scripts/stop-active-servers.sh"

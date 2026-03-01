@@ -78,6 +78,7 @@ const LiveSession = forwardRef(function LiveSession(
   const isPlayingRef = useRef(false);
 
   const statusRef = useRef("disconnected");
+  const wsTargetRef = useRef("");
 
   function emitStatus(nextStatus) {
     statusRef.current = nextStatus;
@@ -193,7 +194,9 @@ const LiveSession = forwardRef(function LiveSession(
 
     emitStatus("connecting");
 
-    const socket = new WebSocket(wsUrl());
+    const targetUrl = wsUrl();
+    wsTargetRef.current = targetUrl;
+    const socket = new WebSocket(targetUrl);
     wsRef.current = socket;
     socket.binaryType = "arraybuffer";
 
@@ -298,7 +301,9 @@ const LiveSession = forwardRef(function LiveSession(
 
     socket.onerror = (event) => {
       console.error("[LiveSession] websocket error", event);
-      onError?.("WebSocket error occurred.");
+      onError?.(
+        `WebSocket connection error. Ensure backend is running and reachable at ${wsTargetRef.current}.`
+      );
     };
 
     socket.onclose = () => {
@@ -310,6 +315,11 @@ const LiveSession = forwardRef(function LiveSession(
       }
 
       reconnectAttemptRef.current += 1;
+      if (reconnectAttemptRef.current >= 3) {
+        onError?.(
+          `Connection lost. Retrying... Backend endpoint: ${wsTargetRef.current}`
+        );
+      }
       const delayMs = Math.min(8000, 800 * 2 ** reconnectAttemptRef.current);
 
       reconnectTimerRef.current = setTimeout(() => {

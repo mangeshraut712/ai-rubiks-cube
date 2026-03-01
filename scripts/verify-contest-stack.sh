@@ -3,13 +3,16 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "1) Backend install check..."
+echo "0) Stop active app listeners..."
+bash "${ROOT_DIR}/scripts/stop-active-servers.sh" >/dev/null 2>&1 || true
+
+echo "1) Backend syntax + dependency check..."
 cd "${ROOT_DIR}/backend"
-npm run start -- --help >/dev/null &
-PID=$!
-sleep 2
-kill "${PID}" >/dev/null 2>&1 || true
-wait "${PID}" 2>/dev/null || true
+node --check src/server.js
+node --check src/geminiLiveClient.js
+node --check src/cubeStateManager.js
+node --check src/tutorPrompt.js
+node --input-type=module -e "await import('./src/geminiLiveClient.js'); await import('./src/cubeStateManager.js'); await import('./src/tutorPrompt.js'); process.exit(0);" >/dev/null
 
 echo "2) Frontend production build..."
 cd "${ROOT_DIR}/frontend"

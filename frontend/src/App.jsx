@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 
-import CubeViewer from "./components/CubeViewer";
 import LiveSession from "./components/LiveSession";
 import StatusBar from "./components/StatusBar";
 import TutorOverlay from "./components/TutorOverlay";
 import { createSolvedCubeState } from "./utils/cubeColors";
+
+const CubeViewer = lazy(() => import("./components/CubeViewer"));
 
 export default function App() {
   const sessionRef = useRef(null);
@@ -250,7 +251,15 @@ export default function App() {
         <section className="grid min-h-[64vh] grid-cols-1 gap-4 lg:grid-cols-[1.45fr_1fr]">
           <div className="relative flex min-h-[420px] flex-col overflow-hidden rounded-2xl border border-[#d2d8e3] bg-white/96 p-3 shadow-[0_14px_30px_rgba(24,39,75,0.12)]">
             <div className="h-full min-h-[360px]">
-              <CubeViewer cubeState={cubeState} activeMove={activeMove} />
+              <Suspense
+                fallback={
+                  <div className="flex h-full items-center justify-center rounded-2xl border border-[#d2d8e3] bg-[#eef4fe] text-sm font-semibold text-[#5f6368]">
+                    Loading 3D cube...
+                  </div>
+                }
+              >
+                <CubeViewer cubeState={cubeState} activeMove={activeMove} />
+              </Suspense>
             </div>
 
             <div className="absolute right-5 top-5 h-40 w-56 rounded-2xl border border-[#d2d8e3] bg-white/70 p-1 shadow-[0_12px_22px_rgba(24,39,75,0.16)] sm:h-44 sm:w-64">

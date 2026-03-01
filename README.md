@@ -35,6 +35,8 @@ An AI-powered Rubik's Cube tutoring application using Google Gemini's **Live API
 - Final pre-submit checklist: [`docs/contest-final-checklist.md`](docs/contest-final-checklist.md)
 - Core vs contest branch workflow: [`docs/maintenance-workflow.md`](docs/maintenance-workflow.md)
 - Standalone contest profile: [`contest/README.md`](contest/README.md)
+- End-to-end testing guide: [`TESTING.md`](TESTING.md)
+- One-command quality check: [`scripts/quality-check.sh`](scripts/quality-check.sh)
 
 ---
 

@@ -9,6 +9,17 @@ const backendWsOrigin = backendHttpOrigin.startsWith("https://")
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ["react", "react-dom"],
+          three: ["three", "three/examples/jsm/controls/OrbitControls.js"]
+        }
+      }
+    },
+    chunkSizeWarningLimit: 700
+  },
   server: {
     port: 5173,
     host: "0.0.0.0",

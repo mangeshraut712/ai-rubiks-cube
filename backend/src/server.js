@@ -21,9 +21,15 @@ dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
 const hasExplicitPort = Boolean(process.env.PORT);
 const PORT = Number(process.env.PORT || 8080);
-const API_KEY = process.env.GEMINI_API_KEY;
+const API_KEY = String(process.env.GEMINI_API_KEY || "").trim();
 const LIVE_MODEL = process.env.GEMINI_LIVE_MODEL || "gemini-live";
 const DEMO_MODE = process.env.DEMO_MODE === "true";
+
+function hasUsableApiKey(value) {
+  return typeof value === "string" && value.startsWith("AIza") && value.length > 20;
+}
+
+const HAS_USABLE_API_KEY = hasUsableApiKey(API_KEY);
 
 // Rate limiting and connection limits
 const MAX_CONNECTIONS = 10;
@@ -36,6 +42,110 @@ const DEMO_AUTOPLAY_TARGET_MOVES = 8;
 const DEMO_AUTOPLAY_INTERVAL_MS = 3500;
 
 const rateLimitData = new Map();
+
+const LOCAL_DEMO_MOVES = [
+  { move: "R", explanation: "turn the right face clockwise" },
+  { move: "U", explanation: "turn the top face clockwise" },
+  { move: "R'", explanation: "turn the right face counterclockwise" },
+  { move: "U'", explanation: "turn the top face counterclockwise" },
+  { move: "F", explanation: "turn the front face clockwise" },
+  { move: "F'", explanation: "turn the front face counterclockwise" },
+  { move: "U2", explanation: "do a double turn of the top face" },
+  { move: "R2", explanation: "do a double turn of the right face" }
+];
+
+class LocalDemoGeminiClient {
+  constructor() {
+    this.activeModel = "demo-local-fallback";
+    this.closed = false;
+    this.moveIndex = 0;
+    this.audioCallback = null;
+    this.textCallback = null;
+    this.interruptionCallback = null;
+  }
+
+  async startSession() {
+    return Promise.resolve();
+  }
+
+  onAudioResponse(callback) {
+    this.audioCallback = callback;
+  }
+
+  onTextResponse(callback) {
+    this.textCallback = callback;
+  }
+
+  onInterruption(callback) {
+    this.interruptionCallback = callback;
+  }
+
+  sendAudioChunk() {
+    // No-op in local demo fallback.
+  }
+
+  sendVideoFrame() {
+    // No-op in local demo fallback.
+  }
+
+  sendTextTurn(text) {
+    if (this.closed || !this.textCallback) {
+      return;
+    }
+
+    const normalized = String(text || "").toLowerCase();
+
+    if (normalized.includes("introduce yourself") || normalized.includes("session started")) {
+      this.#emitText(
+        "Hi, I'm Cubey. Great to meet you. We'll solve this step by step using CFOP. Do R, turn the right face clockwise."
+      );
+      return;
+    }
+
+    if (normalized.includes("continue demo walkthrough") || normalized.includes("demo mode is active")) {
+      this.#emitText(this.#nextMoveInstruction());
+      return;
+    }
+
+    if (normalized.includes("challenge mode is on")) {
+      this.#emitText("Challenge accepted. Do U, turn the top face clockwise.");
+      return;
+    }
+
+    this.#emitText("Nice. I can help in demo mode too. Do U, turn the top face clockwise.");
+  }
+
+  async requestHint() {
+    return "Demo hint: keep white on top, form a clean cross first, then pair corner-edge pieces one slot at a time.";
+  }
+
+  interrupt() {
+    if (!this.closed && this.interruptionCallback) {
+      this.interruptionCallback("local_demo_interrupt");
+    }
+  }
+
+  close() {
+    this.closed = true;
+    this.audioCallback = null;
+    this.textCallback = null;
+    this.interruptionCallback = null;
+  }
+
+  #nextMoveInstruction() {
+    const entry = LOCAL_DEMO_MOVES[this.moveIndex % LOCAL_DEMO_MOVES.length];
+    this.moveIndex += 1;
+    return `Now do ${entry.move}, ${entry.explanation}.`;
+  }
+
+  #emitText(text) {
+    setTimeout(() => {
+      if (!this.closed && this.textCallback) {
+        this.textCallback(text);
+      }
+    }, 180);
+  }
+}
 
 function checkRateLimit(ip, bucket, maxRequests, windowMs = RATE_LIMIT_WINDOW) {
   const key = `${ip}:${bucket}`;
@@ -266,15 +376,24 @@ wss.on("connection", async (ws, req) => {
   };
 
   try {
-    if (!API_KEY) {
-      throw new Error("GEMINI_API_KEY is missing.");
+    if (!HAS_USABLE_API_KEY && !DEMO_MODE) {
+      throw new Error(
+        "GEMINI_API_KEY is missing or invalid. Set a valid key or enable DEMO_MODE=true for local demo fallback."
+      );
     }
 
-    gemini = new GeminiLiveClient({
-      apiKey: API_KEY,
-      systemPrompt: TUTOR_SYSTEM_PROMPT,
-      model: process.env.GEMINI_LIVE_MODEL
-    });
+    const useLocalDemoFallback = DEMO_MODE && !HAS_USABLE_API_KEY;
+
+    if (useLocalDemoFallback) {
+      console.warn(`[ws] Using local demo fallback for ${clientIp} (no GEMINI_API_KEY).`);
+      gemini = new LocalDemoGeminiClient();
+    } else {
+      gemini = new GeminiLiveClient({
+        apiKey: API_KEY,
+        systemPrompt: TUTOR_SYSTEM_PROMPT,
+        model: process.env.GEMINI_LIVE_MODEL
+      });
+    }
 
     gemini.onAudioResponse((chunk) => {
       sendJson(ws, {
