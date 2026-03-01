@@ -499,7 +499,7 @@ const LiveSession = forwardRef(function LiveSession(
   }, [active]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/20 bg-slate-950/90">
+    <div className="relative h-full w-full overflow-hidden rounded-2xl border border-[#d2d8e3] bg-white/90">
       <video
         ref={videoRef}
         className="h-full w-full object-cover"
@@ -510,7 +510,7 @@ const LiveSession = forwardRef(function LiveSession(
       <canvas ref={canvasRef} className="hidden" />
 
       {permissionError ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/85 p-4 text-center text-sm text-rose-100">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/95 p-4 text-center text-sm text-[#7a2d24]">
           {permissionError}
         </div>
       ) : null}

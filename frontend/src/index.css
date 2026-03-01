@@ -6,13 +6,9 @@
   --g-red: #ea4335;
   --g-yellow: #fbbc04;
   --g-green: #34a853;
+  --g-bg: #f6f9fe;
+  --g-text: #202124;
   --gemini-grad: linear-gradient(90deg, #4285f4, #9b72cb, #d96570);
-
-  --bg-color: #131314;
-  --text-primary: #e3e3e3;
-  --text-secondary: #c4c7c5;
-  --surface: #1e1f20;
-  --surface-border: #444746;
 }
 
 * {
@@ -24,15 +20,53 @@ body,
 #root {
   margin: 0;
   min-height: 100%;
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  font-family: 'Outfit', 'Google Sans', sans-serif;
-  letter-spacing: -0.01em;
+}
+
+body {
+  font-family: 'Google Sans', 'Outfit', sans-serif;
+  color: var(--g-text);
+  background:
+    radial-gradient(circle at 10% 16%, rgba(66, 133, 244, 0.22), transparent 35%),
+    radial-gradient(circle at 90% 12%, rgba(234, 67, 53, 0.18), transparent 32%),
+    radial-gradient(circle at 84% 84%, rgba(251, 188, 4, 0.22), transparent 30%),
+    radial-gradient(circle at 6% 80%, rgba(52, 168, 83, 0.16), transparent 33%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4fe 100%);
+  background-attachment: fixed;
 }
 
 button {
   font-family: inherit;
   cursor: pointer;
+}
+
+.google-wordmark {
+  font-family: 'Google Sans', sans-serif;
+  letter-spacing: -0.05em;
+  font-weight: 500;
+}
+
+.google-wordmark span:nth-child(1) {
+  color: var(--g-blue);
+}
+
+.google-wordmark span:nth-child(2) {
+  color: var(--g-red);
+}
+
+.google-wordmark span:nth-child(3) {
+  color: var(--g-yellow);
+}
+
+.google-wordmark span:nth-child(4) {
+  color: var(--g-blue);
+}
+
+.google-wordmark span:nth-child(5) {
+  color: var(--g-green);
+}
+
+.google-wordmark span:nth-child(6) {
+  color: var(--g-red);
 }
 
 .gemini-text-gradient {

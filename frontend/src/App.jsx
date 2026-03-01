@@ -111,40 +111,55 @@ export default function App() {
 
   if (!sessionActive) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_20%_20%,#1d4ed8_0%,#0f172a_45%,#020617_100%)] px-6 py-10 text-white">
-        <div className="mx-auto flex min-h-[84vh] max-w-5xl flex-col items-center justify-center rounded-3xl border border-white/15 bg-slate-900/40 p-10 text-center shadow-2xl backdrop-blur">
-          <div className="mb-4 rounded-full border border-cyan-200/30 bg-cyan-500/10 px-4 py-1 text-xs uppercase tracking-[0.2em] text-cyan-100">
+      <main className="min-h-screen px-6 py-10 text-[#202124]">
+        <div className="mx-auto flex min-h-[84vh] max-w-5xl flex-col items-center justify-center rounded-3xl border border-[#d2d8e3] bg-white/95 p-10 text-center shadow-[0_18px_40px_rgba(32,33,36,0.16)] backdrop-blur">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d2d8e3] bg-[#f8faff] px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#5f6368]">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#4285f4]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#ea4335]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#fbbc04]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#34a853]" />
             Gemini Live Agent Challenge
           </div>
-          <h1 className="mb-4 text-4xl font-black tracking-tight sm:text-5xl">
-            Meet Cubey, Your AI Rubik&apos;s Tutor
+
+          <h1 className="mb-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
+            Meet{" "}
+            <span className="google-wordmark">
+              <span>G</span>
+              <span>e</span>
+              <span>m</span>
+              <span>i</span>
+              <span>n</span>
+              <span>i</span>
+            </span>{" "}
+            Rubik&apos;s Tutor
           </h1>
-          <p className="mb-8 max-w-2xl text-slate-200">
+
+          <p className="mb-8 max-w-2xl text-[#5f6368]">
             Your AI tutor that sees your cube and talks you to victory. Real-time webcam + voice coaching with step-by-step move verification.
           </p>
 
           <div className="mb-8 grid max-w-2xl grid-cols-1 gap-4 text-left sm:grid-cols-3">
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <div className="text-2xl mb-2">🎥</div>
-              <div className="font-semibold">Show Your Cube</div>
-              <div className="text-sm text-slate-400">Position your Rubik's Cube in front of the camera</div>
+            <div className="rounded-2xl border border-[#c9ddff] bg-[#edf4ff] p-4 shadow-[0_10px_20px_rgba(66,133,244,0.12)]">
+              <div className="mb-2 text-2xl">🎥</div>
+              <div className="font-semibold text-[#1f3a68]">Show Your Cube</div>
+              <div className="text-sm text-[#4d648c]">Position your Rubik&apos;s Cube in front of the camera</div>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <div className="text-2xl mb-2">🎙️</div>
-              <div className="font-semibold">Talk to Cubey</div>
-              <div className="text-sm text-slate-400">Voice coaching guides you through each move</div>
+            <div className="rounded-2xl border border-[#f9ceca] bg-[#fff1f0] p-4 shadow-[0_10px_20px_rgba(234,67,53,0.12)]">
+              <div className="mb-2 text-2xl">🎙️</div>
+              <div className="font-semibold text-[#7a2d24]">Talk to Cubey</div>
+              <div className="text-sm text-[#8a4d46]">Voice coaching guides you through each move</div>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <div className="text-2xl mb-2">🏆</div>
-              <div className="font-semibold">Challenge Mode</div>
-              <div className="text-sm text-slate-400">Race against Cubey to solve the scrambled cube!</div>
+            <div className="rounded-2xl border border-[#f8df9a] bg-[#fff9e6] p-4 shadow-[0_10px_20px_rgba(251,188,4,0.14)]">
+              <div className="mb-2 text-2xl">🏆</div>
+              <div className="font-semibold text-[#6a5413]">Challenge Mode</div>
+              <div className="text-sm text-[#7e6a2f]">Race against Cubey to solve the scrambled cube.</div>
             </div>
           </div>
 
           <button
             type="button"
             onClick={startSession}
-            className="rounded-2xl bg-cyan-400 px-8 py-3 text-lg font-bold text-slate-950 shadow-lg transition hover:scale-[1.02] hover:bg-cyan-300"
+            className="rounded-2xl border border-[#2f6ee3] bg-[#4285f4] px-8 py-3 text-lg font-bold text-white shadow-[0_10px_20px_rgba(66,133,244,0.35)] transition hover:-translate-y-0.5 hover:bg-[#3878e8]"
           >
             Start Session
           </button>
@@ -152,17 +167,17 @@ export default function App() {
           <div className="mt-6 flex flex-col items-center gap-3">
             <a
               href="/legacy-2x2-solver/index.html"
-              className="flex items-center justify-center gap-2 text-sm text-slate-400 decoration-cyan-400/50 hover:text-cyan-200 hover:underline"
+              className="flex items-center justify-center gap-2 text-sm text-[#5f6368] decoration-[#4285f4]/60 hover:text-[#1a73e8] hover:underline"
             >
               Looking for our classic 2x2 AI Solver? 🎲
             </a>
 
-            <div className="flex items-center gap-4 text-xs text-slate-500">
+            <div className="flex items-center gap-4 text-xs text-[#5f6368]">
               <a
                 href="https://devpost.com/mbr63drexel"
                 target="_blank"
                 rel="noreferrer"
-                className="hover:text-cyan-300 transition-colors"
+                className="transition-colors hover:text-[#1a73e8]"
               >
                 Made by Mangesh Raut
               </a>
@@ -171,7 +186,7 @@ export default function App() {
                 href="https://geminiliveagentchallenge.devpost.com/"
                 target="_blank"
                 rel="noreferrer"
-                className="hover:text-cyan-300 transition-colors"
+                className="transition-colors hover:text-[#1a73e8]"
               >
                 Gemini Live Agent Entry
               </a>
@@ -183,18 +198,18 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(140deg,#020617_0%,#111827_40%,#1e293b_100%)] px-4 py-4 text-white sm:px-6">
+    <main className="min-h-screen px-4 py-4 text-[#202124] sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-col gap-4">
-        <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-slate-900/70 p-4 shadow-lg backdrop-blur">
+        <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#d2d8e3] bg-white/96 p-4 shadow-[0_12px_28px_rgba(24,39,75,0.12)] backdrop-blur">
           <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">Gemini Rubik&apos;s Tutor</div>
-            <div className="text-xl font-bold">Live Cube Coaching Session</div>
+            <div className="text-xs uppercase tracking-[0.2em] text-[#5f6368]">Gemini Rubik&apos;s Tutor</div>
+            <div className="text-xl font-bold text-[#202124]">Live Cube Coaching Session</div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => sessionRef.current?.requestHint?.()}
-              className="rounded-xl border border-amber-300/40 bg-amber-400/10 px-4 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-400/20"
+              className="rounded-xl border border-[#f4ca64] bg-[#fff7df] px-4 py-2 text-sm font-semibold text-[#6a5413] transition hover:bg-[#ffefbe]"
             >
               Hint
             </button>
@@ -203,8 +218,8 @@ export default function App() {
               type="button"
               onClick={toggleChallengeMode}
               className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${challengeMode
-                ? "border-fuchsia-300/60 bg-fuchsia-500/20 text-fuchsia-100"
-                : "border-slate-500/60 bg-slate-700/40 text-slate-100"
+                ? "border-[#28a745] bg-[#e9f7ef] text-[#1f6e35]"
+                : "border-[#d2d8e3] bg-[#f6f8fc] text-[#475467]"
                 }`}
             >
               {challengeMode ? "Challenge On" : "Challenge Mode"}
@@ -213,7 +228,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => sessionRef.current?.solvePreview?.()}
-              className="rounded-xl border border-cyan-300/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+              className="rounded-xl border border-[#b8cdfa] bg-[#edf4ff] px-4 py-2 text-sm font-semibold text-[#1f3a68] transition hover:bg-[#deebff]"
             >
               Solve Preview
             </button>
@@ -221,24 +236,24 @@ export default function App() {
         </header>
 
         {challengeMessage ? (
-          <div className="rounded-xl border border-fuchsia-300/30 bg-fuchsia-500/10 p-3 text-sm text-fuchsia-100">
+          <div className="rounded-xl border border-[#9cd7ad] bg-[#ecf9f0] p-3 text-sm text-[#1f6e35] shadow-[0_6px_16px_rgba(52,168,83,0.12)]">
             {challengeMessage}
           </div>
         ) : null}
 
         {errorText ? (
-          <div className="rounded-xl border border-rose-400/30 bg-rose-500/10 p-3 text-sm text-rose-100">
+          <div className="rounded-xl border border-[#f2bbb4] bg-[#fff1f0] p-3 text-sm text-[#7a2d24] shadow-[0_6px_16px_rgba(234,67,53,0.12)]">
             {errorText}
           </div>
         ) : null}
 
         <section className="grid min-h-[64vh] grid-cols-1 gap-4 lg:grid-cols-[1.45fr_1fr]">
-          <div className="relative flex min-h-[420px] flex-col overflow-hidden rounded-2xl border border-white/15 bg-slate-900/40 p-3 shadow-xl">
+          <div className="relative flex min-h-[420px] flex-col overflow-hidden rounded-2xl border border-[#d2d8e3] bg-white/96 p-3 shadow-[0_14px_30px_rgba(24,39,75,0.12)]">
             <div className="h-full min-h-[360px]">
               <CubeViewer cubeState={cubeState} activeMove={activeMove} />
             </div>
 
-            <div className="absolute right-5 top-5 h-40 w-56 sm:h-44 sm:w-64">
+            <div className="absolute right-5 top-5 h-40 w-56 rounded-2xl border border-[#d2d8e3] bg-white/70 p-1 shadow-[0_12px_22px_rgba(24,39,75,0.16)] sm:h-44 sm:w-64">
               <LiveSession
                 ref={sessionRef}
                 active={sessionActive}
@@ -278,7 +293,7 @@ export default function App() {
             <button
               type="button"
               onClick={downloadSessionRecord}
-              className="rounded-xl border border-slate-400/50 bg-slate-800/80 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:bg-slate-700"
+              className="rounded-xl border border-[#d2d8e3] bg-white px-4 py-2 text-sm font-semibold text-[#3c4043] transition hover:bg-[#f2f5fb]"
             >
               Download Session JSON
             </button>
@@ -286,7 +301,7 @@ export default function App() {
             <button
               type="button"
               onClick={endSession}
-              className="rounded-xl border border-rose-400/50 bg-rose-500/20 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/30"
+              className="rounded-xl border border-[#f2bbb4] bg-[#fff1f0] px-4 py-2 text-sm font-semibold text-[#7a2d24] transition hover:bg-[#fee2de]"
             >
               End Session
             </button>

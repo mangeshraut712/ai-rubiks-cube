@@ -383,5 +383,5 @@ export default function CubeViewer({ cubeState, activeMove }) {
     };
   }, [normalizedActiveMove]);
 
-  return <div ref={containerRef} className="h-full w-full rounded-2xl border border-white/15 shadow-xl" />;
+  return <div ref={containerRef} className="h-full w-full rounded-2xl border border-[#444746] shadow-xl" />;
 }

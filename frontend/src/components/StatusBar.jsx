@@ -22,31 +22,31 @@ export default function StatusBar({
   const levelPct = Math.min(100, Math.max(0, Math.round(micLevel * 250)));
   const connectionColor =
     connectionStatus === "connected"
-      ? "bg-emerald-500"
+      ? "bg-[#34a853]"
       : connectionStatus === "demo_mode"
-        ? "bg-cyan-400"
+        ? "bg-[#4285f4]"
       : connectionStatus === "connecting"
-        ? "bg-amber-400"
-        : "bg-red-500";
+        ? "bg-[#fbbc04]"
+        : "bg-[#ea4335]";
 
   return (
-    <div className="rounded-2xl border border-white/15 bg-slate-900/85 p-4 text-sm text-slate-100 shadow-lg backdrop-blur">
+    <div className="rounded-2xl border border-[#d2d8e3] bg-white/96 p-4 text-sm text-[#202124] shadow-[0_12px_28px_rgba(24,39,75,0.12)] backdrop-blur">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         <div className="flex items-center gap-2">
           <span className={`h-2.5 w-2.5 rounded-full ${connectionColor}`} />
-          <span className="uppercase tracking-wider text-slate-300">{connectionStatus}</span>
+          <span className="uppercase tracking-wider text-[#5f6368]">{connectionStatus}</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-slate-300">Mic</span>
-          <div className="h-2 w-20 rounded bg-slate-700">
-            <div className="h-full rounded bg-cyan-400 transition-all" style={{ width: `${levelPct}%` }} />
+          <span className="text-[#5f6368]">Mic</span>
+          <div className="h-2 w-20 rounded bg-[#e6ebf4]">
+            <div className="h-full rounded bg-[#4285f4] transition-all" style={{ width: `${levelPct}%` }} />
           </div>
         </div>
 
-        <div className="text-slate-300">Timer: {formatDuration(timerSeconds)}</div>
-        <div className="text-slate-300">Moves: {moveCount}</div>
-        <div className="text-slate-300">Tutor: {isTutorSpeaking ? "Speaking" : "Listening"}</div>
+        <div className="text-[#5f6368]">Timer: {formatDuration(timerSeconds)}</div>
+        <div className="text-[#5f6368]">Moves: {moveCount}</div>
+        <div className="text-[#5f6368]">Tutor: {isTutorSpeaking ? "Speaking" : "Listening"}</div>
       </div>
     </div>
   );
