@@ -220,10 +220,12 @@ chmod +x scripts/*.sh contest/*.sh
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `GEMINI_API_KEY` | Google AI Studio API key | ✅ Yes |
-| `GEMINI_LIVE_MODEL` | Model ID (default: gemini-live) | ❌ No |
+| `GEMINI_LIVE_MODEL` | Model ID (default: `gemini-2.0-flash-live-preview-04-09`) | ❌ No |
+| `GEMINI_FALLBACK_MODEL` | Fallback model (default: `gemini-2.0-flash-exp`) | ❌ No |
 | `PORT` | Server port (default: 8080) | ❌ No |
 | `CORS_ORIGIN` | Allowed origins | ❌ No |
 | `DEMO_MODE` | Test mode without camera | ❌ No |
+| `VITE_WS_URL` | Frontend websocket URL override | ❌ No |
 
 ---
 
@@ -257,12 +259,14 @@ Gemini-Rubiks-Tutor/
 ├── cloudbuild.yaml            # CI/CD pipeline
 ├── deploy.sh                  # Deployment script
 ├── Dockerfile                 # Container image
+├── scripts/                    # Local run/verify/stop helpers
+├── contest/                    # Contest-only profile + deploy wrapper
 └── docs/
-    ├── architecture-diagram.md # System architecture
-    ├── devpost-submission.md   # Ready-to-paste Devpost text
-    ├── demo-video-script.md    # Timed <4 minute demo script
-    ├── contest-final-checklist.md # Pre-submit checklist
-    └── maintenance-workflow.md # Main vs contest branch workflow
+    ├── architecture-diagram.md      # System architecture
+    ├── devpost-submission.md        # Ready-to-paste Devpost text
+    ├── demo-video-script.md         # Timed <4 minute demo script
+    ├── contest-final-checklist.md   # Pre-submit checklist
+    └── maintenance-workflow.md      # Main vs contest branch workflow
 ```
 
 ---
