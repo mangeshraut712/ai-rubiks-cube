@@ -92,7 +92,15 @@ DEMO_MODE=false
 # Optional - model selection
 GEMINI_LIVE_MODEL=gemini-2.0-flash-live-preview-04-09
 GEMINI_FALLBACK_MODEL=gemini-2.0-flash-exp
+
+# Optional - frontend dev proxy target
+VITE_BACKEND_ORIGIN=http://localhost:8080
 ```
+
+## 🎨 Design Language
+
+- Google-inspired frontend styling (colors, typography, and surface hierarchy)
+- Gemini-themed visual identity for the contest demo
 
 ---
 

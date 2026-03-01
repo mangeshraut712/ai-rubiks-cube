@@ -116,7 +116,7 @@ export default function CubeViewer({ cubeState, activeMove }) {
     }
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#0b1224");
+    scene.background = new THREE.Color("#eef4fe");
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     camera.position.set(5.5, 5.5, 6.2);
@@ -141,9 +141,13 @@ export default function CubeViewer({ cubeState, activeMove }) {
     fillLight.position.set(-7, -4, -6);
     scene.add(fillLight);
 
+    const accentLight = new THREE.DirectionalLight(0xfbbc04, 0.25);
+    accentLight.position.set(-4, 6, 3);
+    scene.add(accentLight);
+
     const core = new THREE.Mesh(
       new THREE.BoxGeometry(3.1, 3.1, 3.1),
-      new THREE.MeshStandardMaterial({ color: "#10141f", roughness: 0.6, metalness: 0.1 })
+      new THREE.MeshStandardMaterial({ color: "#161616", roughness: 0.6, metalness: 0.1 })
     );
     scene.add(core);
 
@@ -327,8 +331,8 @@ export default function CubeViewer({ cubeState, activeMove }) {
     const axis = FACE_NORMAL[activeFace].clone();
 
     const arcMaterial = new THREE.MeshStandardMaterial({
-      color: "#7dd3fc",
-      emissive: new THREE.Color("#7dd3fc"),
+      color: "#4285f4",
+      emissive: new THREE.Color("#4285f4"),
       emissiveIntensity: 0.6,
       roughness: 0.2,
       metalness: 0.2
@@ -354,8 +358,8 @@ export default function CubeViewer({ cubeState, activeMove }) {
     const cone = new THREE.Mesh(
       new THREE.ConeGeometry(0.09, 0.24, 12),
       new THREE.MeshStandardMaterial({
-        color: "#7dd3fc",
-        emissive: new THREE.Color("#7dd3fc"),
+        color: "#4285f4",
+        emissive: new THREE.Color("#4285f4"),
         emissiveIntensity: 0.8
       })
     );
@@ -383,5 +387,5 @@ export default function CubeViewer({ cubeState, activeMove }) {
     };
   }, [normalizedActiveMove]);
 
-  return <div ref={containerRef} className="h-full w-full rounded-2xl border border-[#444746] shadow-xl" />;
+  return <div ref={containerRef} className="h-full w-full rounded-2xl border border-[#d2d8e3] shadow-[0_10px_24px_rgba(24,39,75,0.12)]" />;
 }

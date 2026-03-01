@@ -90,6 +90,10 @@ git push origin main
 
 ## File Organization
 
+### Canonical Root
+- The repository root (`Gemini Live Agent Challenge/`) is the canonical app root for deployment and local runs.
+- Any legacy nested cache folders are treated as non-source artifacts and must stay outside the active project tree.
+
 ### Contest-Specific Files
 These files are only relevant for contest submission:
 - `CONTEST.md` - Contest-specific documentation

@@ -49,6 +49,7 @@ An AI-powered Rubik's Cube tutoring application using Google Gemini's **Live API
 | 🏆 **Challenge Mode** | Race against AI to solve scrambled cubes |
 | 🎮 **3D Visualization** | Interactive Three.js cube with move animations |
 | 🔊 **Audio Playback** | Real-time AI voice responses |
+| 🎨 **Google-Inspired UI** | Google palette + Gemini-style visual language |
 
 ### Technical Highlights
 - **WebSocket** bidirectional streaming (audio chunks + video frames)
@@ -226,6 +227,7 @@ chmod +x scripts/*.sh contest/*.sh
 | `CORS_ORIGIN` | Allowed origins | ❌ No |
 | `DEMO_MODE` | Test mode without camera | ❌ No |
 | `VITE_WS_URL` | Frontend websocket URL override | ❌ No |
+| `VITE_BACKEND_ORIGIN` | Dev proxy target (default: `http://localhost:8080`) | ❌ No |
 
 ---
 

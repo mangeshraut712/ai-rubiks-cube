@@ -2,6 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
+const backendHttpOrigin = process.env.VITE_BACKEND_ORIGIN || "http://localhost:8080";
+const backendWsOrigin = backendHttpOrigin.startsWith("https://")
+  ? backendHttpOrigin.replace("https://", "wss://")
+  : backendHttpOrigin.replace("http://", "ws://");
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
@@ -9,12 +14,12 @@ export default defineConfig({
     host: "0.0.0.0",
     proxy: {
       "/ws": {
-        target: "ws://localhost:8080",
+        target: backendWsOrigin,
         ws: true,
         changeOrigin: true
       },
       "/health": {
-        target: "http://localhost:8080",
+        target: backendHttpOrigin,
         changeOrigin: true
       }
     }

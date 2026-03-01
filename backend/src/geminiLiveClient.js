@@ -57,12 +57,10 @@ export class GeminiLiveClient {
               role: "system",
               parts: [{ text: this.systemPrompt }]
             },
-            // Add generation config for more reliable responses
-            generationConfig: {
-              temperature: 0.7,
-              topP: 0.9,
-              maxOutputTokens: 256
-            }
+            // Set generation controls directly on LiveConnectConfig.
+            temperature: 0.7,
+            topP: 0.9,
+            maxOutputTokens: 256
           },
           callbacks: {
             onopen: () => {

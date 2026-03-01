@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+frontend/.env
 
 # npm cache directories
 local-cache/
@@ -27,4 +28,8 @@ build/
 
 # Runtime process/log artifacts
 .runtime/
+.trash/
 *.pid
+
+# Generated solver cache tables
+cache/
