@@ -68,6 +68,26 @@ resource "google_cloud_run_v2_service" "rubiks_tutor" {
           }
         }
       }
+
+      env {
+        name  = "DEMO_MODE"
+        value = var.demo_mode ? "true" : "false"
+      }
+
+      env {
+        name  = "CORS_ORIGIN"
+        value = var.cors_origin
+      }
+
+      env {
+        name  = "GEMINI_LIVE_MODEL"
+        value = var.gemini_live_model
+      }
+
+      env {
+        name  = "GEMINI_FALLBACK_MODEL"
+        value = var.gemini_fallback_model
+      }
     }
   }
 

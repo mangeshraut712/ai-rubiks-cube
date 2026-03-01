@@ -24,3 +24,7 @@ Thumbs.db
 # Build outputs
 dist/
 build/
+
+# Runtime process/log artifacts
+.runtime/
+*.pid

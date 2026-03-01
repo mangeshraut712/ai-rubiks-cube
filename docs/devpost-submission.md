@@ -62,3 +62,7 @@ For submission, include either:
 ## Architecture Diagram
 - Mermaid diagram: `docs/architecture-diagram.md`
 - Include screenshot/rendered diagram in Devpost media for judge visibility.
+
+## Optional Bonus Links
+- Public GDG profile URL: `PASTE_GDG_PROFILE_URL`
+- Optional build-content URL (blog/podcast/video): `PASTE_CONTENT_URL`

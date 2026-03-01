@@ -21,6 +21,20 @@ An AI-powered Rubik's Cube tutoring application using Google Gemini's **Live API
 - ✅ **Cloud Platform:** Google Cloud Run (see [`terraform/`](terraform/) and [`cloudbuild.yaml`](cloudbuild.yaml))
 - ✅ **Architecture Diagram:** See [`docs/architecture-diagram.md`](docs/architecture-diagram.md)
 - ✅ **Deployment Proof:** Infrastructure-as-code with Terraform
+- ✅ **Devpost Submission Draft:** See [`docs/devpost-submission.md`](docs/devpost-submission.md)
+- ✅ **<4 Min Demo Script:** See [`docs/demo-video-script.md`](docs/demo-video-script.md)
+
+---
+
+## 📦 Submission Assets
+
+- Devpost text draft: [`docs/devpost-submission.md`](docs/devpost-submission.md)
+- Demo video script (<4 min): [`docs/demo-video-script.md`](docs/demo-video-script.md)
+- Architecture diagram source: [`docs/architecture-diagram.md`](docs/architecture-diagram.md)
+- Google Cloud IaC proof: [`terraform/main.tf`](terraform/main.tf), [`cloudbuild.yaml`](cloudbuild.yaml), [`deploy.sh`](deploy.sh)
+- Final pre-submit checklist: [`docs/contest-final-checklist.md`](docs/contest-final-checklist.md)
+- Core vs contest branch workflow: [`docs/maintenance-workflow.md`](docs/maintenance-workflow.md)
+- Standalone contest profile: [`contest/README.md`](contest/README.md)
 
 ---
 
@@ -48,7 +62,7 @@ An AI-powered Rubik's Cube tutoring application using Google Gemini's **Live API
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20+
 - Google Gemini API key ([Get one here](https://aistudio.google.com/app/apikey))
 - Google Cloud account (for deployment)
 
@@ -106,6 +120,13 @@ chmod +x deploy.sh
 ./deploy.sh YOUR_GCP_PROJECT_ID
 ```
 
+### Contest Profile Deployment (Judge-Friendly Defaults)
+
+```bash
+chmod +x contest/deploy-cloud-run.sh
+./contest/deploy-cloud-run.sh YOUR_GCP_PROJECT_ID
+```
+
 ### Option 2: Cloud Build (CI/CD)
 
 ```bash
@@ -150,6 +171,17 @@ Set `DEMO_MODE=true` in `.env` to test without a physical Rubik's cube:
 DEMO_MODE=true
 GEMINI_API_KEY=your_key_here
 ```
+
+### Standalone Local Contest Run
+
+```bash
+cp contest/.env.judges.example .env
+# set GEMINI_API_KEY in .env
+chmod +x scripts/*.sh contest/*.sh
+./scripts/run-contest-local.sh
+```
+
+`run-contest-local.sh` uses contest defaults (`PORT=8080`, `DEMO_MODE=true`, wildcard CORS) unless you override with `CONTEST_DEMO_MODE` / `CORS_ORIGIN_OVERRIDE`.
 
 ---
 
@@ -226,7 +258,11 @@ Gemini-Rubiks-Tutor/
 ├── deploy.sh                  # Deployment script
 ├── Dockerfile                 # Container image
 └── docs/
-    └── architecture-diagram.md # System architecture
+    ├── architecture-diagram.md # System architecture
+    ├── devpost-submission.md   # Ready-to-paste Devpost text
+    ├── demo-video-script.md    # Timed <4 minute demo script
+    ├── contest-final-checklist.md # Pre-submit checklist
+    └── maintenance-workflow.md # Main vs contest branch workflow
 ```
 
 ---
@@ -262,7 +298,8 @@ See full diagram: [`docs/architecture-diagram.md`](docs/architecture-diagram.md)
 
 ### Audio Processing
 - **Sample Rate:** 16kHz mono PCM
-- **VAD Threshold:** 0.15 (RMS + Peak weighted)
+- **VAD:** Adaptive noise-floor normalization for robust mic-level detection
+- **Barge-in Trigger:** `0.15` normalized mic level while tutor audio is playing
 - **Buffer Size:** 4096 samples
 - **Echo Cancellation:** Enabled
 - **Noise Suppression:** Enabled
@@ -281,9 +318,13 @@ See full diagram: [`docs/architecture-diagram.md`](docs/architecture-diagram.md)
 - **Max Output Tokens:** 256
 
 ### Security & Rate Limiting
-- Rate limit: 100 requests/minute per IP
+- Rate limits (per IP, per minute):
+  - connect: 30
+  - control messages: 600
+  - video frames: 360
+  - audio chunks: 3000
 - Max concurrent connections: 10
-- CORS configured for production domains
+- CORS supports local development and configurable production origins
 - API key stored in Google Secret Manager
 
 ---

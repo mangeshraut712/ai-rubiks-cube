@@ -11,6 +11,10 @@ REGION="us-central1"
 SERVICE_NAME="gemini-rubiks-tutor"
 REPO_NAME="gemini-rubiks-tutor"
 IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${SERVICE_NAME}:latest"
+DEMO_MODE_VALUE="${DEMO_MODE_VALUE:-true}"
+CORS_ORIGIN_VALUE="${CORS_ORIGIN_VALUE:-*}"
+GEMINI_LIVE_MODEL_VALUE="${GEMINI_LIVE_MODEL_VALUE:-gemini-2.0-flash-live-preview-04-09}"
+GEMINI_FALLBACK_MODEL_VALUE="${GEMINI_FALLBACK_MODEL_VALUE:-gemini-2.0-flash-exp}"
 
 echo "Setting gcloud project to ${PROJECT_ID}"
 gcloud config set project "${PROJECT_ID}" >/dev/null
@@ -56,6 +60,7 @@ gcloud run deploy "${SERVICE_NAME}" \
   --region "${REGION}" \
   --allow-unauthenticated \
   --port "8080" \
+  --set-env-vars "^##^DEMO_MODE=${DEMO_MODE_VALUE}##CORS_ORIGIN=${CORS_ORIGIN_VALUE}##GEMINI_LIVE_MODEL=${GEMINI_LIVE_MODEL_VALUE}##GEMINI_FALLBACK_MODEL=${GEMINI_FALLBACK_MODEL_VALUE}" \
   --set-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest"
 
 SERVICE_URL=$(gcloud run services describe "${SERVICE_NAME}" --region "${REGION}" --format='value(status.url)')
