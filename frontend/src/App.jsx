@@ -149,15 +149,34 @@ export default function App() {
             Start Session
           </button>
 
-          <a
-            href="/legacy-2x2-solver/index.html"
-            className="mt-6 flex items-center justify-center gap-2 text-sm text-slate-400 decoration-cyan-400/50 hover:text-cyan-200 hover:underline"
-          >
-            Looking for our classic 2x2 AI Solver? 🎲
-          </a>
-          <p className="mt-4 text-xs text-slate-400">
-            Requires camera and microphone access
-          </p>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <a
+              href="/legacy-2x2-solver/index.html"
+              className="flex items-center justify-center gap-2 text-sm text-slate-400 decoration-cyan-400/50 hover:text-cyan-200 hover:underline"
+            >
+              Looking for our classic 2x2 AI Solver? 🎲
+            </a>
+
+            <div className="flex items-center gap-4 text-xs text-slate-500">
+              <a
+                href="https://devpost.com/mbr63drexel"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-cyan-300 transition-colors"
+              >
+                Made by Mangesh Raut
+              </a>
+              <span>•</span>
+              <a
+                href="https://geminiliveagentchallenge.devpost.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-cyan-300 transition-colors"
+              >
+                Gemini Live Agent Entry
+              </a>
+            </div>
+          </div>
         </div>
       </main>
     );
