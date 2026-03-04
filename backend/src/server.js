@@ -194,19 +194,47 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json({ limit: "15mb" }));
 
-const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173,http://127.0.0.1:5173")
+const DEFAULT_CORS_ORIGINS =
+  "https://*.run.app,http://localhost:5173,http://127.0.0.1:5173";
+
+function normalizeOrigin(value) {
+  return String(value || "").trim().replace(/\/+$/, "");
+}
+
+const allowedOrigins = (process.env.CORS_ORIGIN || DEFAULT_CORS_ORIGINS)
   .split(",")
-  .map((origin) => origin.trim())
+  .map((origin) => normalizeOrigin(origin))
   .filter(Boolean);
+
+function isOriginAllowed(origin) {
+  if (!origin) {
+    return true;
+  }
+
+  const normalizedOrigin = normalizeOrigin(origin);
+
+  return allowedOrigins.some((allowed) => {
+    if (allowed === "*" || allowed === normalizedOrigin) {
+      return true;
+    }
+
+    const wildcard = allowed.match(/^(https?:\/\/)\*\.(.+)$/i);
+    if (!wildcard) {
+      return false;
+    }
+
+    const scheme = wildcard[1].toLowerCase();
+    const baseDomain = wildcard[2].toLowerCase();
+    const lowerOrigin = normalizedOrigin.toLowerCase();
+
+    return lowerOrigin.startsWith(scheme) && lowerOrigin.endsWith(`.${baseDomain}`);
+  });
+}
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (
-        !origin ||
-        allowedOrigins.includes("*") ||
-        allowedOrigins.includes(origin)
-      ) {
+      if (isOriginAllowed(origin)) {
         callback(null, true);
         return;
       }

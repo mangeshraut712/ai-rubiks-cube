@@ -198,7 +198,10 @@ if [[ "$SCOPE" == "deploy" || "$SCOPE" == "prompt" ]]; then
   if [[ -n "$effective_cors" && "$effective_cors" == "*" ]]; then
     add_failure "CORS origin is '*'. Set a trusted origin before deployment."
   elif [[ -z "$effective_cors" ]]; then
-    if rg -n 'CORS_ORIGIN[^[:cntrl:]]*\*' deploy.sh cloudbuild.yaml >/dev/null 2>&1; then
+    if rg -n \
+      -e 'CORS_ORIGIN[^[:cntrl:]]*:-\*' \
+      -e 'CORS_ORIGIN[^[:cntrl:]]*[:=][[:space:]]*"\*"' \
+      deploy.sh cloudbuild.yaml contest/deploy-cloud-run.sh terraform/variables.tf >/dev/null 2>&1; then
       add_warning "Deployment defaults still allow CORS '*'. Override CORS_ORIGIN_VALUE/_CORS_ORIGIN for production."
     fi
   fi

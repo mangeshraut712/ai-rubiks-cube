@@ -27,7 +27,18 @@ AI-powered Rubik's Cube tutoring with Google Gemini Live API - real-time voice +
 ## 📦 Submission Assets
 
 - Google Cloud IaC proof: [`terraform/main.tf`](terraform/main.tf), [`cloudbuild.yaml`](cloudbuild.yaml), [`deploy.sh`](deploy.sh)
-- Contest profile: [`contest/.env.judges.example`](contest/.env.judges.example), [`contest/deploy-cloud-run.sh`](contest/deploy-cloud-run.sh)
+- Contest profile: [`contest/.env.judges.example`](contest/.env.judges.example), [`contest/deploy-cloud-run.sh`](/contest/deploy-cloud-run.sh)
+- Submission checklist: [`DEVPOST_SUBMISSION_CHECKLIST.md`](DEVPOST_SUBMISSION_CHECKLIST.md)
+- Blog draft for bonus content: [`devpost-blog-post.md`](devpost-blog-post.md)
+
+## 🧾 Devpost-Ready Artifacts (Fill Before Final Submit)
+
+- **Demo video** (YouTube/Vimeo, up to 4 minutes): `TODO: Add URL Here`
+- **Public code repository URL**: `TODO: Add URL Here`
+- **Published blog/article** with `#GeminiLiveAgentChallenge`: `TODO: Add URL Here`
+- **Live Cloud Run API URL**: `TODO: Add URL Here`
+  - *How to verify:* Open your terminal and run `curl -fsS https://<YOUR-CLOUD-RUN-URL>/health`. It will return `{"status":"ok","model":"gemini-live"}` proving it is actively running.
+- **Architecture diagram location**: See the [Architecture Diagram](#%EF%B8%8F-architecture-diagram) section below.
 
 ---
 
@@ -162,6 +173,9 @@ Gemini-Rubiks-Tutor/
 | `PORT` | Server port (default: 8080) | No |
 | `GEMINI_API_KEY` | Google Gemini API key | Yes* |
 | `DEMO_MODE` | Enable demo mode (default: false) | No |
+| `CORS_ORIGIN` | Comma-separated allowlist (supports `https://*.run.app`) | No |
+| `GEMINI_LIVE_MODEL` | Primary Gemini Live model | No |
+| `GEMINI_FALLBACK_MODEL` | One-shot fallback model for hints | No |
 
 *Required unless `DEMO_MODE=true`
 
@@ -200,6 +214,9 @@ The backend must be hosted on a platform that supports long-lived WebSockets wit
 
 ```bash
 # Using deploy script
+# Optional overrides (recommended for production):
+# export CORS_ORIGIN_VALUE="https://your-frontend-domain.com,https://*.run.app"
+# export DEMO_MODE_VALUE=false
 ./deploy.sh YOUR_GCP_PROJECT_ID
 
 # Manual
@@ -241,9 +258,9 @@ terraform apply
 - ✅ **Google Cloud & SDKs:** Built natively with `@google/genai` SDK and fully hosted on Google Cloud Run.
 - ✅ **Grounding & Avoiding Hallucinations:** The physical cube state is verified continuously against a deterministic mathematical algorithm (Kociemba). Gemini coaches *based on this structured state*, entirely eliminating AI movement hallucinations.
 
-### Bonus Points Completed
+### Bonus Points Status
 - ✅ **Automated Cloud Infrastructure:** Fully orchestrated IaC provided in `terraform/`, paired with `cloudbuild.yaml` and `deploy.sh`.
-- ✅ **Content Publication:** A project walkthrough blog is prepared to meet the social media publication criteria (Remember to publish with `#GeminiLiveAgentChallenge`).
+- ⚠️ **Content Publication:** Draft prepared in [`devpost-blog-post.md`](devpost-blog-post.md). Publish on Medium/Dev.to and add the live link above to claim this bonus confidently.
 
 ---
 
@@ -278,6 +295,18 @@ graph TB
 - ✅ Google Cloud usage shown in code: [`terraform/main.tf`](terraform/main.tf), [`cloudbuild.yaml`](cloudbuild.yaml), [`deploy.sh`](deploy.sh).
 - ✅ Architecture diagram included in this README.
 - ✅ Health endpoint and runtime checks available (`GET /health`, WebSocket `/ws`).
+
+---
+
+## 📚 Findings, Learnings & Data Sources
+
+**Findings & Data Sources**
+- **Vision Limitations vs Ground Truth:** We found that depending solely on visual frame ingestion (`image/jpeg` at 4fps) to completely understand the mathematical state of a Rubik's cube led to LLM hallucinations, as small lighting changes could distort color perception. To fix this, we heavily utilized the **Kociemba Two-Phase Algorithm** repository to maintain a local ground truth matrix, feeding this structured data to Gemini as context alongside the visual feed.
+- **Data Privacy & Ephemeral Sessions:** No persistent user data is recorded. Images processed by Gemini are done ephemerally via `ws` streaming protocols in the live connect session.
+
+**Key Learnings**
+- **Gapless Audio Buffering:** Real-time speech from Gemini arrives in small PCM chunks. We learned that using standard HTML5 `<audio>` tags caused stuttering, forcing us to use the browser `AudioContext` with precise packet time-scheduling for flawless gapless playback.
+- **WebSockets on Serverless:** We learned Vercel Serverless Functions do not natively support stateful long-lived WebSockets. This requirement forced us into a split-monorepo design—putting the frontend on Vercel/GitHub Pages, and orchestrating the WebSocket backend precisely and securely on Google Cloud Run.
 
 ---
 

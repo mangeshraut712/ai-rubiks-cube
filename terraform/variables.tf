@@ -23,23 +23,23 @@ variable "image" {
 variable "demo_mode" {
   description = "Enable demo mode for judge-friendly evaluation."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "cors_origin" {
   description = "Allowed CORS origins."
   type        = string
-  default     = "*"
+  default     = "https://*.run.app,http://localhost:5173,http://127.0.0.1:5173"
 }
 
 variable "gemini_live_model" {
   description = "Primary Gemini live model."
   type        = string
-  default     = "gemini-2.0-flash-live-preview-04-09"
+  default     = "gemini-2.5-flash-native-audio-preview-09-2025"
 }
 
 variable "gemini_fallback_model" {
   description = "Fallback Gemini model."
   type        = string
-  default     = "gemini-2.0-flash-exp"
+  default     = "gemini-2.5-flash"
 }

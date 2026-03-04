@@ -10,7 +10,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_ID="$1"
 
 export DEMO_MODE_VALUE="${DEMO_MODE_VALUE:-true}"
-export CORS_ORIGIN_VALUE="${CORS_ORIGIN_VALUE:-*}"
+export CORS_ORIGIN_VALUE="${CORS_ORIGIN_VALUE:-https://gemini-rubiks-tutor.vercel.app,http://localhost:5173}"
 export GEMINI_LIVE_MODEL_VALUE="${GEMINI_LIVE_MODEL_VALUE:-gemini-2.5-flash-native-audio-preview-09-2025}"
 export GEMINI_FALLBACK_MODEL_VALUE="${GEMINI_FALLBACK_MODEL_VALUE:-gemini-2.5-flash}"
 
