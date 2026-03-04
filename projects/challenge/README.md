@@ -1,26 +1,15 @@
-# Challenge Contest Project
+# Challenge Contest Profile: Gemini Live Agent Challenge
 
-This project profile is optimized for Gemini Live Agent Challenge submission packaging:
+This represents the contest-bound configuration profile of the Gemini Live Agent Challenge. It safely isolates the contest deployment needs (like running in "Demo Mode" for judges who may not have API keys, or pre-populating specific `.env` targets).
 
-- Contest-focused docs and checklist
-- Contest deployment wrapper
-- Demo-friendly local defaults (overridable)
-
-## Run Locally
-
-From repository root:
+## How to Run
 
 ```bash
+# Run the contest profile natively
 ./scripts/start-challenge.sh
-```
 
-## Deploy Contest Profile
-
-```bash
+# Deploy to Cloud Run using the challenge constraints 
 ./scripts/deploy-challenge.sh YOUR_GCP_PROJECT_ID
 ```
 
-Notes:
-
-- Local run defaults to `DEMO_MODE=true` for judge/demo friendliness.
-- Deploy wrapper delegates to `contest/deploy-cloud-run.sh`.
+*(This wraps the deployment scripts setting `DEMO_MODE=true` by default and enforces strict specific CORS origins).*

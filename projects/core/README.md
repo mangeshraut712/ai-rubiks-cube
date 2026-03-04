@@ -1,21 +1,12 @@
-# Core Project
+# Core Project: Gemini Rubik's Tutor
 
-This is the original Gemini Rubik's Tutor product flow:
+This represents the original, production-focused instance of the Gemini Rubik's Tutor. It assumes standard authentication overrides, no demo configurations by default, and a standard run behavior.
 
-- Real Gemini Live API interaction
-- Full coaching + cube state grounding
-- Standard local developer workflow
-
-## Run Locally
-
-From repository root:
+## How to Run
 
 ```bash
+# Run the core project
 ./scripts/start-core.sh
 ```
 
-Notes:
-
-- Defaults to `DEMO_MODE=false`.
-- Expects `GEMINI_API_KEY` in environment or `.env`.
-- Runs backend + frontend together.
+*(This runs the project with `DEMO_MODE=false` by default, activating the true Gemini Live API connection).*
