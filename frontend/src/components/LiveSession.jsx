@@ -13,7 +13,10 @@ import {
   startPcmCapture
 } from "../utils/webrtcHelpers";
 
-const INTERRUPT_THRESHOLD = 0.15;
+const INTERRUPT_THRESHOLD = 0.82;
+const INTERRUPT_HOLD_MS = 1500;
+const INTERRUPT_COOLDOWN_MS = 7000;
+const INTERRUPT_ARM_DELAY_MS = 3000;
 
 function base64ToArrayBuffer(base64) {
   const binary = atob(base64);
@@ -69,7 +72,8 @@ const LiveSession = forwardRef(function LiveSession(
     onHint,
     onChallengeUpdate,
     onError,
-    onThinkingChange
+    onThinkingChange,
+    onSolveComplete
   },
   ref
 ) {
@@ -83,41 +87,69 @@ const LiveSession = forwardRef(function LiveSession(
   const unmountedRef = useRef(false);
   const lastFrameRef = useRef(null);
   const lastInterruptMsRef = useRef(0);
+  const aboveInterruptThresholdSinceRef = useRef(null);
 
   const audioCaptureRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
   const playbackContextRef = useRef(null);
-  const playbackQueueRef = useRef([]);
-  const currentSourceRef = useRef(null);
+  const playbackGenerationRef = useRef(0);
+  const scheduledEndTimeRef = useRef(0);
+  const currentSourcesRef = useRef([]);
   const isPlayingRef = useRef(false);
+  const tutorSpeechStartedAtRef = useRef(0);
+  const speakingCheckRef = useRef(null);
 
   const statusRef = useRef("disconnected");
   const wsTargetRef = useRef("");
+  const wsCandidatesRef = useRef([]);
 
   function emitStatus(nextStatus) {
     statusRef.current = nextStatus;
     onStatusChange?.(nextStatus);
   }
 
-  function wsUrl() {
-    if (import.meta.env.VITE_WS_URL) {
-      return import.meta.env.VITE_WS_URL;
-    }
-
-    if (import.meta.env.VITE_BACKEND_ORIGIN) {
-      const origin = String(import.meta.env.VITE_BACKEND_ORIGIN);
-      if (origin.startsWith("https://")) {
-        return `${origin.replace("https://", "wss://")}/ws`;
-      }
-      if (origin.startsWith("http://")) {
-        return `${origin.replace("http://", "ws://")}/ws`;
-      }
-    }
-
+  function wsUrls() {
+    const candidates = [];
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    return `${protocol}://${window.location.host}/ws`;
+
+    const pushUnique = (url) => {
+      const normalized = String(url || "").trim().replace(/\/+$/, "");
+      if (!normalized || candidates.includes(normalized)) {
+        return;
+      }
+      candidates.push(normalized);
+    };
+
+    const fromBackendOrigin = (origin) => {
+      const normalized = String(origin || "").trim().replace(/\/+$/, "");
+      if (normalized.startsWith("https://")) {
+        return `${normalized.replace("https://", "wss://")}/ws`;
+      }
+      if (normalized.startsWith("http://")) {
+        return `${normalized.replace("http://", "ws://")}/ws`;
+      }
+      return "";
+    };
+
+    // 1. Same-origin first — in dev, Vite proxies /ws to the backend seamlessly
+    //    In production, backend serves frontend so same-origin works directly
+    pushUnique(`${protocol}://${window.location.host}/ws`);
+
+    // 2. Explicit overrides from env (if different from same-origin)
+    pushUnique(import.meta.env.VITE_WS_URL);
+    pushUnique(fromBackendOrigin(import.meta.env.VITE_BACKEND_ORIGIN));
+
+    // 3. Localhost fallback ports for dev
+    const localHostname = window.location.hostname;
+    if (localHostname === "localhost" || localHostname === "127.0.0.1") {
+      for (const port of [8080, 3005, 3000, 8081]) {
+        pushUnique(`${protocol}://${localHostname}:${port}/ws`);
+      }
+    }
+
+    return candidates;
   }
 
   function sendJson(payload) {
@@ -132,26 +164,33 @@ const LiveSession = forwardRef(function LiveSession(
   }
 
   function stopAudioPlayback() {
-    playbackQueueRef.current = [];
+    playbackGenerationRef.current += 1;
+    scheduledEndTimeRef.current = 0;
 
-    if (currentSourceRef.current) {
+    for (const source of currentSourcesRef.current) {
       try {
-        currentSourceRef.current.stop();
+        source.stop();
+        source.disconnect();
       } catch (_error) {
         // Ignore stop race conditions.
       }
-      currentSourceRef.current.disconnect();
-      currentSourceRef.current = null;
+    }
+    currentSourcesRef.current = [];
+
+    if (speakingCheckRef.current) {
+      clearInterval(speakingCheckRef.current);
+      speakingCheckRef.current = null;
     }
 
     isPlayingRef.current = false;
+    tutorSpeechStartedAtRef.current = 0;
     updateTutorSpeakingState(false);
   }
 
   async function ensurePlaybackContext() {
     if (!playbackContextRef.current) {
       const Ctor = window.AudioContext || window.webkitAudioContext;
-      playbackContextRef.current = new Ctor();
+      playbackContextRef.current = new Ctor({ sampleRate: 24000 });
     }
 
     if (playbackContextRef.current.state === "suspended") {
@@ -161,56 +200,77 @@ const LiveSession = forwardRef(function LiveSession(
     return playbackContextRef.current;
   }
 
-  async function drainPlaybackQueue() {
-    if (isPlayingRef.current) {
-      return;
-    }
-
-    const next = playbackQueueRef.current.shift();
-    if (!next) {
-      updateTutorSpeakingState(false);
-      return;
-    }
-
-    const audioContext = await ensurePlaybackContext();
-    isPlayingRef.current = true;
-    updateTutorSpeakingState(true);
-
-    const source = audioContext.createBufferSource();
-    source.buffer = next;
-    source.connect(audioContext.destination);
-    currentSourceRef.current = source;
-
-    source.onended = () => {
-      source.disconnect();
-      if (currentSourceRef.current === source) {
-        currentSourceRef.current = null;
-      }
-      isPlayingRef.current = false;
-      drainPlaybackQueue();
-    };
-
-    source.start();
-  }
-
+  /**
+   * Gapless audio scheduling: Each chunk is scheduled to play exactly when
+   * the previous one ends, using Web Audio API's precise time-based scheduling.
+   * This eliminates the gaps/pops that caused the broken voice.
+   */
   async function enqueueAudio(base64Audio, mimeType) {
     try {
       const audioContext = await ensurePlaybackContext();
+      const generation = playbackGenerationRef.current;
       const arrayBuffer = base64ToArrayBuffer(base64Audio);
       let decoded;
 
       if (mimeType?.includes("pcm")) {
+        // Gemini Live API sends audio at 24kHz PCM by default
         decoded = pcm16ToAudioBuffer(
           audioContext,
           arrayBuffer,
-          parsePcmRate(mimeType, 16000)
+          parsePcmRate(mimeType, 24000)
         );
       } else {
         decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
       }
 
-      playbackQueueRef.current.push(decoded);
-      drainPlaybackQueue();
+      if (generation !== playbackGenerationRef.current) {
+        return; // Playback was stopped/reset while decoding
+      }
+
+      const source = audioContext.createBufferSource();
+      source.buffer = decoded;
+      source.connect(audioContext.destination);
+
+      // Schedule this chunk to start exactly when the previous one ends
+      const now = audioContext.currentTime;
+      const startAt = Math.max(now, scheduledEndTimeRef.current);
+      scheduledEndTimeRef.current = startAt + decoded.duration;
+
+      source.onended = () => {
+        // Remove from tracked sources
+        currentSourcesRef.current = currentSourcesRef.current.filter((s) => s !== source);
+        try { source.disconnect(); } catch (_e) { /* noop */ }
+      };
+
+      currentSourcesRef.current.push(source);
+      source.start(startAt);
+
+      // Mark as speaking
+      if (!isPlayingRef.current) {
+        isPlayingRef.current = true;
+        tutorSpeechStartedAtRef.current = Date.now();
+        updateTutorSpeakingState(true);
+
+        // Periodic check to detect when all scheduled audio has finished
+        if (speakingCheckRef.current) {
+          clearInterval(speakingCheckRef.current);
+        }
+        speakingCheckRef.current = setInterval(() => {
+          if (generation !== playbackGenerationRef.current) {
+            clearInterval(speakingCheckRef.current);
+            speakingCheckRef.current = null;
+            return;
+          }
+          const ctx = playbackContextRef.current;
+          if (ctx && ctx.currentTime >= scheduledEndTimeRef.current && currentSourcesRef.current.length === 0) {
+            isPlayingRef.current = false;
+            tutorSpeechStartedAtRef.current = 0;
+            updateTutorSpeakingState(false);
+            clearInterval(speakingCheckRef.current);
+            speakingCheckRef.current = null;
+          }
+        }, 200);
+      }
     } catch (error) {
       console.error("[LiveSession] enqueueAudio failed", error);
       onError?.("Audio playback decode failed.");
@@ -224,7 +284,14 @@ const LiveSession = forwardRef(function LiveSession(
 
     emitStatus("connecting");
 
-    const targetUrl = wsUrl();
+    if (wsCandidatesRef.current.length === 0) {
+      wsCandidatesRef.current = wsUrls();
+    }
+
+    const candidates = wsCandidatesRef.current;
+    const targetIndex = reconnectAttemptRef.current % candidates.length;
+    const targetUrl = candidates[targetIndex];
+
     wsTargetRef.current = targetUrl;
     const socket = new WebSocket(targetUrl);
     wsRef.current = socket;
@@ -233,6 +300,7 @@ const LiveSession = forwardRef(function LiveSession(
     socket.onopen = () => {
       reconnectAttemptRef.current = 0;
       emitStatus("connected");
+      onError?.("");
     };
 
     socket.onmessage = async (event) => {
@@ -284,9 +352,6 @@ const LiveSession = forwardRef(function LiveSession(
 
           case "cube_state_update":
             onCubeState?.(message.cubeState);
-            if (message.move) {
-              onInstruction?.(message.move);
-            }
             break;
 
           case "move_history_update":
@@ -319,10 +384,19 @@ const LiveSession = forwardRef(function LiveSession(
             if (Array.isArray(message.solution) && message.solution.length) {
               onTranscriptEntry?.({
                 speaker: "cubey",
-                text: `Full solution preview: ${message.solution.join(" ")}`,
+                text: `Solution preview: ${message.solution.join(" ")} (${message.solution.length} moves)`,
                 ts: new Date().toISOString()
               });
             }
+            break;
+
+          case "solve_complete":
+            onTranscriptEntry?.({
+              speaker: "cubey",
+              text: `🎉 Cube solved in ${message.totalMoves} moves!`,
+              ts: new Date().toISOString()
+            });
+            onSolveComplete?.();
             break;
 
           default:
@@ -350,12 +424,16 @@ const LiveSession = forwardRef(function LiveSession(
       }
 
       reconnectAttemptRef.current += 1;
-      if (reconnectAttemptRef.current >= 3) {
+      const candidateCount = Math.max(1, wsCandidatesRef.current.length);
+      if (reconnectAttemptRef.current >= candidateCount) {
         onError?.(
-          `Connection lost. Retrying... Backend endpoint: ${wsTargetRef.current}`
+          `Connection lost. Retrying across backend endpoints. Last endpoint: ${wsTargetRef.current}`
         );
       }
-      const delayMs = Math.min(8000, 800 * 2 ** reconnectAttemptRef.current);
+      const delayMs =
+        reconnectAttemptRef.current <= candidateCount
+          ? 450
+          : Math.min(8000, 800 * 2 ** (reconnectAttemptRef.current - candidateCount));
 
       reconnectTimerRef.current = setTimeout(() => {
         setupWebSocket();
@@ -380,6 +458,13 @@ const LiveSession = forwardRef(function LiveSession(
             return;
           }
 
+          // Avoid feeding speaker playback back into Gemini while Cubey is talking.
+          // User barge-in is handled by the local interrupt detector below.
+          const speaking = isPlayingRef.current || currentSourcesRef.current.length > 0;
+          if (speaking) {
+            return;
+          }
+
           const packet = encodeBinaryEnvelope(
             { type: "audio_chunk", mimeType: "audio/pcm;rate=16000" },
             chunk
@@ -390,17 +475,36 @@ const LiveSession = forwardRef(function LiveSession(
         (level) => {
           onMicLevel?.(level);
 
-          const speaking = isPlayingRef.current || playbackQueueRef.current.length > 0;
+          const speaking = isPlayingRef.current || currentSourcesRef.current.length > 0;
           if (!speaking) {
+            aboveInterruptThresholdSinceRef.current = null;
             return;
           }
 
           const now = Date.now();
-          if (level > INTERRUPT_THRESHOLD && now - lastInterruptMsRef.current > 600) {
-            lastInterruptMsRef.current = now;
-            sendJson({ type: "interrupt" });
-            stopAudioPlayback();
+          if (now - tutorSpeechStartedAtRef.current < INTERRUPT_ARM_DELAY_MS) {
+            aboveInterruptThresholdSinceRef.current = null;
+            return;
           }
+
+          if (level > INTERRUPT_THRESHOLD) {
+            if (!aboveInterruptThresholdSinceRef.current) {
+              aboveInterruptThresholdSinceRef.current = now;
+            }
+
+            const heldForMs = now - aboveInterruptThresholdSinceRef.current;
+            const cooldownSatisfied = now - lastInterruptMsRef.current > INTERRUPT_COOLDOWN_MS;
+
+            if (heldForMs >= INTERRUPT_HOLD_MS && cooldownSatisfied) {
+              lastInterruptMsRef.current = now;
+              aboveInterruptThresholdSinceRef.current = null;
+              sendJson({ type: "interrupt" });
+              stopAudioPlayback();
+            }
+            return;
+          }
+
+          aboveInterruptThresholdSinceRef.current = null;
         }
       );
 
@@ -513,16 +617,22 @@ const LiveSession = forwardRef(function LiveSession(
         sendJson({ type: "solve_request" });
       },
 
+      autoSolve() {
+        sendJson({ type: "auto_solve" });
+      },
+
       async endSession() {
         await cleanupMediaAndSocket();
         emitStatus("disconnected");
       }
-    }),
-    []
+    })
   );
 
   useEffect(() => {
     unmountedRef.current = false;
+    wsCandidatesRef.current = wsUrls();
+    reconnectAttemptRef.current = 0;
+    wsTargetRef.current = "";
 
     if (!active) {
       cleanupMediaAndSocket();
@@ -544,7 +654,7 @@ const LiveSession = forwardRef(function LiveSession(
   }, [active]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-2xl border border-[#d2d8e3] bg-white/90">
+    <div className="relative h-full w-full overflow-hidden rounded-[20px] bg-white/40 shadow-inner">
       <video
         ref={videoRef}
         className="h-full w-full object-cover"

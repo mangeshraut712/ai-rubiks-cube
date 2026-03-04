@@ -166,6 +166,7 @@ export default function CubeViewer({ cubeState, activeMove }) {
             color: colorForFaceLetter(color),
             roughness: 0.35,
             metalness: 0.1,
+            side: THREE.DoubleSide,
             emissive: new THREE.Color("#000000"),
             emissiveIntensity: 0
           });

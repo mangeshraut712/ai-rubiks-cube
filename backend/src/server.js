@@ -246,6 +246,16 @@ app.get("*", (req, res, next) => {
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/ws" });
 
+wss.on("error", (error) => {
+  // During startup, ws can mirror server listen errors before fallback logic retries.
+  if (error?.code === "EADDRINUSE") {
+    console.warn("[ws] WebSocket server address in use during startup.");
+    return;
+  }
+
+  console.error("[ws] WebSocket server error", error);
+});
+
 function sendJson(ws, payload) {
   if (ws.readyState !== WebSocket.OPEN) {
     return;
@@ -364,6 +374,9 @@ wss.on("connection", async (ws, req) => {
   let lastVideoFrame = null;
   let closed = false;
   let demoAutoplayTimer = null;
+  let tutorIsThinking = false;
+  let lastTutorResponseAt = 0;
+  let lastTutorNormalizedText = "";
 
   let gemini = null;
 
@@ -417,6 +430,7 @@ wss.on("connection", async (ws, req) => {
 
     // Handle AI thinking state changes
     gemini.onThinkingChange((isThinking) => {
+      tutorIsThinking = Boolean(isThinking);
       sendJson(ws, {
         type: "thinking",
         thinking: isThinking
@@ -424,6 +438,32 @@ wss.on("connection", async (ws, req) => {
     });
 
     gemini.onTextResponse((text) => {
+      const normalizedText = String(text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s']/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const now = Date.now();
+      const hasPrevious = Boolean(lastTutorNormalizedText);
+      const isExactDuplicate = normalizedText && normalizedText === lastTutorNormalizedText;
+      const isContainedDuplicate =
+        hasPrevious &&
+        normalizedText &&
+        (lastTutorNormalizedText.includes(normalizedText) ||
+          normalizedText.includes(lastTutorNormalizedText));
+      const isLongReplayPrefix =
+        hasPrevious &&
+        normalizedText.length >= 30 &&
+        lastTutorNormalizedText.length >= 30 &&
+        now - lastTutorResponseAt < 12_000 &&
+        normalizedText.split(" ").slice(0, 8).join(" ") ===
+          lastTutorNormalizedText.split(" ").slice(0, 8).join(" ");
+
+      if (isExactDuplicate || isContainedDuplicate || isLongReplayPrefix) {
+        return;
+      }
+      lastTutorNormalizedText = normalizedText;
+      lastTutorResponseAt = now;
       pushTranscript(sessionRecord, "cubey", text);
 
       sendJson(ws, {
@@ -462,7 +502,14 @@ wss.on("connection", async (ws, req) => {
       }
     });
 
-    gemini.onInterruption(() => {
+    gemini.onInterruption((reason) => {
+      // Only propagate explicit user/local interruption signals to the UI.
+      // Model-level interruption flags can appear mid-stream and should not
+      // forcibly stop playback client-side.
+      if (reason === "model_interrupted") {
+        return;
+      }
+
       sendJson(ws, { type: "interruption" });
     });
 
@@ -488,6 +535,12 @@ wss.on("connection", async (ws, req) => {
 
       demoAutoplayTimer = setInterval(() => {
         if (closed || !gemini || challengeMode) {
+          return;
+        }
+        if (tutorIsThinking) {
+          return;
+        }
+        if (Date.now() - lastTutorResponseAt < 2400) {
           return;
         }
 
@@ -601,9 +654,14 @@ wss.on("connection", async (ws, req) => {
             sessionRecord.moveHistory.push({ move, ts: new Date().toISOString(), source: "user" });
 
             sendJson(ws, {
+              type: "move_instruction",
+              move,
+              face: move[0]
+            });
+
+            sendJson(ws, {
               type: "cube_state_update",
-              cubeState: cubeState.getSnapshot(),
-              move
+              cubeState: cubeState.getSnapshot()
             });
 
             sendJson(ws, {
@@ -679,6 +737,109 @@ wss.on("connection", async (ws, req) => {
             solution,
             length: solution.length
           });
+
+          // Also notify user via transcript
+          if (solution.length > 0) {
+            const solutionText = `Solution found: ${solution.join(" ")} (${solution.length} moves). Click "Auto Solve" to watch me solve it step by step!`;
+            sendJson(ws, {
+              type: "text_response",
+              text: solutionText,
+              ts: new Date().toISOString()
+            });
+            pushTranscript(sessionRecord, "cubey", solutionText);
+          }
+          break;
+        }
+
+        case "auto_solve": {
+          const solveFaceString = cubeState.toFaceString();
+          const solutionMoves = solveCube(solveFaceString);
+
+          if (solutionMoves.length === 0) {
+            sendJson(ws, {
+              type: "text_response",
+              text: "The cube is already solved! 🎉",
+              ts: new Date().toISOString()
+            });
+            sendJson(ws, {
+              type: "solve_complete",
+              totalMoves: 0
+            });
+            break;
+          }
+
+          sendJson(ws, {
+            type: "text_response",
+            text: `Starting auto-solve: ${solutionMoves.length} moves. Watch the cube!`,
+            ts: new Date().toISOString()
+          });
+          pushTranscript(sessionRecord, "cubey", `Auto-solving: ${solutionMoves.join(" ")}`);
+
+          // Ask Gemini to coach the solve
+          if (gemini && typeof gemini.sendTextTurn === "function") {
+            gemini.sendTextTurn(
+              `I am now auto-solving the cube. The solution is: ${solutionMoves.join(" ")}. Coach the user through each move enthusiastically! Start with the first move ${solutionMoves[0]}.`,
+              true
+            );
+          }
+
+          // Execute moves one-by-one with delay for animation
+          let solveIndex = 0;
+          const solveInterval = setInterval(() => {
+            if (closed || solveIndex >= solutionMoves.length) {
+              clearInterval(solveInterval);
+              if (!closed && solveIndex >= solutionMoves.length) {
+                sendJson(ws, {
+                  type: "text_response",
+                  text: "🎉 Cube solved! Great job watching along!",
+                  ts: new Date().toISOString()
+                });
+                sendJson(ws, {
+                  type: "solve_complete",
+                  totalMoves: solutionMoves.length
+                });
+                pushTranscript(sessionRecord, "cubey", "Cube solved!");
+              }
+              return;
+            }
+
+            const move = solutionMoves[solveIndex];
+            try {
+              cubeState.applyMove(move);
+              sessionRecord.moveHistory.push({
+                move,
+                ts: new Date().toISOString(),
+                source: "auto_solve"
+              });
+
+              // Send move instruction to trigger 3D animation
+              sendJson(ws, {
+                type: "move_instruction",
+                move,
+                face: move[0],
+                autoSolve: true,
+                step: solveIndex + 1,
+                total: solutionMoves.length
+              });
+
+              // Send updated cube state
+              sendJson(ws, {
+                type: "cube_state_update",
+                cubeState: cubeState.getSnapshot(),
+                move
+              });
+
+              sendJson(ws, {
+                type: "move_history_update",
+                moveHistory: sessionRecord.moveHistory
+              });
+            } catch (error) {
+              console.error("[ws] auto-solve move failed", { move, error });
+            }
+
+            solveIndex += 1;
+          }, 1800); // 1.8s per move for smooth animation
+
           break;
         }
 
@@ -714,10 +875,13 @@ wss.on("connection", async (ws, req) => {
   });
 
   ws.on("close", () => {
-    sendJson(ws, {
-      type: "session_record",
-      record: sessionRecord
-    });
+    // Note: socket is already closed here, cannot send.
+    // Log the session record for debugging / auditing.
+    if (sessionRecord.transcript.length > 0) {
+      console.log(
+        `[ws] Session ${sessionRecord.sessionId} ended. Moves: ${sessionRecord.moveHistory.length}, Transcript lines: ${sessionRecord.transcript.length}`
+      );
+    }
 
     safeClose();
   });
@@ -751,9 +915,11 @@ server.on("listening", () => {
 });
 
 server.on("error", (error) => {
+  const shouldAllowFallback = !hasExplicitPort || PORT === 8080;
+
   if (
     error?.code === "EADDRINUSE" &&
-    !hasExplicitPort &&
+    shouldAllowFallback &&
     listenAttemptIndex < fallbackPorts.length - 1
   ) {
     const occupiedPort = fallbackPorts[listenAttemptIndex];

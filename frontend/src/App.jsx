@@ -7,6 +7,14 @@ import { createSolvedCubeState } from "./utils/cubeColors";
 
 const CubeViewer = lazy(() => import("./components/CubeViewer"));
 
+function normalizeTranscriptText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s']/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export default function App() {
   const sessionRef = useRef(null);
 
@@ -26,6 +34,9 @@ export default function App() {
   const [errorText, setErrorText] = useState("");
   const [startTimestamp, setStartTimestamp] = useState(null);
   const [isThinking, setIsThinking] = useState(false);
+  const [autoSolving, setAutoSolving] = useState(false);
+  const moveQueueRef = useRef([]);
+  const moveAnimTimerRef = useRef(null);
 
   useEffect(() => {
     if (!sessionActive || !startTimestamp) {
@@ -56,6 +67,12 @@ export default function App() {
     setTimerSeconds(0);
     setErrorText("");
     setStartTimestamp(Date.now());
+    setAutoSolving(false);
+    moveQueueRef.current = [];
+    if (moveAnimTimerRef.current) {
+      clearTimeout(moveAnimTimerRef.current);
+      moveAnimTimerRef.current = null;
+    }
   }
 
   function startSession() {
@@ -75,11 +92,53 @@ export default function App() {
       return;
     }
 
-    setTranscript((prev) => [...prev, entry]);
+    setTranscript((prev) => {
+      const last = prev[prev.length - 1];
+      const isDuplicateCubeyLine =
+        entry.speaker === "cubey" &&
+        last?.speaker === "cubey" &&
+        normalizeTranscriptText(last.text) === normalizeTranscriptText(entry.text);
+
+      if (isDuplicateCubeyLine) {
+        return prev;
+      }
+
+      return [...prev, entry];
+    });
 
     if (entry.speaker === "cubey") {
       setLatestInstruction(entry.text);
     }
+  }
+
+  // Move queue: processes moves one-by-one with animation delay
+  function enqueueMove(move) {
+    if (!move) return;
+    moveQueueRef.current.push(move);
+    drainMoveQueue();
+  }
+
+  function drainMoveQueue() {
+    if (moveAnimTimerRef.current) return; // Already processing
+    if (moveQueueRef.current.length === 0) return;
+
+    const next = moveQueueRef.current.shift();
+    setActiveMove(next);
+
+    // Wait for animation to complete before showing next move
+    moveAnimTimerRef.current = setTimeout(() => {
+      moveAnimTimerRef.current = null;
+      if (moveQueueRef.current.length > 0) {
+        drainMoveQueue();
+      } else {
+        setActiveMove(""); // Clear highlight when queue empty
+      }
+    }, 600); // Match CubeViewer animation duration (420ms + buffer)
+  }
+
+  function handleAutoSolve() {
+    setAutoSolving(true);
+    sessionRef.current?.autoSolve?.();
   }
 
   function downloadSessionRecord() {
@@ -203,16 +262,18 @@ export default function App() {
   return (
     <main className="min-h-screen px-4 py-4 text-[#202124] sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-col gap-4">
-        <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#d2d8e3] bg-white/96 p-4 shadow-[0_12px_28px_rgba(24,39,75,0.12)] backdrop-blur">
+        <header className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-white/60 bg-white/70 p-4 shadow-[0_8px_32px_rgba(32,33,36,0.06)] backdrop-blur-xl">
           <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-[#5f6368]">Gemini Rubik&apos;s Tutor</div>
-            <div className="text-xl font-bold text-[#202124]">Live Cube Coaching Session</div>
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#5f6368]">
+              <span className="gemini-text-gradient">✦</span> Gemini Rubik&apos;s Tutor
+            </div>
+            <div className="text-[1.2rem] font-bold text-[#202124]">Live Cube Coaching Session</div>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => sessionRef.current?.requestHint?.()}
-              className="rounded-xl border border-[#f4ca64] bg-[#fff7df] px-4 py-2 text-sm font-semibold text-[#6a5413] transition hover:bg-[#ffefbe]"
+              className="rounded-[12px] border border-[#fbbc04]/30 bg-[#fbbc04]/10 px-4 py-2 text-[13px] font-bold text-[#8f6a00] shadow-sm transition hover:bg-[#fbbc04]/20"
             >
               Hint
             </button>
@@ -220,9 +281,9 @@ export default function App() {
             <button
               type="button"
               onClick={toggleChallengeMode}
-              className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${challengeMode
-                ? "border-[#28a745] bg-[#e9f7ef] text-[#1f6e35]"
-                : "border-[#d2d8e3] bg-[#f6f8fc] text-[#475467]"
+              className={`rounded-[12px] border px-4 py-2 text-[13px] font-bold shadow-sm transition ${challengeMode
+                ? "border-[#34a853]/30 bg-[#34a853]/10 text-[#1f6e35]"
+                : "border-[#e8eaed] bg-white text-[#5f6368] hover:bg-[#f8f9fa]"
                 }`}
             >
               {challengeMode ? "Challenge On" : "Challenge Mode"}
@@ -231,9 +292,21 @@ export default function App() {
             <button
               type="button"
               onClick={() => sessionRef.current?.solvePreview?.()}
-              className="rounded-xl border border-[#b8cdfa] bg-[#edf4ff] px-4 py-2 text-sm font-semibold text-[#1f3a68] transition hover:bg-[#deebff]"
+              className="rounded-[12px] border border-[#4285f4]/30 bg-[#4285f4]/10 px-4 py-2 text-[13px] font-bold text-[#1a73e8] shadow-sm transition hover:bg-[#4285f4]/20"
             >
               Solve Preview
+            </button>
+
+            <button
+              type="button"
+              onClick={handleAutoSolve}
+              disabled={autoSolving}
+              className={`rounded-[12px] border px-4 py-2 text-[13px] font-bold shadow-sm transition ${autoSolving
+                ? "border-[#34a853]/30 bg-[#34a853]/10 text-[#1f6e35] animate-pulse cursor-wait"
+                : "border-[#34a853]/50 bg-[#34a853]/20 text-[#1f6e35] hover:bg-[#34a853]/30"
+                }`}
+            >
+              {autoSolving ? "⏳ Solving..." : "✨ Auto Solve"}
             </button>
           </div>
         </header>
@@ -251,8 +324,8 @@ export default function App() {
         ) : null}
 
         <section className="grid min-h-[64vh] grid-cols-1 gap-4 lg:grid-cols-[1.45fr_1fr]">
-          <div className="relative flex min-h-[420px] flex-col overflow-hidden rounded-2xl border border-[#d2d8e3] bg-white/96 p-3 shadow-[0_14px_30px_rgba(24,39,75,0.12)]">
-            <div className="h-full min-h-[360px]">
+          <div className="relative flex min-h-[420px] flex-col overflow-hidden rounded-[24px] border border-white/60 bg-white/70 p-3 shadow-[0_8px_32px_rgba(32,33,36,0.08)] backdrop-blur-xl">
+            <div className="h-full min-h-[360px] overflow-hidden rounded-[18px]">
               <Suspense
                 fallback={
                   <div className="flex h-full items-center justify-center rounded-2xl border border-[#d2d8e3] bg-[#eef4fe] text-sm font-semibold text-[#5f6368]">
@@ -264,7 +337,7 @@ export default function App() {
               </Suspense>
             </div>
 
-            <div className="absolute right-5 top-5 h-40 w-56 rounded-2xl border border-[#d2d8e3] bg-white/70 p-1 shadow-[0_12px_22px_rgba(24,39,75,0.16)] sm:h-44 sm:w-64">
+            <div className="absolute right-5 top-5 h-40 w-56 rounded-[22px] border border-white/60 bg-white/50 p-1.5 shadow-[0_8px_24px_rgba(32,33,36,0.12)] backdrop-blur-2xl sm:h-44 sm:w-64">
               <LiveSession
                 ref={sessionRef}
                 active={sessionActive}
@@ -272,15 +345,20 @@ export default function App() {
                 onMicLevel={setMicLevel}
                 onTutorSpeakingChange={setIsTutorSpeaking}
                 onTranscriptEntry={handleTranscriptEntry}
-                onInstruction={setActiveMove}
+                onInstruction={enqueueMove}
                 onCubeState={setCubeState}
                 onMoveHistory={setMoveHistory}
                 onHint={setHintText}
                 onThinkingChange={setIsThinking}
                 onChallengeUpdate={(payload) => {
                   setChallengeMessage(payload.message || "");
+                  if (payload.enabled) {
+                    setAutoSolving(false);
+                    moveQueueRef.current = [];
+                  }
                 }}
                 onError={setErrorText}
+                onSolveComplete={() => setAutoSolving(false)}
               />
             </div>
           </div>
@@ -292,7 +370,7 @@ export default function App() {
           />
         </section>
 
-        <footer className="space-y-3">
+        <footer className="space-y-3 pb-6">
           <StatusBar
             connectionStatus={connectionStatus}
             micLevel={micLevel}
@@ -306,17 +384,17 @@ export default function App() {
             <button
               type="button"
               onClick={downloadSessionRecord}
-              className="rounded-xl border border-[#d2d8e3] bg-white px-4 py-2 text-sm font-semibold text-[#3c4043] transition hover:bg-[#f2f5fb]"
+              className="rounded-[12px] border border-white/60 bg-white/70 px-5 py-2.5 text-[12px] font-bold tracking-wide text-[#5f6368] shadow-sm backdrop-blur-md transition hover:bg-white"
             >
-              Download Session JSON
+              DOWNLOAD SESSION JSON
             </button>
 
             <button
               type="button"
               onClick={endSession}
-              className="rounded-xl border border-[#f2bbb4] bg-[#fff1f0] px-4 py-2 text-sm font-semibold text-[#7a2d24] transition hover:bg-[#fee2de]"
+              className="rounded-[12px] border border-[#ea4335]/30 bg-[#ea4335]/10 px-5 py-2.5 text-[12px] font-bold tracking-wide text-[#ea4335] shadow-sm backdrop-blur-md transition hover:bg-[#ea4335]/20"
             >
-              End Session
+              END SESSION
             </button>
           </div>
         </footer>

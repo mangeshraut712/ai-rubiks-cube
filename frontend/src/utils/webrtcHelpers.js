@@ -85,7 +85,7 @@ export function captureVideoFrame(videoEl, canvasEl, quality = 0.7, checkMotion 
   canvasEl.width = width;
   canvasEl.height = height;
 
-  const ctx = canvasEl.getContext("2d", { willReadFrequently: false });
+  const ctx = canvasEl.getContext("2d", { willReadFrequently: true });
   if (!ctx) {
     return null;
   }

@@ -6,6 +6,16 @@ const DEFAULT_PRIMARY_MODEL =
   process.env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-preview-09-2025";
 const DEFAULT_FALLBACK_MODEL =
   process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash";
+const DEFAULT_SILENCE_DURATION_MS = 1800;
+const DEFAULT_MAX_OUTPUT_TOKENS = 1536;
+
+function toPositiveInt(value, fallback) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return Math.floor(parsed);
+}
 
 /**
  * Wraps Gemini Live API bidirectional streaming for audio + video tutoring.
@@ -33,6 +43,10 @@ export class GeminiLiveClient {
     this.emitter = new EventEmitter();
     this.isOpen = false;
     this.frameInputMode = "auto";
+    this.pendingTranscript = "";
+    this.pendingPartText = "";
+    this.lastDeliveredText = "";
+    this.lastDeliveredNormalized = "";
   }
 
   /**
@@ -41,6 +55,29 @@ export class GeminiLiveClient {
    * @returns {Promise<void>}
    */
   async startSession() {
+    const silenceDurationMs = toPositiveInt(
+      process.env.GEMINI_SILENCE_DURATION_MS,
+      DEFAULT_SILENCE_DURATION_MS
+    );
+    const maxOutputTokens = toPositiveInt(
+      process.env.GEMINI_MAX_OUTPUT_TOKENS,
+      DEFAULT_MAX_OUTPUT_TOKENS
+    );
+    const voiceName = String(process.env.GEMINI_VOICE_NAME || "").trim();
+    const voiceLang = String(process.env.GEMINI_VOICE_LANG || "en-US").trim() || "en-US";
+    const speechConfig = voiceName
+      ? {
+        languageCode: voiceLang,
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName
+          }
+        }
+      }
+      : {
+        languageCode: voiceLang
+      };
+
     const candidateModels = Array.from(new Set([
       this.model,
       process.env.GEMINI_LIVE_MODEL,
@@ -65,14 +102,24 @@ export class GeminiLiveClient {
           config: {
             responseModalities: [Modality.AUDIO],
             outputAudioTranscription: {},
+            realtimeInputConfig: {
+              automaticActivityDetection: {
+                startOfSpeechSensitivity: "START_SENSITIVITY_LOW",
+                endOfSpeechSensitivity: "END_SENSITIVITY_LOW",
+                prefixPaddingMs: 300,
+                silenceDurationMs
+              },
+              activityHandling: "START_OF_ACTIVITY_INTERRUPTS",
+              turnCoverage: "TURN_INCLUDES_ONLY_ACTIVITY"
+            },
+            speechConfig,
             systemInstruction: {
               role: "system",
               parts: [{ text: this.systemPrompt }]
             },
-            // Set generation controls directly on LiveConnectConfig.
             temperature: 0.7,
             topP: 0.9,
-            maxOutputTokens: 256
+            maxOutputTokens
           },
           callbacks: {
             onopen: () => {
@@ -285,7 +332,66 @@ export class GeminiLiveClient {
 
     this.session = null;
     this.isOpen = false;
+    this.pendingTranscript = "";
+    this.pendingPartText = "";
+    this.lastDeliveredText = "";
+    this.lastDeliveredNormalized = "";
     this.emitter.removeAllListeners();
+  }
+
+  #mergeText(existing, incoming) {
+    const left = String(existing || "").trim();
+    const right = String(incoming || "").trim();
+
+    if (!right) {
+      return left;
+    }
+    if (!left) {
+      return right;
+    }
+    if (right.startsWith(left)) {
+      return right;
+    }
+    if (left.endsWith(right)) {
+      return left;
+    }
+    const leftLower = left.toLowerCase();
+    const rightLower = right.toLowerCase();
+
+    if (leftLower.includes(rightLower)) {
+      return left;
+    }
+    if (rightLower.includes(leftLower)) {
+      return right;
+    }
+
+    const maxOverlap = Math.min(left.length, right.length);
+    for (let len = maxOverlap; len >= 8; len -= 1) {
+      if (leftLower.slice(-len) === rightLower.slice(0, len)) {
+        return `${left}${right.slice(len)}`.replace(/\s+/g, " ").trim();
+      }
+    }
+
+    return `${left} ${right}`.replace(/\s+/g, " ").trim();
+  }
+
+  #sanitizeText(text) {
+    let cleaned = String(text || "")
+      .replace(/\*\*/g, "")
+      .replace(/`+/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    cleaned = cleaned.replace(/^as cubey[:,]?\s*/i, "").trim();
+    return cleaned;
+  }
+
+  #normalizeText(text) {
+    return String(text || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s']/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   #handleServerMessage(message) {
@@ -305,6 +411,8 @@ export class GeminiLiveClient {
 
     if (serverContent.interrupted) {
       this.emitter.emit("interruption", "model_interrupted");
+      this.pendingTranscript = "";
+      this.pendingPartText = "";
     }
 
     const outputTranscript =
@@ -312,17 +420,18 @@ export class GeminiLiveClient {
       serverContent.output_audio_transcription?.text ||
       serverContent.outputTranscription?.text ||
       serverContent.output_transcription?.text;
-    const hasOutputTranscript = Boolean(outputTranscript?.trim());
+    const normalizedOutputTranscript = outputTranscript?.trim() || "";
+    const hasOutputTranscript = Boolean(normalizedOutputTranscript);
 
     if (hasOutputTranscript) {
-      this.emitter.emit("text", outputTranscript.trim());
+      this.pendingTranscript = this.#mergeText(this.pendingTranscript, normalizedOutputTranscript);
     }
 
     const parts = serverContent.modelTurn?.parts || serverContent.model_turn?.parts || [];
     for (const part of parts) {
       const text = part?.text;
       if (!hasOutputTranscript && text?.trim()) {
-        this.emitter.emit("text", text.trim());
+        this.pendingPartText = this.#mergeText(this.pendingPartText, text.trim());
       }
 
       const inlineData = part?.inlineData || part?.inline_data;
@@ -332,6 +441,35 @@ export class GeminiLiveClient {
       if (data && mimeType?.startsWith("audio/")) {
         this.emitter.emit("audio", { data, mimeType });
       }
+    }
+
+    const turnComplete = Boolean(serverContent.turnComplete || serverContent.turn_complete);
+    const turnCompleteReason =
+      serverContent.turnCompleteReason || serverContent.turn_complete_reason || "";
+    if (turnComplete) {
+      const finalText = this.#sanitizeText(this.pendingTranscript || this.pendingPartText || "");
+      const normalizedFinalText = this.#normalizeText(finalText);
+
+      // Check if this text is substantially different from last delivered.
+      // Use substring containment check to catch partial repeats.
+      const isDuplicate =
+        normalizedFinalText &&
+        (normalizedFinalText === this.lastDeliveredNormalized ||
+          this.lastDeliveredNormalized.includes(normalizedFinalText) ||
+          normalizedFinalText.includes(this.lastDeliveredNormalized));
+
+      const canEmitText =
+        turnCompleteReason !== "NEED_MORE_INPUT" &&
+        normalizedFinalText.length >= 3 &&
+        !isDuplicate;
+
+      if (canEmitText) {
+        this.emitter.emit("text", finalText);
+        this.lastDeliveredText = finalText;
+        this.lastDeliveredNormalized = normalizedFinalText;
+      }
+      this.pendingTranscript = "";
+      this.pendingPartText = "";
     }
   }
 }

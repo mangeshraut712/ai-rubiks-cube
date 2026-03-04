@@ -36,11 +36,13 @@ AI-powered Rubik's Cube tutoring with Google Gemini Live API - real-time voice +
 | Feature | Description |
 |---------|-------------|
 | **Live Multimodal** | Real-time audio + video streaming via Gemini Live API |
-| **Voice Interaction** | Natural conversation about cube solving |
-| **3D Visualization** | Interactive Three.js Rubik's Cube |
-| **Smart Hints** | AI-generated contextual hints |
-| **Challenge Mode** | Timed solve challenges with scoring |
-| **Demo Mode** | Works without API key for testing |
+| **Auto Solve Agent** | Step-by-step 3D animated solving with real-time voice coaching |
+| **Voice Interaction** | Natural conversation about cube solving (gapless playback) |
+| **3D Visualization** | Interactive Three.js Rubik's Cube synchronized with voice |
+| **Smart Hints** | AI-generated contextual hints using fallback vision models |
+| **Challenge Mode** | Timed solve challenges with scoring and random scrambles |
+| **Premium UI** | Frost glassmorphism design with Google-inspired typography |
+| **Security Tested** | Validated against the Vibe Coding Security framework (`SECURITY.md`) |
 
 ---
 
@@ -161,6 +163,30 @@ Gemini-Rubiks-Tutor/
 | `DEMO_MODE` | Enable demo mode (default: false) | No |
 
 *Required unless `DEMO_MODE=true`
+
+---
+
+## 🔐 Security Gate
+
+- Security checklist: [`SECURITY.md`](SECURITY.md)
+- Agent guardrail: [`AGENTS.md`](AGENTS.md)
+- Automated gate script: `./scripts/security-check.sh`
+- Security memory log: `.runtime/security-memory.log`
+
+Enable commit/push hooks once per clone:
+
+```bash
+./scripts/install-git-hooks.sh
+```
+
+Manual checks:
+
+```bash
+./scripts/security-check.sh --scope prompt
+./scripts/security-check.sh --scope commit
+./scripts/security-check.sh --scope push
+./scripts/security-check.sh --scope deploy
+```
 
 ---
 

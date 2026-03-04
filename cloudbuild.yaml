@@ -4,8 +4,8 @@ substitutions:
   _REPOSITORY: gemini-rubiks-tutor
   _DEMO_MODE: "true"
   _CORS_ORIGIN: "*"
-  _GEMINI_LIVE_MODEL: gemini-2.0-flash-live-preview-04-09
-  _GEMINI_FALLBACK_MODEL: gemini-2.0-flash-exp
+  _GEMINI_LIVE_MODEL: gemini-2.5-flash-native-audio-preview-09-2025
+  _GEMINI_FALLBACK_MODEL: gemini-2.5-flash
 
 steps:
   - id: Build Image
@@ -21,6 +21,19 @@ steps:
     args:
       - push
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+
+  - id: Security Gate
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    env:
+      - SECURITY_CORS_ORIGIN=${_CORS_ORIGIN}
+      - SECURITY_DEMO_MODE=${_DEMO_MODE}
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        chmod +x scripts/security-check.sh
+        ./scripts/security-check.sh --scope deploy --ci
 
   - id: Deploy Cloud Run
     name: gcr.io/google.com/cloudsdktool/cloud-sdk

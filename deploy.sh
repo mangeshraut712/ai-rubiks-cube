@@ -13,8 +13,13 @@ REPO_NAME="gemini-rubiks-tutor"
 IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${SERVICE_NAME}:latest"
 DEMO_MODE_VALUE="${DEMO_MODE_VALUE:-true}"
 CORS_ORIGIN_VALUE="${CORS_ORIGIN_VALUE:-*}"
-GEMINI_LIVE_MODEL_VALUE="${GEMINI_LIVE_MODEL_VALUE:-gemini-2.0-flash-live-preview-04-09}"
-GEMINI_FALLBACK_MODEL_VALUE="${GEMINI_FALLBACK_MODEL_VALUE:-gemini-2.0-flash-exp}"
+GEMINI_LIVE_MODEL_VALUE="${GEMINI_LIVE_MODEL_VALUE:-gemini-2.5-flash-native-audio-preview-09-2025}"
+GEMINI_FALLBACK_MODEL_VALUE="${GEMINI_FALLBACK_MODEL_VALUE:-gemini-2.5-flash}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+SECURITY_CORS_ORIGIN="${CORS_ORIGIN_VALUE}" \
+SECURITY_DEMO_MODE="${DEMO_MODE_VALUE}" \
+"${SCRIPT_DIR}/scripts/security-check.sh" --scope deploy
 
 echo "Setting gcloud project to ${PROJECT_ID}"
 gcloud config set project "${PROJECT_ID}" >/dev/null
