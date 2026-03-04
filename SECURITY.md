@@ -10,7 +10,7 @@ This repository uses a lightweight security gate for four moments:
 Run manually at any time:
 
 ```bash
-./scripts/security-check.sh --scope prompt
+./scripts/security-check.sh --scope prompt --context "short summary of current user request"
 ./scripts/security-check.sh --scope commit
 ./scripts/security-check.sh --scope push
 ./scripts/security-check.sh --scope deploy

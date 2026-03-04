@@ -3,10 +3,11 @@ set -euo pipefail
 
 SCOPE="general"
 CI_MODE="false"
+CONTEXT_NOTE="${SECURITY_CONTEXT:-}"
 
 usage() {
   cat <<'EOF'
-Usage: ./scripts/security-check.sh [--scope <prompt|commit|push|deploy>] [--ci]
+Usage: ./scripts/security-check.sh [--scope <prompt|commit|push|deploy>] [--context "<note>"] [--ci]
 
 Scopes:
   prompt  - run before starting work on a new prompt/request
@@ -27,6 +28,15 @@ while [[ $# -gt 0 ]]; do
       SCOPE="$2"
       shift 2
       ;;
+    --context)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --context"
+        usage
+        exit 2
+      fi
+      CONTEXT_NOTE="$2"
+      shift 2
+      ;;
     --ci)
       CI_MODE="true"
       shift
@@ -42,6 +52,16 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+case "$SCOPE" in
+  prompt|commit|push|deploy|general)
+    ;;
+  *)
+    echo "Invalid scope: $SCOPE"
+    usage
+    exit 2
+    ;;
+esac
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
@@ -94,14 +114,19 @@ collect_target_files() {
   fi
 }
 
-readarray -t TARGET_FILES < <(collect_target_files | sed '/^[[:space:]]*$/d')
+while IFS= read -r line; do
+  [[ -n "${line//[[:space:]]/}" ]] || continue
+  TARGET_FILES+=("$line")
+done < <(collect_target_files)
 
 write_memory() {
   local status="$1"
   local ts=""
+  local clean_context=""
   ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  clean_context="$(printf '%s' "$CONTEXT_NOTE" | tr '\n' ' ' | tr -s ' ' | cut -c1-200)"
   {
-    echo "[$ts] scope=$SCOPE status=$status files=${#TARGET_FILES[@]} failures=${#FAILURES[@]} warnings=${#WARNINGS[@]} ci=$CI_MODE"
+    echo "[$ts] scope=$SCOPE status=$status files=${#TARGET_FILES[@]} failures=${#FAILURES[@]} warnings=${#WARNINGS[@]} ci=$CI_MODE context=\"$clean_context\""
     if [[ ${#FAILURES[@]} -gt 0 ]]; then
       for item in "${FAILURES[@]}"; do
         printf '  FAIL: %s\n' "$(printf '%s' "$item" | head -n 1)"
@@ -181,6 +206,10 @@ if [[ "$SCOPE" == "deploy" || "$SCOPE" == "prompt" ]]; then
   effective_demo="${SECURITY_DEMO_MODE:-}"
   if [[ "$SCOPE" == "deploy" && "$effective_demo" == "true" ]]; then
     add_warning "DEMO_MODE is true for deployment. Confirm this is intentional."
+  fi
+
+  if [[ "$SCOPE" == "prompt" && -z "$CONTEXT_NOTE" ]]; then
+    add_warning "No --context note supplied for prompt memory."
   fi
 fi
 
