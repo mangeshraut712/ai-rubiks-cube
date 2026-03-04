@@ -191,9 +191,12 @@ Manual checks:
 
 ---
 
-## ☁️ Cloud Deployment
+## ☁️ Cloud Deployment (Monorepo Setup)
 
-### Google Cloud Run
+This project is a monorepo containing both the React frontend and the Express/WebSocket backend. Because Vercel Serverless Functions do **not** support continuous WebSockets (required for the Gemini Live API), you must deploy the services separately:
+
+### 1. Backend: Google Cloud Run (WebSockets)
+The backend must be hosted on a platform that supports long-lived WebSockets without timeout constraints.
 
 ```bash
 # Using deploy script
@@ -208,12 +211,19 @@ gcloud run deploy gemini-rubiks-tutor \
   --allow-unauthenticated
 ```
 
-### Terraform
+*(Once deployed, copy your Cloud Run URL. e.g., `https://gemini-rubiks-tutor-xxxxxx.a.run.app`)*
 
-```bash
-cd terraform
-terraform init
-terraform plan
+### 2. Frontend: Vercel or GitHub Pages
+You can deploy the Vite React frontend directly from this GitHub repository to Vercel using the provided `vercel.json` configuration.
+
+**Vercel Deployment:**
+1. Import this repository into Vercel.
+2. Vercel will automatically read the `vercel.json` to build the `frontend/` directory.
+3. In your Vercel Project Settings -> Environment Variables, add:
+   - `VITE_BACKEND_ORIGIN` = `https://your-cloud-run-backend-url.run.app` (This tells the frontend where the WebSocket server is located).
+
+**GitHub Pages Deployment:**
+Update `base` in `frontend/vite.config.js` to your repo name, run `npm run build`, and push the `dist/` folder to your `gh-pages` branch.
 terraform apply
 ```
 
