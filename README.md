@@ -24,10 +24,27 @@ AI-powered Rubik's Cube tutoring with Google Gemini Live API - real-time voice +
 
 ---
 
+## 🧩 Two Projects In One Repo
+
+| Project | Purpose | Entry Point |
+|---------|---------|-------------|
+| **Core Project** | Original production-focused Gemini Rubik's Tutor flow | [`projects/core/README.md`](projects/core/README.md) |
+| **Challenge Contest Project** | Contest-focused packaging, checklist, and deployment profile | [`projects/challenge/README.md`](projects/challenge/README.md) |
+
+Quick launch:
+
+```bash
+./scripts/start-core.sh
+./scripts/start-challenge.sh
+```
+
+---
+
 ## 📦 Submission Assets
 
 - Google Cloud IaC proof: [`terraform/main.tf`](terraform/main.tf), [`cloudbuild.yaml`](cloudbuild.yaml), [`deploy.sh`](deploy.sh)
-- Contest profile: [`contest/.env.judges.example`](contest/.env.judges.example), [`contest/deploy-cloud-run.sh`](/contest/deploy-cloud-run.sh)
+- Contest profile: [`contest/.env.judges.example`](contest/.env.judges.example), [`contest/deploy-cloud-run.sh`](contest/deploy-cloud-run.sh)
+- Project split docs: [`projects/core/README.md`](projects/core/README.md), [`projects/challenge/README.md`](projects/challenge/README.md)
 - Submission checklist: [`DEVPOST_SUBMISSION_CHECKLIST.md`](DEVPOST_SUBMISSION_CHECKLIST.md)
 - Blog draft for bonus content: [`devpost-blog-post.md`](devpost-blog-post.md)
 
@@ -92,6 +109,16 @@ npm run dev
 
 Open http://localhost:5173
 
+Or run from repo root with project wrappers:
+
+```bash
+# Original core project
+./scripts/start-core.sh
+
+# Challenge contest profile
+./scripts/start-challenge.sh
+```
+
 ### Real Gemini Mode vs Demo Mode
 
 - `DEMO_MODE=false`: real Gemini Live Agent (voice + multimodal coaching).
@@ -136,6 +163,11 @@ If this fails, restart backend and frontend.
 
 ```
 Gemini-Rubiks-Tutor/
+├── projects/
+│   ├── core/                 # Original core project profile
+│   │   └── README.md
+│   └── challenge/            # Contest project profile
+│       └── README.md
 ├── backend/                  # Express + WebSocket server
 │   ├── src/
 │   │   ├── server.js         # Main server
@@ -155,6 +187,10 @@ Gemini-Rubiks-Tutor/
 ├── contest/                   # Contest profile
 │   ├── .env.judges.example
 │   └── deploy-cloud-run.sh
+├── scripts/                  # Wrapper commands for both projects
+│   ├── start-core.sh
+│   ├── start-challenge.sh
+│   └── deploy-challenge.sh
 ├── terraform/                 # Infrastructure
 │   ├── main.tf
 │   ├── variables.tf
@@ -241,7 +277,11 @@ You can deploy the Vite React frontend directly from this GitHub repository to V
 
 **GitHub Pages Deployment:**
 Update `base` in `frontend/vite.config.js` to your repo name, run `npm run build`, and push the `dist/` folder to your `gh-pages` branch.
-terraform apply
+
+Contest deployment shortcut:
+
+```bash
+./scripts/deploy-challenge.sh YOUR_GCP_PROJECT_ID
 ```
 
 ---

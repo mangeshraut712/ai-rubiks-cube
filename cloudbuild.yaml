@@ -2,7 +2,7 @@ substitutions:
   _REGION: us-central1
   _SERVICE: gemini-rubiks-tutor
   _REPOSITORY: gemini-rubiks-tutor
-  _DEMO_MODE: "true"
+  _DEMO_MODE: "false"
   _CORS_ORIGIN: "https://gemini-rubiks-tutor.vercel.app"
   _GEMINI_LIVE_MODEL: gemini-2.5-flash-native-audio-preview-09-2025
   _GEMINI_FALLBACK_MODEL: gemini-2.5-flash
