@@ -33,7 +33,7 @@ jobs:
 
       - name: Install frontend deps
         working-directory: frontend
-        run: npm install
+        run: npm ci
 
       - name: Lint backend
         working-directory: backend

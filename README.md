@@ -247,7 +247,7 @@ Use these Vercel project settings:
 
 - Framework Preset: `Vite`
 - Root Directory: repository root (same folder as `vercel.json`)
-- Install Command: `npm install --prefix frontend`
+- Install Command: `npm ci --prefix frontend`
 - Build Command: `npm run build --prefix frontend`
 - Output Directory: `frontend/dist`
 
