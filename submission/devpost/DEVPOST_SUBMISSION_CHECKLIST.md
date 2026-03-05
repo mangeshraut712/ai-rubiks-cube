@@ -23,7 +23,7 @@ Selected category: **Live Agents** (real-time Audio/Vision)
 - [ ] Project Overview step completed in Devpost UI (name + elevator pitch)
 - [ ] Project Details step completed in Devpost UI (story + built with + links + media)
 - [ ] Additional Info step completed in Devpost UI (all required fields)
-- [x] Submitter country entered (`USA`)
+- [x] Submitter country entered (`USA`) (`USA`)
 - [x] Category selected: `Live Agents`
 - [x] Project start date entered as `03-01-26`
 - [ ] Terms checkbox checked on final Submit step
@@ -59,7 +59,7 @@ Selected category: **Live Agents** (real-time Audio/Vision)
 
 - [ ] Publish article/video/podcast with explicit contest mention + hashtag
 - [x] Automated cloud deployment scripts / IaC included (`terraform/`, `cloudbuild.yaml`, `deploy.sh`)
-- [x] GDG profile link added: `https://gdg.community.dev/u/m4z8dp/#/about`
+- [x] GDG profile link added: `https://developers.google.com/profile/u/108023457408810667216`
 
 ## 6) Final Runbook
 
