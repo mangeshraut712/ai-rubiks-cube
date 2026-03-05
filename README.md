@@ -63,6 +63,7 @@ Quick launch:
 
 - **Demo video** (YouTube/Vimeo, up to 4 minutes): `<final video URL placeholder>` *(publish the <240-second demo, confirm runtime via `ffprobe` or the player so it stays under 240 seconds, then replace this placeholder with the shareable link before submitting).*  
 - **Public code repository URL**: `https://github.com/mangeshraut712/ai-rubiks-cube`
+- **Live frontend URL (Vercel)**: `https://ai-rubiks-cube.vercel.app/`
 - **Published blog/article** with `#GeminiLiveAgentChallenge`: `TODO: Add URL Here` *(publish + link this post; include the live URL in both the README and Devpost entry to claim the bonus).* 
 - **Live Cloud Run API URL**: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app`
 - **Cloud Run proof artifacts**: [`terraform/main.tf`](terraform/main.tf), [`cloudbuild.yaml`](cloudbuild.yaml), [`deploy.sh`](deploy.sh), [`backend/src/geminiLiveClient.js`](backend/src/geminiLiveClient.js)
@@ -297,6 +298,7 @@ You can deploy the Vite React frontend directly from this GitHub repository to V
 5. Trigger a deployment and verify frontend health:
    - Open the Vercel URL and confirm UI loads.
    - Confirm browser requests to `GET /health` hit your Cloud Run backend successfully.
+   - Current production frontend URL: `https://ai-rubiks-cube.vercel.app/`.
 
 **GitHub Pages Deployment:**
 Update `base` in `frontend/vite.config.js` to your repo name, run `npm run build`, and push the `dist/` folder to your `gh-pages` branch.

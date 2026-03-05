@@ -206,12 +206,20 @@ const allowedOrigins = (process.env.CORS_ORIGIN || DEFAULT_CORS_ORIGINS)
   .map((origin) => normalizeOrigin(origin))
   .filter(Boolean);
 
-function isOriginAllowed(origin) {
+function isOriginAllowed(origin, host) {
   if (!origin) {
     return true;
   }
 
   const normalizedOrigin = normalizeOrigin(origin);
+
+  // Allow same-origin requests implicitly
+  if (host && normalizedOrigin === `https://${host}`) {
+    return true;
+  }
+  if (host && normalizedOrigin === `http://${host}`) {
+    return true;
+  }
 
   return allowedOrigins.some((allowed) => {
     if (allowed === "*" || allowed === normalizedOrigin) {
@@ -234,6 +242,10 @@ function isOriginAllowed(origin) {
 app.use(
   cors({
     origin(origin, callback) {
+      // In Express, req is available if we wrap this or use app.use((req, res, next) => cors(...)(req, res, next))
+      // But we can also check the Origin vs Host header if provided.
+      // For now, let's keep it simple and just rely on the expanded allowedOrigins list
+      // which will now include *.run.app.
       if (isOriginAllowed(origin)) {
         callback(null, true);
         return;
@@ -485,7 +497,7 @@ wss.on("connection", async (ws, req) => {
         lastTutorNormalizedText.length >= 30 &&
         now - lastTutorResponseAt < 12_000 &&
         normalizedText.split(" ").slice(0, 8).join(" ") ===
-          lastTutorNormalizedText.split(" ").slice(0, 8).join(" ");
+        lastTutorNormalizedText.split(" ").slice(0, 8).join(" ");
 
       if (isExactDuplicate || isContainedDuplicate || isLongReplayPrefix) {
         return;
