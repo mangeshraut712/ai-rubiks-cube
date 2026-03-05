@@ -227,13 +227,6 @@ export default function App() {
           </button>
 
           <div className="mt-6 flex flex-col items-center gap-3">
-            <a
-              href="/legacy-2x2-solver/index.html"
-              className="flex items-center justify-center gap-2 text-sm text-[#5f6368] decoration-[#4285f4]/60 hover:text-[#1a73e8] hover:underline"
-            >
-              Looking for our classic 2x2 AI Solver? 🎲
-            </a>
-
             <div className="flex items-center gap-4 text-xs text-[#5f6368]">
               <a
                 href="https://devpost.com/mbr63drexel"

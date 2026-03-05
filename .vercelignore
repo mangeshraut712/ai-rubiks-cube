@@ -1,13 +1,9 @@
 # Keep Vercel upload frontend-focused and small
-.agents/
 .runtime/
 backend/
 cache/
-contest/
 local-cache/
-projects/
 scripts/
-submission/
 terraform/
 
 # Local env and caches

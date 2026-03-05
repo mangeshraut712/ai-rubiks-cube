@@ -154,7 +154,7 @@ declare -a SECRET_SCAN_FILES=()
 for file in "${TARGET_FILES[@]-}"; do
   [[ -f "$file" ]] || continue
   case "$file" in
-    *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.ico|*.gif|*.pdf|*.lock|backend/package-lock.json|frontend/package-lock.json|.env.example|contest/.env.judges.example)
+    *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.ico|*.gif|*.pdf|*.lock|backend/package-lock.json|frontend/package-lock.json|.env.example)
       continue
       ;;
   esac
@@ -189,7 +189,7 @@ tracked_env_hits=""
 tracked_env_hits="$(
   printf '%s\n' "${TARGET_FILES[@]-}" \
     | { if command -v rg >/dev/null 2>&1; then rg '(^|/)\.env($|(\.[^/]+$))'; else grep -E '(^|/)\.env($|(\.[^/]+$))'; fi; } \
-    | { if command -v rg >/dev/null 2>&1; then rg -v '(\.example$|\.sample$|\.template$|contest/\.env\.judges\.example$)'; else grep -Ev '(\.example$|\.sample$|\.template$|contest/\.env\.judges\.example$)'; fi; } \
+    | { if command -v rg >/dev/null 2>&1; then rg -v '(\.example$|\.sample$|\.template$)'; else grep -Ev '(\.example$|\.sample$|\.template$)'; fi; } \
     || true
 )"
 
@@ -205,7 +205,7 @@ if [[ "$SCOPE" == "deploy" || "$SCOPE" == "prompt" ]]; then
     if rg -n \
       -e 'CORS_ORIGIN[^[:cntrl:]]*:-\*' \
       -e 'CORS_ORIGIN[^[:cntrl:]]*[:=][[:space:]]*"\*"' \
-      deploy.sh cloudbuild.yaml contest/deploy-cloud-run.sh terraform/variables.tf >/dev/null 2>&1; then
+      deploy.sh cloudbuild.yaml terraform/variables.tf >/dev/null 2>&1; then
       add_warning "Deployment defaults still allow CORS '*'. Override CORS_ORIGIN_VALUE/_CORS_ORIGIN for production."
     fi
   fi
