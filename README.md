@@ -26,7 +26,7 @@ AI-powered Rubik's Cube tutoring with Google Gemini Live API - real-time voice +
 - Mandatory stack: **Gemini model + Google GenAI SDK/ADK + Google Cloud hosting**
 - Must-submit assets: text description, public repo + spin-up steps, cloud proof, architecture diagram, <4m demo video
 
-This repository is aligned to those constraints and uses the checklist in `DEVPOST_SUBMISSION_CHECKLIST.md` as the source of truth.
+This repository is aligned to those constraints and uses the checklist in `submission/devpost/DEVPOST_SUBMISSION_CHECKLIST.md` as the source of truth.
 
 - ✅ **Category:** Live Agents (Real-time Audio/Vision Interaction)
 - ✅ **Technology:** Gemini Live API with `@google/genai` SDK
@@ -56,8 +56,8 @@ Quick launch:
 - Google Cloud IaC proof: [`terraform/main.tf`](terraform/main.tf), [`cloudbuild.yaml`](cloudbuild.yaml), [`deploy.sh`](deploy.sh)
 - Contest profile: [`contest/.env.judges.example`](contest/.env.judges.example), [`contest/deploy-cloud-run.sh`](contest/deploy-cloud-run.sh)
 - Project split docs: [`projects/core/README.md`](projects/core/README.md), [`projects/challenge/README.md`](projects/challenge/README.md)
-- Submission checklist: [`DEVPOST_SUBMISSION_CHECKLIST.md`](DEVPOST_SUBMISSION_CHECKLIST.md)
-- Blog draft for bonus content: [`devpost-blog-post.md`](devpost-blog-post.md)
+- Submission checklist: [`submission/devpost/DEVPOST_SUBMISSION_CHECKLIST.md`](submission/devpost/DEVPOST_SUBMISSION_CHECKLIST.md)
+- Blog draft for bonus content: [`submission/devpost/devpost-blog-post.md`](submission/devpost/devpost-blog-post.md)
 
 ## 🧾 Devpost-Ready Artifacts (Fill Before Final Submit)
 
@@ -67,7 +67,7 @@ Quick launch:
 - **Published blog/article** with `#GeminiLiveAgentChallenge`: `TODO: Add URL Here` *(publish + link this post; include the live URL in both the README and Devpost entry to claim the bonus).* 
 - **Live Cloud Run API URL**: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app`
 - **Cloud Run proof artifacts**: [`terraform/main.tf`](terraform/main.tf), [`cloudbuild.yaml`](cloudbuild.yaml), [`deploy.sh`](deploy.sh), [`backend/src/geminiLiveClient.js`](backend/src/geminiLiveClient.js)
-- **Architecture diagram location**: See the [Architecture Diagram](#%EF%B8%8F-architecture-diagram) section below and [`architecture.mmd`](architecture.mmd).
+- **Architecture diagram location**: See the [Architecture Diagram](#%EF%B8%8F-architecture-diagram) section below and [`submission/architecture/architecture.mmd`](submission/architecture/architecture.mmd).
 
 ## ☁️ Cloud Run Proof Checklist
 
@@ -341,7 +341,7 @@ git push origin main
 
 ### Bonus Points Status
 - ✅ **Automated Cloud Infrastructure:** Fully orchestrated IaC provided in `terraform/`, paired with `cloudbuild.yaml` and `deploy.sh`.
-- ⚠️ **Content Publication:** Draft prepared in [`devpost-blog-post.md`](devpost-blog-post.md). Publish on Medium/Dev.to and add the live link above to claim this bonus confidently.
+- ⚠️ **Content Publication:** Draft prepared in [`submission/devpost/devpost-blog-post.md`](submission/devpost/devpost-blog-post.md). Publish on Medium/Dev.to and add the live link above to claim this bonus confidently.
 
 ---
 

@@ -108,11 +108,11 @@ When you combine real-world physical object manipulation with low-latency Audio 
 `TODO_ADD_SHORT_GCP_PROOF_RECORDING_URL` *(recommended: 15-30 second behind-the-scenes deployment/Cloud Run console clip)*
 
 **(REQUIRED) Where did you upload an architecture diagram in the image Gallery or File Upload?**  
-`File Upload on Devpost. The same architecture is also documented in the GitHub README "Architecture Diagram" section and in architecture.mmd in the repository root.`
+`File Upload on Devpost. The same architecture is also documented in the GitHub README "Architecture Diagram" section and in submission/architecture/architecture.mmd in this repository.`
 
 **OPTIONAL for Bonus Points (Max 0.6) URL to published piece of content (blog, podcast, video)**  
 `TODO_ADD_PUBLISHED_BLOG_URL`
-Draft source in repo: `https://github.com/mangeshraut712/ai-rubiks-cube/blob/main/devpost-blog-post.md` *(includes required disclosure that it was created for entering this hackathon + hashtag `#GeminiLiveAgentChallenge`)*
+Draft source in repo: `https://github.com/mangeshraut712/ai-rubiks-cube/blob/main/submission/devpost/devpost-blog-post.md` *(includes required disclosure that it was created for entering this hackathon + hashtag `#GeminiLiveAgentChallenge`)*
 
 **OPTIONAL for Bonus Points (Max 0.2) Automating Cloud Deployment - Provide a link to the section of your code that demonstrates you have automated...**  
 `https://github.com/mangeshraut712/ai-rubiks-cube/blob/main/terraform/main.tf`  

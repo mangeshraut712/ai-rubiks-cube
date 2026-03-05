@@ -44,8 +44,8 @@ Selected category: **Live Agents** (real-time Audio/Vision)
 - [x] Cloud deployment proof URL/recording: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health` (`{"status":"ok","model":"gemini-live"}`) + `https://github.com/mangeshraut712/ai-rubiks-cube/tree/main/terraform` + `https://github.com/mangeshraut712/ai-rubiks-cube/blob/main/cloudbuild.yaml` + `https://github.com/mangeshraut712/ai-rubiks-cube/blob/main/deploy.sh` + `https://github.com/mangeshraut712/ai-rubiks-cube/blob/main/backend/src/geminiLiveClient.js`
 - [x] Devpost file upload package prepared: `submission/Gemini_Rubiks_Tutor_Final_Submission.zip` (clean project zip for Devpost File Upload)
 - [ ] Published article/post with `#GeminiLiveAgentChallenge`: `TODO_ADD_PUBLISHED_ARTICLE_URL`
-- [x] Blog draft in repo: `devpost-blog-post.md`
-- [x] Architecture diagram uploaded via Devpost File Upload (also mirrored in `README.md` mermaid section + `architecture.mmd`)
+- [x] Blog draft in repo: `submission/devpost/devpost-blog-post.md`
+- [x] Architecture diagram uploaded via Devpost File Upload (also mirrored in `README.md` mermaid section + `submission/architecture/architecture.mmd`)
 
 ## 4) Judging Criteria Mapping
 

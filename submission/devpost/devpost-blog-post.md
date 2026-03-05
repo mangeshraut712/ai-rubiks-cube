@@ -80,7 +80,7 @@ The README includes full setup:
 - Cloud deployment instructions (`Cloud Deployment (Monorepo Setup)`)
 - Contest-oriented scripts and checklist artifacts
 
-If you are evaluating the project for the challenge, start from the repo root README and `DEVPOST_SUBMISSION_CHECKLIST.md`.
+If you are evaluating the project for the challenge, start from the repo root README and `submission/devpost/DEVPOST_SUBMISSION_CHECKLIST.md`.
 
 ---
 
