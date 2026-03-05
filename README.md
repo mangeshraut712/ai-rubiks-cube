@@ -290,9 +290,13 @@ You can deploy the Vite React frontend directly from this GitHub repository to V
 
 **Vercel Deployment:**
 1. Import this repository into Vercel.
-2. Vercel will automatically read the `vercel.json` to build the `frontend/` directory.
-3. In your Vercel Project Settings -> Environment Variables, add:
+2. Keep the production branch set to `main` (or your chosen release branch).
+3. Vercel will automatically read the root `vercel.json` to install/build only `frontend/`.
+4. In your Vercel Project Settings -> Environment Variables, add:
    - `VITE_BACKEND_ORIGIN` = `https://your-cloud-run-backend-url.run.app` (This tells the frontend where the WebSocket server is located).
+5. Trigger a deployment and verify frontend health:
+   - Open the Vercel URL and confirm UI loads.
+   - Confirm browser requests to `GET /health` hit your Cloud Run backend successfully.
 
 **GitHub Pages Deployment:**
 Update `base` in `frontend/vite.config.js` to your repo name, run `npm run build`, and push the `dist/` folder to your `gh-pages` branch.
@@ -301,6 +305,21 @@ Contest deployment shortcut:
 
 ```bash
 ./scripts/deploy-challenge.sh YOUR_GCP_PROJECT_ID
+```
+
+### GitHub Repo Readiness Checklist
+
+- Repo URL: `https://github.com/mangeshraut712/ai-rubiks-cube`
+- Branch to deploy from: `main`
+- Frontend deploy config: [`vercel.json`](vercel.json), [`.vercelignore`](.vercelignore)
+- Cloud backend deploy config: [`deploy.sh`](deploy.sh), [`cloudbuild.yaml`](cloudbuild.yaml), [`terraform/main.tf`](terraform/main.tf)
+
+Before release:
+
+```bash
+git status
+./scripts/security-check.sh --scope push
+git push origin main
 ```
 
 ---
