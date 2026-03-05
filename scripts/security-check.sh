@@ -92,7 +92,11 @@ collect_target_files() {
         local upstream=""
         upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
         if [[ -n "$upstream" ]]; then
-          git diff --name-only --diff-filter=ACMR "${upstream}...HEAD"
+          if git merge-base "$upstream" HEAD >/dev/null 2>&1; then
+            git diff --name-only --diff-filter=ACMR "${upstream}...HEAD"
+          else
+            git diff --name-only --diff-filter=ACMR "${upstream}..HEAD"
+          fi
         else
           git ls-files
         fi
@@ -147,7 +151,7 @@ if [[ "$SCOPE" == "commit" && ${#TARGET_FILES[@]} -eq 0 ]]; then
 fi
 
 declare -a SECRET_SCAN_FILES=()
-for file in "${TARGET_FILES[@]}"; do
+for file in "${TARGET_FILES[@]-}"; do
   [[ -f "$file" ]] || continue
   case "$file" in
     *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.ico|*.gif|*.pdf|*.lock|backend/package-lock.json|frontend/package-lock.json|.env.example|contest/.env.judges.example)
@@ -183,7 +187,7 @@ fi
 
 tracked_env_hits=""
 tracked_env_hits="$(
-  printf '%s\n' "${TARGET_FILES[@]}" \
+  printf '%s\n' "${TARGET_FILES[@]-}" \
     | { if command -v rg >/dev/null 2>&1; then rg '(^|/)\.env($|(\.[^/]+$))'; else grep -E '(^|/)\.env($|(\.[^/]+$))'; fi; } \
     | { if command -v rg >/dev/null 2>&1; then rg -v '(\.example$|\.sample$|\.template$|contest/\.env\.judges\.example$)'; else grep -Ev '(\.example$|\.sample$|\.template$|contest/\.env\.judges\.example$)'; fi; } \
     || true
