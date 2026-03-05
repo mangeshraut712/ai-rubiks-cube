@@ -16,6 +16,14 @@ AI-powered Rubik's Cube tutoring with real-time voice + vision using Gemini Live
 - 3D cube visualization with move-by-move guidance
 - Challenge mode, move tracking, and session transcript
 
+## Classic 2x2 Solver (Restored)
+
+The original 2x2x2 Rubik's Cube solver (BFS/A*/IDA* + interactive 3D visualization) is available again in this repo:
+
+- Source: `frontend/public/legacy-2x2-solver/`
+- Local URL: `http://localhost:5173/legacy-2x2-solver/index.html`
+- Production URL: `https://ai-rubiks-cube.vercel.app/legacy-2x2-solver/index.html`
+
 ## Tech Stack
 
 - Frontend: React, Vite, Three.js
