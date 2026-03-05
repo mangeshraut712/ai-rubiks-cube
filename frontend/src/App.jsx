@@ -1,10 +1,26 @@
 /**
- * Gemini Rubik's Tutor - Main Application
- * 2026: Fully integrated with all new features
+ * Gemini Rubik's Tutor - Ultra-Polished Frontend
+ * 2026: Professional Google-inspired design with ice cube aesthetic 🧊
  */
 import { Suspense, lazy, useEffect, useRef, useState, useCallback } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import { FiSettings, FiBarChart2, FiHelpCircle, FiUsers, FiMoon, FiSun } from "react-icons/fi";
+import {
+  FiSettings,
+  FiBarChart2,
+  FiHelpCircle,
+  FiUsers,
+  FiMic,
+  FiVideo,
+  FiAward,
+  FiZap,
+  FiClock,
+  FiArrowRight,
+  FiPlay,
+  FiGrid,
+  FiMoon,
+  FiSun
+} from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
 
 import LiveSession from "./components/LiveSession";
 import StatusBar from "./components/StatusBar";
@@ -20,6 +36,67 @@ import { createSolvedCubeState } from "./utils/cubeColors";
 import { applyMoveToState } from "./utils/cubeLogic";
 
 const CubeViewer = lazy(() => import("./components/CubeViewer"));
+const SCRAMBLE_MOVES = ["U", "U'", "D", "D'", "L", "L'", "R", "R'", "F", "F'", "B", "B'"];
+const VOICE_MOVE_COMMANDS = new Set([
+  "U",
+  "U'",
+  "U2",
+  "D",
+  "D'",
+  "D2",
+  "L",
+  "L'",
+  "L2",
+  "R",
+  "R'",
+  "R2",
+  "F",
+  "F'",
+  "F2",
+  "B",
+  "B'",
+  "B2"
+]);
+const LANDING_NAV_ITEMS = [
+  { icon: FiHelpCircle, label: "Tutorial", action: "tutorial" },
+  { icon: FiBarChart2, label: "Statistics", action: "statistics" },
+  { icon: FiSettings, label: "Settings", action: "settings" }
+];
+const HERO_FEATURES = [
+  {
+    icon: FiVideo,
+    title: "Show Your Cube",
+    desc: "Position your Rubik's Cube in front of the camera",
+    bg: "bg-blue-50",
+    text: "text-blue-600",
+    border: "border-blue-200",
+    shadow: "shadow-blue-500/10"
+  },
+  {
+    icon: FiMic,
+    title: "Talk to Cubey",
+    desc: "Voice coaching guides you through each move",
+    bg: "bg-red-50",
+    text: "text-red-600",
+    border: "border-red-200",
+    shadow: "shadow-red-500/10"
+  },
+  {
+    icon: FiAward,
+    title: "Challenge Mode",
+    desc: "Race against Cubey to solve the scrambled cube",
+    bg: "bg-green-50",
+    text: "text-green-600",
+    border: "border-green-200",
+    shadow: "shadow-green-500/10"
+  }
+];
+const TECH_STACK_BADGES = [
+  { icon: FiZap, label: "AI-Powered" },
+  { icon: FiGrid, label: "WebRTC" },
+  { icon: FiClock, label: "WebAssembly" },
+  { icon: FiMic, label: "Voice Control" }
+];
 
 function normalizeTranscriptText(text) {
   return String(text || "")
@@ -29,16 +106,29 @@ function normalizeTranscriptText(text) {
     .trim();
 }
 
+// Animated Google Logo Component
+function GoogleLogo() {
+  return (
+    <span className="inline-flex font-bold tracking-tight">
+      <span className="text-[#4285f4]">G</span>
+      <span className="text-[#ea4335]">e</span>
+      <span className="text-[#fbbc04]">m</span>
+      <span className="text-[#4285f4]">i</span>
+      <span className="text-[#34a853]">n</span>
+      <span className="text-[#ea4335]">i</span>
+    </span>
+  );
+}
+
 export default function App() {
   const sessionRef = useRef(null);
 
-  // Zustand store
   const {
     cubeState,
     moveHistory,
     sessionActive: storeSessionActive,
-    isDarkMode,
     settings,
+    isDarkMode,
     tutorialCompleted,
     setCubeState,
     applyMove,
@@ -49,11 +139,10 @@ export default function App() {
     setActiveMove,
     setHintText,
     setLatestInstruction,
+    recordSessionComplete,
     toggleDarkMode,
-    recordSessionComplete
   } = useCubeStore();
 
-  // Local state
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
   const [micLevel, setMicLevel] = useState(0);
   const [isTutorSpeaking, setIsTutorSpeaking] = useState(false);
@@ -76,79 +165,81 @@ export default function App() {
   const moveQueueRef = useRef([]);
   const moveAnimTimerRef = useRef(null);
 
-  // Timer effect
-  useEffect(() => {
-    if (!storeSessionActive || !startTimestamp) {
-      return undefined;
+  const openPanel = useCallback((panel) => {
+    if (panel === "tutorial") {
+      setShowTutorial(true);
+      return;
     }
+    if (panel === "statistics") {
+      setShowStatistics(true);
+      return;
+    }
+    if (panel === "settings") {
+      setShowSettings(true);
+    }
+  }, []);
 
+  const triggerHapticFeedback = useCallback(
+    (duration = 50) => {
+      if (
+        !settings.hapticsEnabled ||
+        typeof window === "undefined" ||
+        typeof navigator.vibrate !== "function"
+      ) {
+        return;
+      }
+      navigator.vibrate(duration);
+    },
+    [settings.hapticsEnabled]
+  );
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", Boolean(isDarkMode));
+    root.classList.toggle("high-contrast", Boolean(settings.highContrast));
+  }, [isDarkMode, settings.highContrast]);
+
+  useEffect(
+    () => () => {
+      if (moveAnimTimerRef.current) {
+        clearTimeout(moveAnimTimerRef.current);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!storeSessionActive || !startTimestamp) return;
     const interval = setInterval(() => {
-      const elapsedMs = Date.now() - startTimestamp;
-      setTimerSeconds(Math.floor(elapsedMs / 1000));
+      setTimerSeconds(Math.floor((Date.now() - startTimestamp) / 1000));
     }, 1000);
-
     return () => clearInterval(interval);
   }, [storeSessionActive, startTimestamp]);
 
-  // Show tutorial on first load
   useEffect(() => {
     if (!tutorialCompleted && !storeSessionActive) {
       setShowTutorial(true);
     }
   }, [tutorialCompleted, storeSessionActive]);
 
-  // Apply dark mode
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark-mode");
-    } else {
-      document.documentElement.classList.remove("dark-mode");
+  const handleMove = useCallback((move) => {
+    if (!move || autoSolving) return;
+    try {
+      setActiveMoveLocal(move);
+      setActiveMove(move);
+      const newState = applyMoveToState(cubeState, move);
+      setCubeState(newState);
+      applyMove(move, "user");
+
+      if (moveAnimTimerRef.current) clearTimeout(moveAnimTimerRef.current);
+      moveAnimTimerRef.current = setTimeout(() => setActiveMoveLocal(""), settings.animationSpeed || 420);
+
+      triggerHapticFeedback();
+    } catch (_error) {
+      toast.error("Invalid move");
     }
-  }, [isDarkMode]);
+  }, [cubeState, autoSolving, settings.animationSpeed, setCubeState, applyMove, setActiveMove, triggerHapticFeedback]);
 
-  // Handle cube move
-  const handleMove = useCallback(
-    (move) => {
-      if (!move || autoSolving) return;
-
-      try {
-        // Update local state for animation
-        setActiveMoveLocal(move);
-        setActiveMove(move);
-
-        // Apply move to cube state
-        const newState = applyMoveToState(cubeState, move);
-        setCubeState(newState);
-
-        // Add to history
-        applyMove(move, "user");
-
-        // Clear animation after delay
-        if (moveAnimTimerRef.current) {
-          clearTimeout(moveAnimTimerRef.current);
-        }
-        moveAnimTimerRef.current = setTimeout(() => {
-          setActiveMoveLocal("");
-        }, settings.animationSpeed || 420);
-
-        // Haptic feedback
-        if (settings.hapticsEnabled && navigator.vibrate) {
-          navigator.vibrate(50);
-        }
-
-        // Sound effect
-        if (settings.soundEnabled) {
-          // Play sound
-        }
-      } catch (error) {
-        console.error("Move failed:", error);
-        toast.error("Invalid move");
-      }
-    },
-    [cubeState, autoSolving, settings, setCubeState, applyMove, setActiveMove]
-  );
-
-  // Handle undo
   const handleUndo = useCallback(() => {
     const move = undoMove();
     if (move?.stateBefore) {
@@ -157,40 +248,27 @@ export default function App() {
     }
   }, [undoMove, setCubeState]);
 
-  // Handle redo
   const handleRedo = useCallback(() => {
     const move = redoMove();
     if (move) {
-      const newState = applyMoveToState(cubeState, move.move);
-      setCubeState(newState);
+      setCubeState(applyMoveToState(cubeState, move.move));
       toast.success("Redo");
     }
   }, [redoMove, cubeState, setCubeState]);
 
-  // Handle scramble
   const handleScramble = useCallback(() => {
-    const moves = ["U", "U'", "D", "D'", "L", "L'", "R", "R'", "F", "F'", "B", "B'"];
-    const scramble = [];
-    for (let i = 0; i < 20; i++) {
-      scramble.push(moves[Math.floor(Math.random() * moves.length)]);
-    }
-
+    const scramble = Array.from({ length: 20 }, () => SCRAMBLE_MOVES[Math.floor(Math.random() * SCRAMBLE_MOVES.length)]);
     let currentState = createSolvedCubeState();
-    scramble.forEach((move) => {
-      currentState = applyMoveToState(currentState, move);
-    });
-
+    scramble.forEach(move => { currentState = applyMoveToState(currentState, move); });
     setCubeState(currentState);
     toast.success("Cube scrambled!");
   }, [setCubeState]);
 
-  // Handle reset
   const handleReset = useCallback(() => {
     resetCube();
     toast.success("Cube reset");
   }, [resetCube]);
 
-  // Keyboard shortcuts
   useKeyboardShortcuts({
     onMove: handleMove,
     onScramble: handleScramble,
@@ -198,52 +276,23 @@ export default function App() {
     onUndo: handleUndo,
     onRedo: handleRedo,
     onHint: () => sessionRef.current?.requestHint?.(),
-    onToggleChallenge: () => setChallengeMode((prev) => !prev),
+    onToggleChallenge: toggleChallengeMode,
     onToggleDarkMode: toggleDarkMode,
     onToggleSettings: () => setShowSettings(true),
     onStartSession: () => !storeSessionActive && startSession(),
     onEndSession: () => storeSessionActive && endSession()
   });
 
-  // Voice commands
   useVoiceCommands({
     onCommand: (command) => {
-      if (command === "RESET") {
-        handleReset();
-      } else if (command === "SCRAMBLE") {
-        handleScramble();
-      } else if (command === "UNDO") {
-        handleUndo();
-      } else if (command === "REDO") {
-        handleRedo();
-      } else if (command === "HINT") {
-        sessionRef.current?.requestHint?.();
-      } else if (
-        [
-          "U",
-          "U'",
-          "U2",
-          "D",
-          "D'",
-          "D2",
-          "L",
-          "L'",
-          "L2",
-          "R",
-          "R'",
-          "R2",
-          "F",
-          "F'",
-          "F2",
-          "B",
-          "B'",
-          "B2"
-        ].includes(command)
-      ) {
-        handleMove(command);
-      }
+      if (command === "RESET") handleReset();
+      else if (command === "SCRAMBLE") handleScramble();
+      else if (command === "UNDO") handleUndo();
+      else if (command === "REDO") handleRedo();
+      else if (command === "HINT") sessionRef.current?.requestHint?.();
+      else if (VOICE_MOVE_COMMANDS.has(command)) handleMove(command);
     },
-    enabled: settings.voiceEnabled && storeSessionActive
+    enabled: settings.voiceEnabled !== false && storeSessionActive
   });
 
   function resetSessionUiState() {
@@ -278,34 +327,23 @@ export default function App() {
 
   async function endSession() {
     const sessionDuration = startTimestamp ? Math.floor((Date.now() - startTimestamp) / 1000) : 0;
-
     await sessionRef.current?.endSession?.();
     setSessionActive(false);
     setConnectionStatus("disconnected");
     setIsTutorSpeaking(false);
-
-    // Record session stats
-    if (sessionDuration > 0) {
-      recordSessionComplete(sessionDuration, moveHistory.length);
-    }
-
+    if (sessionDuration > 0) recordSessionComplete(sessionDuration, moveHistory.length);
     toast.success("Session ended");
   }
 
   function handleTranscriptEntry(entry) {
     if (!entry?.text) return;
-
     setTranscript((prev) => {
       const last = prev[prev.length - 1];
-      const isDuplicateCubeyLine =
-        entry.speaker === "cubey" &&
-        last?.speaker === "cubey" &&
+      const isDuplicate = entry.speaker === "cubey" && last?.speaker === "cubey" &&
         normalizeTranscriptText(last.text) === normalizeTranscriptText(entry.text);
-
-      if (isDuplicateCubeyLine) return prev;
+      if (isDuplicate) return prev;
       return [...prev, entry];
     });
-
     if (entry.speaker === "cubey") {
       setLatestInstructionLocal(entry.text);
       setLatestInstruction(entry.text);
@@ -320,18 +358,13 @@ export default function App() {
 
   function drainMoveQueue() {
     if (moveAnimTimerRef.current || moveQueueRef.current.length === 0) return;
-
     const next = moveQueueRef.current.shift();
     setActiveMoveLocal(next);
     setActiveMove(next);
-
     moveAnimTimerRef.current = setTimeout(() => {
       moveAnimTimerRef.current = null;
-      if (moveQueueRef.current.length > 0) {
-        drainMoveQueue();
-      } else {
-        setActiveMoveLocal("");
-      }
+      if (moveQueueRef.current.length > 0) drainMoveQueue();
+      else setActiveMoveLocal("");
     }, settings.animationSpeed || 420);
   }
 
@@ -349,7 +382,6 @@ export default function App() {
       challengeMode,
       transcript
     };
-
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -357,7 +389,6 @@ export default function App() {
     a.download = `rubiks-session-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
     a.click();
     URL.revokeObjectURL(url);
-
     toast.success("Session record downloaded");
   }
 
@@ -368,332 +399,314 @@ export default function App() {
     toast(next ? "Challenge mode enabled!" : "Challenge mode disabled");
   }
 
-  const moveCount = moveHistory.length;
-
   return (
     <>
-      <Toaster position="top-right" />
+      <Toaster
+        position="top-right"
+        toastOptions={{ style: { background: "#fff", border: "1px solid #e8eaed", borderRadius: "8px" } }}
+      />
 
-      {/* Tutorial Modal */}
-      {showTutorial && (
-        <Tutorial
-          onClose={() => setShowTutorial(false)}
-          onComplete={() => setShowTutorial(false)}
-        />
-      )}
+      <AnimatePresence mode="wait">
+        {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} onComplete={() => setShowTutorial(false)} />}
+        {showStatistics && <Statistics onClose={() => setShowStatistics(false)} />}
+        {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+        {showMultiplayer && <MultiplayerLobby onClose={() => setShowMultiplayer(false)} />}
+      </AnimatePresence>
 
-      {/* Statistics Modal */}
-      {showStatistics && <Statistics onClose={() => setShowStatistics(false)} />}
+      <AnimatePresence mode="wait">
+        {!storeSessionActive ? (
+          <motion.div
+            key="landing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="min-h-screen mesh-gradient-bg flex flex-col"
+          >
+            {/* Navbar */}
+            <nav className="sticky top-0 z-50 glass-effect border-b border-gray-200 dark:border-gray-800" aria-label="Primary">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-16 gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                      <span className="text-2xl">🧊</span>
+                    </div>
+                    <span className="text-xl font-bold text-gray-900 dark:text-white">Cube Solver</span>
+                  </div>
 
-      {/* Settings Modal */}
-      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+                  <div className="hidden md:flex items-center gap-1">
+                    {LANDING_NAV_ITEMS.map((item) => (
+                      <button
+                        key={item.label}
+                        onClick={() => openPanel(item.action)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
+                        aria-label={`Open ${item.label}`}
+                      >
+                        <item.icon className="w-4 h-4" />
+                        {item.label}
+                      </button>
+                    ))}
+                    <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-2" />
+                    <button
+                      onClick={toggleDarkMode}
+                      className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                      aria-label="Toggle dark mode"
+                    >
+                      {isDarkMode ? <FiSun className="w-4 h-4" /> : <FiMoon className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="md:hidden border-t border-gray-100 dark:border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2 overflow-x-auto">
+                  {LANDING_NAV_ITEMS.map((item) => (
+                    <button
+                      key={`mobile-${item.label}`}
+                      onClick={() => openPanel(item.action)}
+                      className="inline-flex shrink-0 items-center gap-2 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-100"
+                      aria-label={`Open ${item.label}`}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </nav>
 
-      {/* Multiplayer Modal */}
-      {showMultiplayer && <MultiplayerLobby onClose={() => setShowMultiplayer(false)} />}
+            {/* Hero Section */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 flex-1">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="flex justify-center mb-8">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-full">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                    <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Gemini Live Agent Challenge 2026</span>
+                  </div>
+                </div>
 
-      {!storeSessionActive ? (
-        // Landing Page
-        <main className="min-h-screen px-6 py-10 text-[#202124] dark:text-white">
-          <div className="mx-auto flex min-h-[84vh] max-w-5xl flex-col items-center justify-center rounded-3xl border border-[#d2d8e3] dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 p-10 text-center shadow-[0_18px_40px_rgba(32,33,36,0.16)] backdrop-blur">
+                <div className="text-center mb-6">
+                  <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
+                    Meet <GoogleLogo /> Rubik&apos;s Tutor
+                  </h1>
+                  <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+                    Your AI tutor that sees your cube and talks you to victory.
+                    Real-time webcam + voice coaching with step-by-step move verification.
+                  </p>
+                </div>
+              </motion.div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12">
+                {HERO_FEATURES.map((feature, idx) => (
+                  <motion.div
+                    key={feature.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * idx + 0.3 }}
+                    className={`group relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border ${feature.border} dark:border-gray-700 p-6 hover:shadow-xl ${feature.shadow} transition-all duration-300 hover:-translate-y-1`}
+                  >
+                    <div className={`w-14 h-14 ${feature.bg} dark:bg-opacity-20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                      <feature.icon className={`w-7 h-7 ${feature.text}`} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{feature.desc}</p>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-4 mb-12">
+                <button
+                  onClick={startSession}
+                  className="group flex items-center gap-2 px-8 py-4 bg-[#4285f4] text-white font-medium rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+                  aria-label="Start new tutoring session"
+                >
+                  <FiPlay className="w-5 h-5" />
+                  Start Session
+                  <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button
+                  onClick={() => setShowMultiplayer(true)}
+                  className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all"
+                  aria-label="Open multiplayer mode"
+                >
+                  <FiUsers className="w-5 h-5" />
+                  Multiplayer
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                {TECH_STACK_BADGES.map((tech) => (
+                  <span
+                    key={tech.label}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-full transition-colors cursor-default"
+                  >
+                    <tech.icon className="w-4 h-4" />
+                    {tech.label}
+                  </span>
+                ))}
+              </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="border-t border-gray-200 dark:border-gray-800">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <a
+                    href="/legacy-2x2-solver/index.html"
+                    className="inline-flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
+                  >
+                    <span>🎲</span>
+                    <span className="font-medium">Looking for our classic 2×2 AI Solver?</span>
+                  </a>
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <a href="https://devpost.com/mbr63drexel" target="_blank" rel="noreferrer" className="hover:text-gray-900 dark:hover:text-gray-300 transition-colors">
+                      Made by Mangesh Raut
+                    </a>
+                    <span className="text-gray-300 dark:text-gray-700">•</span>
+                    <a href="https://geminiliveagentchallenge.devpost.com/" target="_blank" rel="noreferrer" className="hover:text-gray-900 dark:hover:text-gray-300 transition-colors">
+                      Gemini Live Agent Entry 2026
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </footer>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="session"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="min-h-screen mesh-gradient-bg flex flex-col"
+          >
             {/* Header */}
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d2d8e3] dark:border-slate-600 bg-[#f8faff] dark:bg-slate-700 px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#5f6368] dark:text-gray-300">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#4285f4]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#ea4335]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#fbbc04]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#34a853]" />
-              Gemini Live Agent Challenge 2026
-            </div>
-
-            <h1 className="mb-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
-              Meet{" "}
-              <span className="google-wordmark">
-                <span>G</span>
-                <span>e</span>
-                <span>m</span>
-                <span>i</span>
-                <span>n</span>
-                <span>i</span>
-              </span>{" "}
-              Rubik&apos;s Tutor
-            </h1>
-
-            <p className="mb-8 max-w-2xl text-[#5f6368] dark:text-gray-300">
-              Your AI tutor that sees your cube and talks you to victory. Real-time webcam + voice
-              coaching with step-by-step move verification.
-            </p>
-
-            {/* Feature Cards */}
-            <div className="mb-8 grid max-w-2xl grid-cols-1 gap-4 text-left sm:grid-cols-3">
-              <div className="rounded-2xl border border-[#c9ddff] bg-[#edf4ff] dark:bg-blue-900/20 dark:border-blue-800 p-4 shadow-[0_10px_20px_rgba(66,133,244,0.12)]">
-                <div className="mb-2 text-2xl">🎥</div>
-                <div className="font-semibold text-[#1f3a68] dark:text-blue-300">
-                  Show Your Cube
+            <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10">
+              <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-lg flex items-center justify-center">
+                    <span className="text-lg">🧊</span>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {"Gemini Rubik's Tutor"}
+                    </div>
+                    <div className="text-sm font-bold text-gray-900 dark:text-white">Live Session</div>
+                  </div>
                 </div>
-                <div className="text-sm text-[#4d648c] dark:text-blue-200">
-                  Position your Rubik&apos;s Cube in front of the camera
+
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <button onClick={() => sessionRef.current?.requestHint?.()} className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors" aria-label="Request solving hint">
+                    Hint
+                  </button>
+                  <button onClick={toggleChallengeMode} className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${challengeMode ? "text-green-700 bg-green-50 border-green-200" : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50"}`} aria-label="Toggle challenge mode">
+                    {challengeMode ? "Challenge On" : "Challenge"}
+                  </button>
+                  <button onClick={() => sessionRef.current?.solvePreview?.()} className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors" aria-label="Preview AI solving path">
+                    Preview
+                  </button>
+                  <button onClick={handleAutoSolve} disabled={autoSolving} className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${autoSolving ? "text-green-700 bg-green-50 border-green-200 animate-pulse" : "text-green-700 bg-green-50 border-green-200 hover:bg-green-100"}`} aria-label="Start automatic solve mode">
+                    {autoSolving ? "⏳ Solving..." : "✨ Auto Solve"}
+                  </button>
+                  <button onClick={() => setShowSettings(true)} className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors" aria-label="Open settings">
+                    <FiSettings className="w-5 h-5" />
+                  </button>
                 </div>
-              </div>
-              <div className="rounded-2xl border border-[#f9ceca] bg-[#fff1f0] dark:bg-red-900/20 dark:border-red-800 p-4 shadow-[0_10px_20px_rgba(234,67,53,0.12)]">
-                <div className="mb-2 text-2xl">🎙️</div>
-                <div className="font-semibold text-[#7a2d24] dark:text-red-300">Talk to Cubey</div>
-                <div className="text-sm text-[#8a4d46] dark:text-red-200">
-                  Voice coaching guides you through each move
-                </div>
-              </div>
-              <div className="rounded-2xl border border-[#f8df9a] bg-[#fff9e6] dark:bg-yellow-900/20 dark:border-yellow-800 p-4 shadow-[0_10px_20px_rgba(251,188,4,0.14)]">
-                <div className="mb-2 text-2xl">🏆</div>
-                <div className="font-semibold text-[#6a5413] dark:text-yellow-300">
-                  Challenge Mode
-                </div>
-                <div className="text-sm text-[#7e6a2f] dark:text-yellow-200">
-                  Race against Cubey to solve the scrambled cube
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3 justify-center">
-              <button
-                type="button"
-                onClick={startSession}
-                className="rounded-2xl border border-[#2f6ee3] bg-[#4285f4] px-8 py-3 text-lg font-bold text-white shadow-[0_10px_20px_rgba(66,133,244,0.35)] transition hover:-translate-y-0.5 hover:bg-[#3878e8]"
-              >
-                Start Session
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowMultiplayer(true)}
-                className="rounded-2xl border border-purple-500 bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-3 text-lg font-bold text-white shadow-lg transition hover:-translate-y-0.5"
-              >
-                <FiUsers className="inline mr-2" />
-                Multiplayer
-              </button>
-            </div>
-
-            {/* Toolbar */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <button
-                onClick={() => setShowTutorial(true)}
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-[#5f6368] hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-700"
-              >
-                <FiHelpCircle />
-                Tutorial
-              </button>
-
-              <button
-                onClick={() => setShowStatistics(true)}
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-[#5f6368] hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-700"
-              >
-                <FiBarChart2 />
-                Statistics
-              </button>
-
-              <button
-                onClick={() => setShowSettings(true)}
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-[#5f6368] hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-700"
-              >
-                <FiSettings />
-                Settings
-              </button>
-
-              <button
-                onClick={toggleDarkMode}
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-[#5f6368] hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-700"
-              >
-                {isDarkMode ? <FiSun /> : <FiMoon />}
-                {isDarkMode ? "Light" : "Dark"}
-              </button>
-            </div>
-
-            {/* Legacy Link */}
-            <div className="mt-6 flex flex-col items-center gap-3">
-              <a
-                href="/legacy-2x2-solver/index.html"
-                className="flex items-center justify-center gap-2 text-sm text-[#5f6368] decoration-[#4285f4]/60 hover:text-[#1a73e8] hover:underline dark:text-gray-400"
-              >
-                Looking for our classic 2x2 AI Solver? 🎲
-              </a>
-
-              <div className="flex items-center gap-4 text-xs text-[#5f6368] dark:text-gray-400">
-                <a
-                  href="https://devpost.com/mbr63drexel"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="transition-colors hover:text-[#1a73e8]"
-                >
-                  Made by Mangesh Raut
-                </a>
-                <span>•</span>
-                <a
-                  href="https://geminiliveagentchallenge.devpost.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="transition-colors hover:text-[#1a73e8]"
-                >
-                  Gemini Live Agent Entry 2026
-                </a>
-              </div>
-            </div>
-          </div>
-        </main>
-      ) : (
-        // Active Session
-        <main className="min-h-screen px-4 py-4 text-[#202124] dark:text-white sm:px-6">
-          <div className="mx-auto flex max-w-7xl flex-col gap-4">
-            {/* Header */}
-            <header className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-white/60 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 p-4 shadow-[0_8px_32px_rgba(32,33,36,0.06)] backdrop-blur-xl">
-              <div>
-                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#5f6368] dark:text-gray-400">
-                  <span className="gemini-text-gradient">✦</span> Gemini Rubik&apos;s Tutor
-                </div>
-                <div className="text-[1.2rem] font-bold text-[#202124] dark:text-white">
-                  Live Cube Coaching Session
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => sessionRef.current?.requestHint?.()}
-                  className="rounded-[12px] border border-[#fbbc04]/30 bg-[#fbbc04]/10 px-4 py-2 text-[13px] font-bold text-[#8f6a00] dark:text-yellow-400 shadow-sm transition hover:bg-[#fbbc04]/20"
-                >
-                  Hint
-                </button>
-
-                <button
-                  onClick={toggleChallengeMode}
-                  className={`rounded-[12px] border px-4 py-2 text-[13px] font-bold shadow-sm transition ${
-                    challengeMode
-                      ? "border-[#34a853]/30 bg-[#34a853]/10 text-[#1f6e35] dark:text-green-400"
-                      : "border-[#e8eaed] dark:border-slate-600 bg-white dark:bg-slate-700 text-[#5f6368] dark:text-gray-300 hover:bg-[#f8f9fa] dark:hover:bg-slate-600"
-                  }`}
-                >
-                  {challengeMode ? "Challenge On" : "Challenge Mode"}
-                </button>
-
-                <button
-                  onClick={() => sessionRef.current?.solvePreview?.()}
-                  className="rounded-[12px] border border-[#4285f4]/30 bg-[#4285f4]/10 px-4 py-2 text-[13px] font-bold text-[#1a73e8] dark:text-blue-400 shadow-sm transition hover:bg-[#4285f4]/20"
-                >
-                  Solve Preview
-                </button>
-
-                <button
-                  onClick={handleAutoSolve}
-                  disabled={autoSolving}
-                  className={`rounded-[12px] border px-4 py-2 text-[13px] font-bold shadow-sm transition ${
-                    autoSolving
-                      ? "border-[#34a853]/30 bg-[#34a853]/10 text-[#1f6e35] animate-pulse cursor-wait"
-                      : "border-[#34a853]/50 bg-[#34a853]/20 text-[#1f6e35] dark:text-green-400 hover:bg-[#34a853]/30"
-                  }`}
-                >
-                  {autoSolving ? "⏳ Solving..." : "✨ Auto Solve"}
-                </button>
-
-                <button
-                  onClick={() => setShowSettings(true)}
-                  className="rounded-[12px] border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-[13px] font-bold text-gray-700 dark:text-gray-300 shadow-sm transition hover:bg-gray-50 dark:hover:bg-slate-600"
-                >
-                  <FiSettings />
-                </button>
               </div>
             </header>
 
-            {/* Challenge Message */}
-            {challengeMessage && (
-              <div className="rounded-xl border border-[#9cd7ad] bg-[#ecf9f0] dark:bg-green-900/20 dark:border-green-800 p-3 text-sm text-[#1f6e35] dark:text-green-400 shadow-[0_6px_16px_rgba(52,168,83,0.12)]">
-                {challengeMessage}
-              </div>
-            )}
-
-            {/* Error Message */}
-            {errorText && (
-              <div className="rounded-xl border border-[#f2bbb4] bg-[#fff1f0] dark:bg-red-900/20 dark:border-red-800 p-3 text-sm text-[#7a2d24] dark:text-red-400 shadow-[0_6px_16px_rgba(234,67,53,0.12)]">
-                {errorText}
-              </div>
-            )}
-
             {/* Main Content */}
-            <section className="grid min-h-[64vh] grid-cols-1 gap-4 lg:grid-cols-[1.45fr_1fr]">
-              <div className="relative flex min-h-[420px] flex-col overflow-hidden rounded-[24px] border border-white/60 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 p-3 shadow-[0_8px_32px_rgba(32,33,36,0.08)] backdrop-blur-xl">
-                <div className="h-full min-h-[360px] overflow-hidden rounded-[18px]">
-                  <Suspense
-                    fallback={
-                      <div className="flex h-full items-center justify-center rounded-2xl border border-[#d2d8e3] dark:border-slate-600 bg-[#eef4fe] dark:bg-slate-700 text-sm font-semibold text-[#5f6368] dark:text-gray-300">
-                        Loading 3D cube...
-                      </div>
-                    }
-                  >
-                    <CubeViewer cubeState={cubeState} activeMove={activeMove} />
-                  </Suspense>
+            <main className="max-w-7xl mx-auto px-4 py-4 flex-1">
+              {challengeMessage && (
+                <div className="mb-4">
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 px-4 py-3 rounded-lg text-sm">{challengeMessage}</div>
                 </div>
+              )}
+              {errorText && (
+                <div className="mb-4">
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 px-4 py-3 rounded-lg text-sm">{errorText}</div>
+                </div>
+              )}
 
-                <div className="absolute right-5 top-5 h-40 w-56 rounded-[22px] border border-white/60 dark:border-slate-600 bg-white/50 dark:bg-slate-700/50 p-1.5 shadow-[0_8px_24px_rgba(32,33,36,0.12)] backdrop-blur-2xl sm:h-44 sm:w-64">
-                  <LiveSession
-                    ref={sessionRef}
-                    active={storeSessionActive}
-                    onStatusChange={setConnectionStatus}
-                    onMicLevel={setMicLevel}
-                    onTutorSpeakingChange={setIsTutorSpeaking}
-                    onTranscriptEntry={handleTranscriptEntry}
-                    onInstruction={enqueueMove}
-                    onCubeState={setCubeState}
-                    onMoveHistory={(_history) => {}}
-                    onHint={(hint) => {
-                      setHintTextLocal(hint);
-                      setHintText(hint);
-                    }}
-                    onThinkingChange={setIsThinking}
-                    onChallengeUpdate={(payload) => {
-                      setChallengeMessage(payload.message || "");
-                      if (payload.enabled) {
-                        setAutoSolving(false);
-                        moveQueueRef.current = [];
-                      }
-                    }}
-                    onError={setErrorText}
-                    onSolveComplete={() => setAutoSolving(false)}
-                  />
-                </div>
+              <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_1fr] gap-4 h-full">
+                <motion.div
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="relative bg-white/60 dark:bg-gray-800/60 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 min-h-[420px]"
+                >
+                  <div className="h-full min-h-[360px] rounded-lg overflow-hidden bg-gray-50/50 dark:bg-gray-900/30">
+                    <Suspense fallback={<div className="flex h-full items-center justify-center text-gray-500"><div className="spinner mr-3"></div>Loading 3D cube...</div>}>
+                      <CubeViewer cubeState={cubeState} activeMove={activeMove} />
+                    </Suspense>
+                  </div>
+
+                  {/* Camera PIP */}
+                  <div className="mt-3 h-40 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden lg:mt-0 lg:absolute lg:right-6 lg:top-6 lg:w-56">
+                    <LiveSession
+                      ref={sessionRef}
+                      active={storeSessionActive}
+                      onStatusChange={setConnectionStatus}
+                      onMicLevel={setMicLevel}
+                      onTutorSpeakingChange={setIsTutorSpeaking}
+                      onTranscriptEntry={handleTranscriptEntry}
+                      onInstruction={enqueueMove}
+                      onCubeState={setCubeState}
+                      onMoveHistory={() => { }}
+                      onHint={(hint) => {
+                        setHintTextLocal(hint);
+                        setHintText(hint);
+                      }}
+                      onThinkingChange={setIsThinking}
+                      onChallengeUpdate={(payload) => {
+                        setChallengeMessage(payload.message || "");
+                        if (payload.enabled) {
+                          setAutoSolving(false);
+                          moveQueueRef.current = [];
+                        }
+                      }}
+                      onError={setErrorText}
+                      onSolveComplete={() => setAutoSolving(false)}
+                    />
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <TutorOverlay latestInstruction={latestInstruction} hintText={hintText} transcript={transcript} />
+                </motion.div>
               </div>
-
-              <TutorOverlay
-                latestInstruction={latestInstruction}
-                hintText={hintText}
-                transcript={transcript}
-              />
-            </section>
+            </main>
 
             {/* Footer */}
-            <footer className="space-y-3 pb-6">
+            <footer className="max-w-7xl mx-auto px-4 py-4 w-full">
               <StatusBar
                 connectionStatus={connectionStatus}
                 micLevel={micLevel}
                 timerSeconds={timerSeconds}
-                moveCount={moveCount}
+                moveCount={moveHistory.length}
                 isTutorSpeaking={isTutorSpeaking}
                 isThinking={isThinking}
               />
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={downloadSessionRecord}
-                  className="rounded-[12px] border border-white/60 dark:border-slate-600 bg-white/70 dark:bg-slate-700/70 px-5 py-2.5 text-[12px] font-bold tracking-wide text-[#5f6368] dark:text-gray-300 shadow-sm backdrop-blur-md transition hover:bg-white dark:hover:bg-slate-600"
-                >
-                  DOWNLOAD SESSION JSON
+              <div className="flex flex-wrap gap-3 mt-4">
+                <button onClick={downloadSessionRecord} className="px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" aria-label="Download current session as JSON">
+                  Download Session JSON
                 </button>
-
-                <button
-                  onClick={endSession}
-                  className="rounded-[12px] border border-[#ea4335]/30 bg-[#ea4335]/10 px-5 py-2.5 text-[12px] font-bold tracking-wide text-[#ea4335] dark:text-red-400 shadow-sm backdrop-blur-md transition hover:bg-[#ea4335]/20"
-                >
-                  END SESSION
+                <button onClick={endSession} className="px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-red-700 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 transition-colors" aria-label="End live tutoring session">
+                  End Session
                 </button>
               </div>
             </footer>
-          </div>
-        </main>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

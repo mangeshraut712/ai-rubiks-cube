@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * Parses basic markdown like **bold** into span elements.
@@ -33,65 +34,81 @@ export default function TutorOverlay({ latestInstruction, hintText, transcript }
   }, [transcript]);
 
   return (
-    <div className="flex h-full flex-col rounded-3xl border border-white/60 bg-white/70 p-5 text-[#202124] shadow-[0_8px_32px_rgba(32,33,36,0.08)] backdrop-blur-xl">
+    <div className="flex h-full flex-col rounded-3xl border border-white/60 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 p-5 text-[#202124] dark:text-white shadow-[0_8px_32px_rgba(32,33,36,0.08)] backdrop-blur-xl">
       {/* CUBEY SAYS HEADER */}
-      <div className="relative mb-6 overflow-hidden rounded-2xl bg-white p-[2px] shadow-sm">
+      <div className="relative mb-6 overflow-hidden rounded-2xl bg-white dark:bg-gray-900 p-[2px] shadow-sm">
         {/* Animated Gradient Border Layer */}
         <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#4285f4] via-[#9b72cb] to-[#d96570] opacity-80" />
 
         {/* Inner Content Layer */}
-        <div className="relative z-10 flex h-full flex-col rounded-[14px] bg-white p-4">
-          <div className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#5f6368]">
-            <span className="gemini-text-gradient">✦</span>
+        <div className="relative z-10 flex h-full flex-col rounded-[14px] bg-white dark:bg-gray-900 p-4">
+          <div className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#5f6368] dark:text-gray-400">
+            <span className="gemini-text-gradient font-bold text-lg leading-none">✦</span>
             Cubey Says
           </div>
-          <p className="text-[1.1rem] font-medium leading-relaxed text-[#202124]">
+          <motion.p
+            key={latestInstruction}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-[1.1rem] font-medium leading-relaxed text-[#202124] dark:text-white"
+          >
             {formatMarkdown(latestInstruction) ||
               "Show me your cube and I will guide your next move."}
-          </p>
+          </motion.p>
         </div>
       </div>
 
-      {hintText ? (
-        <div className="mb-5 rounded-2xl border border-[#fbbc04]/30 bg-[#fbbc04]/10 p-3.5 text-sm text-[#8f6a00] shadow-sm">
-          <span className="mr-2 font-bold uppercase tracking-widest">💡 Hint:</span>
-          {formatMarkdown(hintText)}
-        </div>
-      ) : null}
+      <AnimatePresence>
+        {hintText && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-5 rounded-2xl border border-[#fbbc04]/30 bg-[#fbbc04]/10 p-3.5 text-sm text-[#8f6a00] dark:text-[#fbbc04] shadow-sm overflow-hidden"
+          >
+            <span className="mr-2 font-bold uppercase tracking-widest">💡 Hint:</span>
+            {formatMarkdown(hintText)}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="mb-3 flex items-center justify-between">
-        <div className="text-[11px] font-bold uppercase tracking-widest text-[#5f6368]">
+        <div className="text-[11px] font-bold uppercase tracking-widest text-[#5f6368] dark:text-gray-400">
           Transcript
         </div>
       </div>
       <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto pr-1 scroll-smooth">
         {transcript.length === 0 ? (
-          <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-[#d2d8e3] bg-white/50 p-4 text-center text-sm text-[#5f6368]">
+          <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-[#d2d8e3] dark:border-gray-700 bg-white/50 dark:bg-gray-900/50 p-4 text-center text-sm text-[#5f6368] dark:text-gray-400">
             Connection established.
             <br />
             Speak to start the session.
           </div>
         ) : null}
 
-        {transcript.map((entry, index) => (
-          <div
-            key={`${entry.ts}-${index}`}
-            className={`rounded-2xl p-3.5 text-sm transition-all duration-300 ${
-              entry.speaker === "cubey"
-                ? "border border-[#e8eaed] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
-                : "border border-transparent bg-[#f1f3f4] text-right"
-            }`}
-          >
-            <div
-              className={`mb-1.5 text-[10px] font-bold uppercase tracking-widest ${entry.speaker === "cubey" ? "gemini-text-gradient" : "text-[#5f6368]"}`}
+        <AnimatePresence initial={false}>
+          {transcript.map((entry, index) => (
+            <motion.div
+              key={`${entry.ts}-${index}`}
+              initial={{ opacity: 0, x: entry.speaker === "cubey" ? -10 : 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className={`rounded-2xl p-3.5 text-sm transition-all duration-300 ${entry.speaker === "cubey"
+                  ? "border border-[#e8eaed] dark:border-gray-700 bg-white dark:bg-gray-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                  : "border border-transparent bg-[#f1f3f4] dark:bg-gray-800 text-right"
+                }`}
             >
-              {entry.speaker === "cubey" ? "✦ Cubey" : "You"}
-            </div>
-            <p className="text-[13px] leading-relaxed text-[#202124]">
-              {formatMarkdown(entry.text)}
-            </p>
-          </div>
-        ))}
+              <div
+                className={`mb-1.5 text-[10px] font-bold uppercase tracking-widest ${entry.speaker === "cubey" ? "gemini-text-gradient" : "text-[#5f6368] dark:text-gray-400"}`}
+              >
+                {entry.speaker === "cubey" ? "✦ Cubey" : "You"}
+              </div>
+              <p className="text-[13px] leading-relaxed text-[#202124] dark:text-gray-200">
+                {formatMarkdown(entry.text)}
+              </p>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );

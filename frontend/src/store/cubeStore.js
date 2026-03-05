@@ -48,6 +48,7 @@ export const useCubeStore = create(
         settings: {
           autoRotate: false,
           soundEnabled: true,
+          voiceEnabled: true,
           hapticsEnabled: true,
           highContrast: false,
           animationSpeed: 420,
@@ -142,7 +143,7 @@ export const useCubeStore = create(
         nextTutorialStep: () =>
           set((state) => {
             state.tutorialStep++;
-            if (state.tutorialStep >= 10) {
+            if (state.tutorialStep >= 8) {
               state.tutorialCompleted = true;
               state.tutorialMode = false;
             }
