@@ -1,26 +1,53 @@
 /**
  * Requests webcam + microphone stream for live tutoring.
  * Optimized for Gemini Live API with balanced quality/bandwidth.
+ * Enhanced with better error handling and permissions handling.
  * @returns {Promise<MediaStream>}
  */
 export async function requestMediaStream() {
-  return navigator.mediaDevices.getUserMedia({
-    video: {
-      width: { ideal: 1280, max: 1920 },
-      height: { ideal: 720, max: 1080 },
-      facingMode: "user",
-      frameRate: { ideal: 15, max: 30 }
-    },
-    audio: {
-      channelCount: 1,
-      sampleRate: 16000,
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-      // Improve voice capture
-      latency: 0
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      video: {
+        width: { ideal: 1280, max: 1920 },
+        height: { ideal: 720, max: 1080 },
+        facingMode: "user",
+        frameRate: { ideal: 15, max: 30 }
+      },
+      audio: {
+        channelCount: 1,
+        sampleRate: 16000,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        latency: 0
+      }
+    });
+  } catch (error) {
+    console.error("[webrtcHelpers] Media stream request failed:", error);
+
+    // Try with reduced requirements if full request fails
+    if (error.name === "NotAllowedError") {
+      throw new Error("Camera/microphone permission denied. Please allow access and try again.");
     }
-  });
+
+    // Fallback: try audio only
+    try {
+      console.log("[webrtcHelpers] Trying audio-only fallback");
+      return await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          sampleRate: 16000,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        },
+        video: false
+      });
+    } catch (audioError) {
+      console.error("[webrtcHelpers] Audio fallback also failed:", audioError);
+      throw new Error("Could not access microphone. Please check permissions.");
+    }
+  }
 }
 
 // Frame comparison for motion detection - avoids sending duplicate frames
@@ -31,7 +58,7 @@ let lastFrameHash = null;
  * Returns true if frame is significantly different from last frame
  */
 function isFrameDifferent(canvasEl, threshold = 0.02) {
-  const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
+  const ctx = canvasEl.getContext("2d", { willReadFrequently: true });
   const imageData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
   const data = imageData.data;
 
@@ -58,6 +85,7 @@ function isFrameDifferent(canvasEl, threshold = 0.02) {
 /**
  * Captures the latest webcam frame as base64 JPEG.
  * Now includes motion detection to reduce bandwidth.
+ * Enhanced with better error handling.
  * @param {HTMLVideoElement} videoEl
  * @param {HTMLCanvasElement} canvasEl
  * @param {number} [quality]
@@ -97,8 +125,13 @@ export function captureVideoFrame(videoEl, canvasEl, quality = 0.7, checkMotion 
     return null;
   }
 
-  const dataUrl = canvasEl.toDataURL("image/jpeg", quality);
-  return dataUrl.split(",")[1] || null;
+  try {
+    const dataUrl = canvasEl.toDataURL("image/jpeg", quality);
+    return dataUrl.split(",")[1] || null;
+  } catch (error) {
+    console.warn("[webrtcHelpers] Frame capture failed:", error);
+    return null;
+  }
 }
 
 function downsampleBuffer(float32Data, inputSampleRate, outputSampleRate) {
@@ -144,20 +177,21 @@ function floatTo16BitPcm(float32Data) {
 
 /**
  * Starts ScriptProcessor-based PCM capture (16kHz mono Int16) from a media stream.
+ * Enhanced with better audio level detection.
  * @param {MediaStream} stream
  * @param {(chunk: Uint8Array) => void} onChunk
  * @param {(level: number) => void} [onMicLevel]
  * @returns {{stop: () => Promise<void>}}
  */
-export function startPcmCapture(stream, onChunk, onMicLevel = () => { }) {
+export function startPcmCapture(stream, onChunk, onMicLevel = () => {}) {
   const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
   const audioContext = new AudioContextCtor();
   const source = audioContext.createMediaStreamSource(stream);
   const processor = audioContext.createScriptProcessor(4096, 1, 1);
   const sink = audioContext.createMediaStreamDestination();
+
   let noiseFloor = 0.01;
   let noiseFloorInitialized = false;
-
   source.connect(processor);
   processor.connect(sink);
 
@@ -177,15 +211,17 @@ export function startPcmCapture(stream, onChunk, onMicLevel = () => { }) {
       noiseFloor = noiseFloor * 0.95 + rms * 0.05;
     }
 
-    const adaptedLevel = Math.max(
-      0,
-      (rms - noiseFloor) / Math.max(0.0001, 1 - noiseFloor)
-    );
+    const adaptedLevel = Math.max(0, (rms - noiseFloor) / Math.max(0.0001, 1 - noiseFloor));
     onMicLevel(Math.min(1, adaptedLevel * 2));
 
     const resampled = downsampleBuffer(input, audioContext.sampleRate, 16000);
     const pcm16 = floatTo16BitPcm(resampled);
-    onChunk(new Uint8Array(pcm16.buffer));
+
+    // Only send if there's actual audio (not silence)
+    const maxAmplitude = Math.max(...pcm16.map(Math.abs));
+    if (maxAmplitude > 100) {
+      onChunk(new Uint8Array(pcm16.buffer));
+    }
   };
 
   return {
@@ -226,4 +262,33 @@ export function encodeBinaryEnvelope(header, payload) {
   output.set(payload, 4 + headerBytes.byteLength);
 
   return output.buffer;
+}
+
+/**
+ * Checks if the browser supports the required media APIs
+ * @returns {{supported: boolean, missing: string[]}}
+ */
+export function checkMediaSupport() {
+  const missing = [];
+
+  if (!navigator.mediaDevices) {
+    missing.push("MediaDevices API");
+  }
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    missing.push("getUserMedia");
+  }
+
+  if (!window.AudioContext && !window.webkitAudioContext) {
+    missing.push("Web Audio API");
+  }
+
+  if (!window.WebSocket) {
+    missing.push("WebSocket");
+  }
+
+  return {
+    supported: missing.length === 0,
+    missing
+  };
 }

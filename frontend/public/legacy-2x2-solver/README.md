@@ -11,29 +11,29 @@ python3 -m http.server 8080
 
 ## 📁 Files
 
-| File | Description |
-|------|-------------|
-| `index.html` | Main UI with Apple-style design, shadcn/ui tokens |
-| `solver.js` | Bidirectional BFS & IDA* algorithms |
-| `a-star-solver.js` | A* search with heuristics |
-| `cube-engine.js` | Three.js 3D visualization |
-| `app.js` | Application controller with step-by-step hints |
-| `web-worker-solver.js` | Background solving (optional) |
+| File                   | Description                                       |
+| ---------------------- | ------------------------------------------------- |
+| `index.html`           | Main UI with Apple-style design, shadcn/ui tokens |
+| `solver.js`            | Bidirectional BFS & IDA\* algorithms              |
+| `a-star-solver.js`     | A\* search with heuristics                        |
+| `cube-engine.js`       | Three.js 3D visualization                         |
+| `app.js`               | Application controller with step-by-step hints    |
+| `web-worker-solver.js` | Background solving (optional)                     |
 
 ## ⌨️ Shortcuts
 
-| Key | Action |
-|-----|--------|
+| Key     | Action   |
+| ------- | -------- |
 | `Space` | Scramble |
-| `Enter` | Solve |
-| `R` | Reset |
-| `H` | Help |
+| `Enter` | Solve    |
+| `R`     | Reset    |
+| `H`     | Help     |
 
 ## 🧠 Algorithms
 
 1. **BFS** ⭐ - Bidirectional, fastest for any scramble
-2. **A*** - Heuristic search, good for short scrambles  
-3. **IDA*** - Memory efficient, heuristic pruning
+2. **A\*** - Heuristic search, good for short scrambles
+3. **IDA\*** - Memory efficient, heuristic pruning
 
 ## 🎨 Features
 
@@ -45,10 +45,10 @@ python3 -m http.server 8080
 
 ## 📊 Performance
 
-| Scramble | BFS | A* | IDA* |
-|----------|-----|-----|------|
-| 20 moves | **0.014s** ⭐ | ~30s | ~30s |
+| Scramble | BFS           | A\*  | IDA\* |
+| -------- | ------------- | ---- | ----- |
+| 20 moves | **0.014s** ⭐ | ~30s | ~30s  |
 
 ---
 
-*See main [README.md](../README.md) for full documentation*
+_See main [README.md](../../../README.md) for full documentation_

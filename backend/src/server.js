@@ -9,11 +9,7 @@ import WebSocket, { WebSocketServer } from "ws";
 import { fileURLToPath } from "url";
 
 import { GeminiLiveClient } from "./geminiLiveClient.js";
-import {
-  CubeState,
-  generateScramble,
-  solveCube
-} from "./cubeStateManager.js";
+import { CubeState, generateScramble, solveCube } from "./cubeStateManager.js";
 import { TUTOR_SYSTEM_PROMPT } from "./tutorPrompt.js";
 
 dotenv.config();
@@ -110,7 +106,10 @@ class LocalDemoGeminiClient {
       return;
     }
 
-    if (normalized.includes("continue demo walkthrough") || normalized.includes("demo mode is active")) {
+    if (
+      normalized.includes("continue demo walkthrough") ||
+      normalized.includes("demo mode is active")
+    ) {
       this.#emitText(this.#nextMoveInstruction());
       return;
     }
@@ -197,11 +196,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json({ limit: "15mb" }));
 
-const DEFAULT_CORS_ORIGINS =
-  "https://*.run.app,http://localhost:5173,http://127.0.0.1:5173";
+const DEFAULT_CORS_ORIGINS = "https://*.run.app,http://localhost:5173,http://127.0.0.1:5173";
 
 function normalizeOrigin(value) {
-  return String(value || "").trim().replace(/\/+$/, "");
+  return String(value || "")
+    .trim()
+    .replace(/\/+$/, "");
 }
 
 const allowedOrigins = (process.env.CORS_ORIGIN || DEFAULT_CORS_ORIGINS)
@@ -515,7 +515,7 @@ wss.on("connection", async (ws, req) => {
         lastTutorNormalizedText.length >= 30 &&
         now - lastTutorResponseAt < 12_000 &&
         normalizedText.split(" ").slice(0, 8).join(" ") ===
-        lastTutorNormalizedText.split(" ").slice(0, 8).join(" ");
+          lastTutorNormalizedText.split(" ").slice(0, 8).join(" ");
 
       if (isExactDuplicate || isContainedDuplicate || isLongReplayPrefix) {
         return;
@@ -644,9 +644,7 @@ wss.on("connection", async (ws, req) => {
   ws.on("message", async (rawMessage, isBinary) => {
     try {
       if (isBinary) {
-        const dataBuffer = Buffer.isBuffer(rawMessage)
-          ? rawMessage
-          : Buffer.from(rawMessage);
+        const dataBuffer = Buffer.isBuffer(rawMessage) ? rawMessage : Buffer.from(rawMessage);
 
         const { header, payload } = decodeBinaryEnvelope(dataBuffer);
 
@@ -706,7 +704,9 @@ wss.on("connection", async (ws, req) => {
         }
 
         case "move_applied": {
-          const move = String(message.move || "").trim().toUpperCase();
+          const move = String(message.move || "")
+            .trim()
+            .toUpperCase();
           if (move) {
             cubeState.applyMove(move);
             sessionRecord.moveHistory.push({ move, ts: new Date().toISOString(), source: "user" });
@@ -984,9 +984,7 @@ server.on("error", (error) => {
     listenAttemptIndex += 1;
     const nextPort = fallbackPorts[listenAttemptIndex];
 
-    console.warn(
-      `[server] Port ${occupiedPort} is in use. Retrying on :${nextPort}...`
-    );
+    console.warn(`[server] Port ${occupiedPort} is in use. Retrying on :${nextPort}...`);
 
     setTimeout(() => {
       server.listen(nextPort);

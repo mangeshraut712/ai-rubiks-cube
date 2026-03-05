@@ -1,26 +1,42 @@
 {
   "name": "gemini-rubiks-tutor-backend",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "test": "vitest --passWithNoTests",
+    "lint": "eslint . --ext .js",
+    "format": "prettier --write ."
   },
   "dependencies": {
-    "@google/genai": "^1.43.0",
-    "@google/generative-ai": "^0.24.1",
+    "@google/genai": "^1.0.0",
+    "@google/generative-ai": "^0.24.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^4.21.2",
+    "dotenv": "^16.4.7",
+    "express": "^5.0.1",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
     "kociemba": "^1.0.1",
-    "ws": "^8.18.3"
+    "winston": "^3.17.0",
+    "ws": "^8.18.0",
+    "zod": "^3.24.1",
+    "ioredis": "^5.4.2",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^3.0.2",
+    "uuid": "^11.0.5",
+    "compression": "^1.7.5"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.9",
+    "vitest": "^3.0.4",
+    "supertest": "^7.0.0",
+    "eslint": "^9.19.0",
+    "prettier": "^3.4.2"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

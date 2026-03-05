@@ -4,8 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const DEFAULT_PRIMARY_MODEL =
   process.env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-preview-09-2025";
-const DEFAULT_FALLBACK_MODEL =
-  process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash";
+const DEFAULT_FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash";
 const DEFAULT_SILENCE_DURATION_MS = 1800;
 const DEFAULT_MAX_OUTPUT_TOKENS = 1536;
 
@@ -19,6 +18,7 @@ function toPositiveInt(value, fallback) {
 
 /**
  * Wraps Gemini Live API bidirectional streaming for audio + video tutoring.
+ * Enhanced with improved error handling and connection resilience.
  */
 export class GeminiLiveClient {
   /**
@@ -47,6 +47,8 @@ export class GeminiLiveClient {
     this.pendingPartText = "";
     this.lastDeliveredText = "";
     this.lastDeliveredNormalized = "";
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 3;
   }
 
   /**
@@ -67,28 +69,37 @@ export class GeminiLiveClient {
     const voiceLang = String(process.env.GEMINI_VOICE_LANG || "en-US").trim() || "en-US";
     const speechConfig = voiceName
       ? {
-        languageCode: voiceLang,
-        voiceConfig: {
-          prebuiltVoiceConfig: {
-            voiceName
+          languageCode: voiceLang,
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName
+            }
           }
         }
-      }
       : {
-        languageCode: voiceLang
-      };
+          languageCode: voiceLang
+        };
 
-    const candidateModels = Array.from(new Set([
-      this.model,
-      process.env.GEMINI_LIVE_MODEL,
-      "gemini-2.5-flash-native-audio-preview-09-2025",
-      "gemini-live-2.5-flash-preview"
-    ].filter(Boolean)));
+    // Enhanced model list with multiple fallbacks
+    const candidateModels = Array.from(
+      new Set(
+        [
+          this.model,
+          process.env.GEMINI_LIVE_MODEL,
+          "gemini-2.5-flash-native-audio-preview-09-2025",
+          "gemini-live-2.5-flash-preview",
+          "gemini-2.0-flash-live-preview"
+        ].filter(Boolean)
+      )
+    );
     let lastError = null;
 
-    for (const candidateModel of candidateModels) {
+    for (let attempt = 0; attempt < candidateModels.length; attempt++) {
+      const candidateModel = candidateModels[attempt];
       try {
-        console.log(`[gemini-live] Attempting to connect with model: ${candidateModel}`);
+        console.log(
+          `[gemini-live] Attempting to connect with model: ${candidateModel} (attempt ${attempt + 1})`
+        );
         let settled = false;
         let resolveOpen;
         let rejectOpen;
@@ -125,6 +136,7 @@ export class GeminiLiveClient {
             onopen: () => {
               this.isOpen = true;
               this.activeModel = candidateModel;
+              this.reconnectAttempts = 0;
               console.log(`[gemini-live] Connected successfully with model: ${candidateModel}`);
               this.emitter.emit("open", { model: candidateModel });
               if (!settled) {
@@ -156,7 +168,6 @@ export class GeminiLiveClient {
         });
 
         await openPromise;
-
         return;
       } catch (error) {
         lastError = error;
@@ -164,6 +175,8 @@ export class GeminiLiveClient {
           model: candidateModel,
           error: error?.message ?? String(error)
         });
+
+        // Continue to next model if this one fails
       }
     }
 
@@ -211,13 +224,17 @@ export class GeminiLiveClient {
       return;
     }
 
-    const encoded = Buffer.from(pcmBuffer).toString("base64");
-    this.session.sendRealtimeInput({
-      audio: {
-        data: encoded,
-        mimeType: "audio/pcm;rate=16000"
-      }
-    });
+    try {
+      const encoded = Buffer.from(pcmBuffer).toString("base64");
+      this.session.sendRealtimeInput({
+        audio: {
+          data: encoded,
+          mimeType: "audio/pcm;rate=16000"
+        }
+      });
+    } catch (error) {
+      console.warn("[gemini-live] sendAudioChunk failed:", error?.message ?? error);
+    }
   }
 
   /**
@@ -246,9 +263,13 @@ export class GeminiLiveClient {
     try {
       this.session.sendRealtimeInput({ media: framePayload });
       this.frameInputMode = "media";
-    } catch (_mediaError) {
-      this.session.sendRealtimeInput({ video: framePayload });
-      this.frameInputMode = "video";
+    } catch {
+      try {
+        this.session.sendRealtimeInput({ video: framePayload });
+        this.frameInputMode = "video";
+      } catch {
+        console.warn("[gemini-live] Failed to send video frame with both media and video modes");
+      }
     }
   }
 
@@ -262,15 +283,19 @@ export class GeminiLiveClient {
       return;
     }
 
-    this.session.sendClientContent({
-      turns: [
-        {
-          role: "user",
-          parts: [{ text: text.trim() }]
-        }
-      ],
-      turnComplete
-    });
+    try {
+      this.session.sendClientContent({
+        turns: [
+          {
+            role: "user",
+            parts: [{ text: text.trim() }]
+          }
+        ],
+        turnComplete
+      });
+    } catch (error) {
+      console.warn("[gemini-live] sendTextTurn failed:", error?.message ?? error);
+    }
   }
 
   /**
@@ -313,7 +338,10 @@ export class GeminiLiveClient {
         }
       ]);
 
-      return response?.response?.text?.() || "I could not detect the mistake clearly. Please rotate the cube and ask again.";
+      return (
+        response?.response?.text?.() ||
+        "I could not detect the mistake clearly. Please rotate the cube and ask again."
+      );
     } catch (error) {
       console.error("[gemini-live] requestHint failed", error);
       return "I couldn't generate a visual hint right now. Please try again in a moment.";
@@ -401,12 +429,12 @@ export class GeminiLiveClient {
     }
 
     // Emit thinking state based on whether model is generating
-    const isThinking = !serverContent.interrupted && (
-      serverContent.modelTurn ||
-      serverContent.model_turn ||
-      serverContent.outputAudioTranscription ||
-      serverContent.output_audio_transcription
-    );
+    const isThinking =
+      !serverContent.interrupted &&
+      (serverContent.modelTurn ||
+        serverContent.model_turn ||
+        serverContent.outputAudioTranscription ||
+        serverContent.output_audio_transcription);
     this.emitter.emit("thinking", !!isThinking);
 
     if (serverContent.interrupted) {
@@ -459,9 +487,7 @@ export class GeminiLiveClient {
           normalizedFinalText.includes(this.lastDeliveredNormalized));
 
       const canEmitText =
-        turnCompleteReason !== "NEED_MORE_INPUT" &&
-        normalizedFinalText.length >= 3 &&
-        !isDuplicate;
+        turnCompleteReason !== "NEED_MORE_INPUT" && normalizedFinalText.length >= 3 && !isDuplicate;
 
       if (canEmitText) {
         this.emitter.emit("text", finalText);

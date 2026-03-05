@@ -1,1157 +1,1162 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>2×2 Rubik's Cube Solver | AI-Powered Solution Engine</title>
-    <meta name="description"
-        content="Advanced AI-powered 2x2 Rubik's Cube solver using BFS, A*, and IDS algorithms with step-by-step hints and beautiful animations.">
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <meta
+      name="description"
+      content="Advanced AI-powered 2x2 Rubik's Cube solver using BFS, A*, and IDS algorithms with step-by-step hints and beautiful animations."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
-        rel="stylesheet">
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
 
     <style>
-        /* ===== 2025 DESIGN SYSTEM - Apple/shadcn/ui Inspired ===== */
-        :root {
-            --background: 0 0% 100%;
-            --foreground: 240 10% 3.9%;
-            --card: 0 0% 100%;
-            --card-foreground: 240 10% 3.9%;
-            --primary: 240 5.9% 10%;
-            --primary-foreground: 0 0% 98%;
-            --secondary: 240 4.8% 95.9%;
-            --secondary-foreground: 240 5.9% 10%;
-            --muted: 240 4.8% 95.9%;
-            --muted-foreground: 240 3.8% 46.1%;
-            --accent: 240 4.8% 95.9%;
-            --accent-foreground: 240 5.9% 10%;
-            --destructive: 0 84.2% 60.2%;
-            --destructive-foreground: 0 0% 98%;
-            --border: 240 5.9% 90%;
-            --input: 240 5.9% 90%;
-            --ring: 240 5.9% 10%;
-            --success: 142 76% 36%;
-            --success-foreground: 0 0% 100%;
-            --info: 221 83% 53%;
-            --warning: 38 92% 50%;
-            --radius: 0.75rem;
-            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+      /* ===== 2025 DESIGN SYSTEM - Apple/shadcn/ui Inspired ===== */
+      :root {
+        --background: 0 0% 100%;
+        --foreground: 240 10% 3.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 240 10% 3.9%;
+        --primary: 240 5.9% 10%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 240 4.8% 95.9%;
+        --secondary-foreground: 240 5.9% 10%;
+        --muted: 240 4.8% 95.9%;
+        --muted-foreground: 240 3.8% 46.1%;
+        --accent: 240 4.8% 95.9%;
+        --accent-foreground: 240 5.9% 10%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 240 5.9% 90%;
+        --input: 240 5.9% 90%;
+        --ring: 240 5.9% 10%;
+        --success: 142 76% 36%;
+        --success-foreground: 0 0% 100%;
+        --info: 221 83% 53%;
+        --warning: 38 92% 50%;
+        --radius: 0.75rem;
+        --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-mono: "JetBrains Mono", "SF Mono", monospace;
+      }
+
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+        line-height: 1.6;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* ===== Animations ===== */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
         }
 
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
         }
 
-        html {
-            scroll-behavior: smooth;
-            -webkit-font-smoothing: antialiased;
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes slideInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-30px);
         }
 
-        body {
-            font-family: var(--font-sans);
-            background-color: hsl(var(--background));
-            color: hsl(var(--foreground));
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes slideInRight {
+        from {
+          opacity: 0;
+          transform: translateX(30px);
         }
 
-        /* ===== Animations ===== */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
 
-            to {
-                opacity: 1;
-            }
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
         }
 
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
+        50% {
+          transform: scale(1.05);
+        }
+      }
 
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+      @keyframes moveHighlight {
+        0% {
+          box-shadow: 0 0 0 0 hsla(var(--success), 0.4);
         }
 
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        70% {
+          box-shadow: 0 0 0 10px hsla(var(--success), 0);
         }
 
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+        100% {
+          box-shadow: 0 0 0 0 hsla(var(--success), 0);
         }
+      }
 
-        @keyframes pulse {
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
 
-            0%,
-            100% {
-                transform: scale(1);
-            }
+      .animate-fade-in-up {
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
 
-            50% {
-                transform: scale(1.05);
-            }
-        }
+      .animate-slide-in-left {
+        animation: slideInLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
 
-        @keyframes moveHighlight {
-            0% {
-                box-shadow: 0 0 0 0 hsla(var(--success), 0.4);
-            }
+      .animate-slide-in-right {
+        animation: slideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
 
-            70% {
-                box-shadow: 0 0 0 10px hsla(var(--success), 0);
-            }
+      .animate-scale-in {
+        animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
 
-            100% {
-                box-shadow: 0 0 0 0 hsla(var(--success), 0);
-            }
-        }
+      .delay-100 {
+        animation-delay: 100ms;
+      }
 
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
+      .delay-200 {
+        animation-delay: 200ms;
+      }
 
-        .animate-fade-in-up {
-            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+      .delay-300 {
+        animation-delay: 300ms;
+      }
 
-        .animate-slide-in-left {
-            animation: slideInLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+      [class*="animate-"]:not(.animate-pulse) {
+        opacity: 0;
+      }
 
-        .animate-slide-in-right {
-            animation: slideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+      /* ===== Layout ===== */
+      .container {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
 
-        .animate-scale-in {
-            animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+      /* ===== Header ===== */
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: hsla(var(--background), 0.8);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid hsl(var(--border));
+      }
 
-        .delay-100 {
-            animation-delay: 100ms;
-        }
+      .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 4rem;
+      }
 
-        .delay-200 {
-            animation-delay: 200ms;
-        }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
 
-        .delay-300 {
-            animation-delay: 300ms;
-        }
+      .logo-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, hsl(var(--success)), hsl(var(--info)));
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px hsla(var(--success), 0.3);
+        transition: transform 0.3s ease;
+      }
 
-        [class*="animate-"]:not(.animate-pulse) {
-            opacity: 0;
-        }
+      .logo-icon:hover {
+        transform: rotate(15deg) scale(1.05);
+      }
 
-        /* ===== Layout ===== */
-        .container {
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 1.5rem;
-        }
+      .logo-text h1 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+      }
 
-        /* ===== Header ===== */
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: hsla(var(--background), 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid hsl(var(--border));
-        }
+      .logo-text span {
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+      }
 
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 4rem;
-        }
+      /* ===== Buttons ===== */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-family: inherit;
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.625rem 1rem;
+        border-radius: var(--radius);
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
+      .btn:focus-visible {
+        outline: 2px solid hsl(var(--ring));
+        outline-offset: 2px;
+      }
 
-        .logo-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            background: linear-gradient(135deg, hsl(var(--success)), hsl(var(--info)));
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 8px hsla(var(--success), 0.3);
-            transition: transform 0.3s ease;
-        }
+      .btn-primary {
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+      }
 
-        .logo-icon:hover {
-            transform: rotate(15deg) scale(1.05);
-        }
+      .btn-primary:hover {
+        background: hsl(var(--primary) / 0.9);
+        transform: translateY(-1px);
+      }
 
-        .logo-text h1 {
-            font-size: 1.125rem;
-            font-weight: 700;
-            letter-spacing: -0.025em;
-        }
+      .btn-success {
+        background: hsl(var(--success));
+        color: hsl(var(--success-foreground));
+      }
 
-        .logo-text span {
-            font-size: 0.75rem;
-            color: hsl(var(--muted-foreground));
-        }
+      .btn-success:hover {
+        background: hsl(var(--success) / 0.9);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px hsla(var(--success), 0.3);
+      }
 
-        /* ===== Buttons ===== */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            font-family: inherit;
-            font-size: 0.875rem;
-            font-weight: 500;
-            padding: 0.625rem 1rem;
-            border-radius: var(--radius);
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+      .btn-secondary {
+        background: hsl(var(--secondary));
+        color: hsl(var(--secondary-foreground));
+        border: 1px solid hsl(var(--border));
+      }
 
-        .btn:focus-visible {
-            outline: 2px solid hsl(var(--ring));
-            outline-offset: 2px;
-        }
+      .btn-secondary:hover {
+        background: hsl(var(--accent));
+      }
 
-        .btn-primary {
-            background: hsl(var(--primary));
-            color: hsl(var(--primary-foreground));
-        }
+      .btn-ghost {
+        background: transparent;
+        color: hsl(var(--muted-foreground));
+      }
 
-        .btn-primary:hover {
-            background: hsl(var(--primary) / 0.9);
-            transform: translateY(-1px);
-        }
+      .btn-ghost:hover {
+        background: hsl(var(--accent));
+        color: hsl(var(--accent-foreground));
+      }
 
-        .btn-success {
-            background: hsl(var(--success));
-            color: hsl(var(--success-foreground));
-        }
+      .btn-icon {
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+      }
 
-        .btn-success:hover {
-            background: hsl(var(--success) / 0.9);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px hsla(var(--success), 0.3);
-        }
+      .btn-lg {
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+      }
 
-        .btn-secondary {
-            background: hsl(var(--secondary));
-            color: hsl(var(--secondary-foreground));
-            border: 1px solid hsl(var(--border));
-        }
+      /* ===== Cards ===== */
+      .card {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition:
+          box-shadow 0.3s ease,
+          border-color 0.3s ease;
+      }
 
-        .btn-secondary:hover {
-            background: hsl(var(--accent));
-        }
+      .card:hover {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      }
 
-        .btn-ghost {
-            background: transparent;
-            color: hsl(var(--muted-foreground));
-        }
+      .card-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid hsl(var(--border));
+      }
 
-        .btn-ghost:hover {
-            background: hsl(var(--accent));
-            color: hsl(var(--accent-foreground));
-        }
+      .card-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: hsl(var(--muted-foreground));
+      }
 
-        .btn-icon {
-            width: 2.25rem;
-            height: 2.25rem;
-            padding: 0;
-        }
+      .card-content {
+        padding: 1.5rem;
+      }
 
-        .btn-lg {
-            padding: 0.875rem 1.5rem;
-            font-size: 1rem;
-        }
+      /* ===== Form Elements ===== */
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
 
-        /* ===== Cards ===== */
-        .card {
-            background: hsl(var(--card));
-            border: 1px solid hsl(var(--border));
-            border-radius: var(--radius);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-            transition: box-shadow 0.3s ease, border-color 0.3s ease;
-        }
+      .form-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: hsl(var(--foreground));
+        display: flex;
+        justify-content: space-between;
+      }
 
-        .card:hover {
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-        }
+      .form-label .value {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+        background: hsl(var(--muted));
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+      }
 
-        .card-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid hsl(var(--border));
-        }
+      select {
+        width: 100%;
+        height: 2.5rem;
+        padding: 0 0.75rem;
+        font-family: inherit;
+        font-size: 0.875rem;
+        color: hsl(var(--foreground));
+        background: hsl(var(--background));
+        border: 1px solid hsl(var(--input));
+        border-radius: var(--radius);
+        transition: border-color 0.2s;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        padding-right: 2.5rem;
+      }
 
-        .card-title {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: hsl(var(--muted-foreground));
-        }
+      select:focus {
+        outline: none;
+        border-color: hsl(var(--ring));
+        box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1);
+      }
 
-        .card-content {
-            padding: 1.5rem;
-        }
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 0.5rem;
+        background: hsl(var(--muted));
+        border-radius: 0.25rem;
+        border: none;
+      }
 
-        /* ===== Form Elements ===== */
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 1.25rem;
+        height: 1.25rem;
+        background: hsl(var(--primary));
+        border-radius: 50%;
+        cursor: pointer;
+        border: 3px solid hsl(var(--background));
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
 
-        .form-label {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: hsl(var(--foreground));
-            display: flex;
-            justify-content: space-between;
-        }
+      /* ===== Main Layout - 3 Column Grid ===== */
+      main {
+        padding: 2rem 0;
+      }
 
-        .form-label .value {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: hsl(var(--muted-foreground));
-            background: hsl(var(--muted));
-            padding: 0.125rem 0.375rem;
-            border-radius: 0.25rem;
-        }
+      .main-grid {
+        display: grid;
+        grid-template-columns: 320px 1fr 340px;
+        gap: 1.5rem;
+        align-items: start;
+      }
 
-        select {
-            width: 100%;
-            height: 2.5rem;
-            padding: 0 0.75rem;
-            font-family: inherit;
-            font-size: 0.875rem;
-            color: hsl(var(--foreground));
-            background: hsl(var(--background));
-            border: 1px solid hsl(var(--input));
-            border-radius: var(--radius);
-            transition: border-color 0.2s;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            padding-right: 2.5rem;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: hsl(var(--ring));
-            box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1);
-        }
-
-        input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 0.5rem;
-            background: hsl(var(--muted));
-            border-radius: 0.25rem;
-            border: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 1.25rem;
-            height: 1.25rem;
-            background: hsl(var(--primary));
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid hsl(var(--background));
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-        }
-
-        /* ===== Main Layout - 3 Column Grid ===== */
-        main {
-            padding: 2rem 0;
-        }
-
+      @media (max-width: 1200px) {
         .main-grid {
-            display: grid;
-            grid-template-columns: 320px 1fr 340px;
-            gap: 1.5rem;
-            align-items: start;
-        }
-
-        @media (max-width: 1200px) {
-            .main-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .main-grid>.card:nth-child(2) {
-                grid-column: span 2;
-                order: -1;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .main-grid>.card:nth-child(2) {
-                grid-column: auto;
-            }
-        }
-
-        /* ===== 3D Cube Container ===== */
-        .cube-card {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .cube-viewport {
-            background: linear-gradient(180deg, hsl(var(--muted) / 0.3) 0%, hsl(var(--muted) / 0.1) 100%);
-            border-radius: var(--radius) var(--radius) 0 0;
-            position: relative;
-            overflow: hidden;
-            min-height: 380px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .cube-viewport canvas {
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        /* Status Badge - Bottom of Cube */
-        .cube-status {
-            position: absolute;
-            bottom: 1rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background: hsla(var(--background), 0.95);
-            backdrop-filter: blur(8px);
-            border: 1px solid hsl(var(--border));
-            border-radius: 2rem;
-            padding: 0.5rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            z-index: 10;
-        }
-
-        .cube-status.success {
-            background: hsla(142, 76%, 36%, 0.15);
-            border-color: hsl(var(--success));
-            color: hsl(var(--success));
-        }
-
-        .cube-status.error {
-            background: hsla(0, 84%, 60%, 0.15);
-            border-color: hsl(var(--destructive));
-            color: hsl(var(--destructive));
-        }
-
-        /* ===== Current Move Overlay - Inside Cube Viewport ===== */
-        .move-overlay {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            right: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            z-index: 10;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            pointer-events: none;
-        }
-
-        .move-overlay.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .current-move-badge {
-            background: hsla(var(--background), 0.95);
-            backdrop-filter: blur(8px);
-            border: 1px solid hsl(var(--success));
-            border-radius: var(--radius);
-            padding: 0.75rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            animation: moveHighlight 1s ease infinite;
-        }
-
-        .move-step-number {
-            width: 1.75rem;
-            height: 1.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: hsl(var(--success));
-            color: white;
-            border-radius: 50%;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-        .move-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .move-name {
-            font-family: var(--font-mono);
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: hsl(var(--foreground));
-        }
-
-        .move-description {
-            font-size: 0.75rem;
-            color: hsl(var(--muted-foreground));
-        }
-
-        .move-progress-text {
-            background: hsla(var(--background), 0.95);
-            backdrop-filter: blur(8px);
-            border: 1px solid hsl(var(--border));
-            border-radius: var(--radius);
-            padding: 0.5rem 0.75rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: hsl(var(--muted-foreground));
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Progress bar */
-        .progress-container {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: hsl(var(--muted));
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .progress-container.visible {
-            opacity: 1;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, hsl(var(--success)), hsl(var(--info)));
-            width: 0%;
-            transition: width 0.15s ease;
-            border-radius: 0 2px 2px 0;
-        }
-
-        /* ===== Solution Strip - Below Cube ===== */
-        .solution-strip {
-            background: hsl(var(--muted) / 0.5);
-            border-top: 1px solid hsl(var(--border));
-            border-radius: 0 0 var(--radius) var(--radius);
-            padding: 1rem 1.25rem;
-        }
-
-        .solution-strip-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.75rem;
-        }
-
-        .solution-strip-title {
-            font-size: 0.6875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.075em;
-            color: hsl(var(--muted-foreground));
-        }
-
-        .solution-move-count {
-            font-family: var(--font-mono);
-            font-size: 0.6875rem;
-            color: hsl(var(--muted-foreground));
-        }
-
-        .solution-moves {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.375rem;
-        }
-
-        .solution-move {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.5rem;
-            background: hsl(var(--background));
-            border: 1px solid hsl(var(--border));
-            border-radius: 0.25rem;
-            color: hsl(var(--muted-foreground));
-            transition: all 0.2s ease;
-        }
-
-        .solution-move.active {
-            background: hsl(var(--success));
-            border-color: hsl(var(--success));
-            color: white;
-            transform: scale(1.1);
-        }
-
-        .solution-move.completed {
-            background: hsl(var(--success) / 0.15);
-            border-color: hsl(var(--success) / 0.3);
-            color: hsl(var(--success));
-        }
-
-        .solution-placeholder {
-            font-size: 0.8125rem;
-            color: hsl(var(--muted-foreground));
-            font-style: italic;
-        }
-
-        /* ===== Manual Controls ===== */
-        .moves-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
-        }
-
-        .move-btn {
-            height: 2.5rem;
-            font-family: var(--font-mono);
-            font-size: 0.875rem;
-            font-weight: 600;
-            background: hsl(var(--muted));
-            color: hsl(var(--foreground));
-            border: 1px solid hsl(var(--border));
-            border-radius: var(--radius);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .move-btn:hover {
-            background: hsl(var(--primary));
-            color: hsl(var(--primary-foreground));
-            border-color: hsl(var(--primary));
-            transform: translateY(-2px);
-        }
-
-        /* ===== Results Panel ===== */
-        .result-group {
-            background: hsl(var(--muted) / 0.5);
-            border-radius: var(--radius);
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .result-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .result-label {
-            font-size: 0.6875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.075em;
-            color: hsl(var(--muted-foreground));
-            margin-bottom: 0.5rem;
-        }
-
-        .result-value {
-            font-family: var(--font-mono);
-            font-size: 0.875rem;
-            color: hsl(var(--foreground));
-            word-break: break-all;
-            line-height: 1.5;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .stat-label {
-            font-size: 0.6875rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            color: hsl(var(--muted-foreground));
-        }
-
-        .stat-value {
-            font-family: var(--font-mono);
-            font-size: 1rem;
-            font-weight: 600;
-            color: hsl(var(--foreground));
-        }
-
-        /* ===== ASCII Cube ===== */
-        .ascii-cube {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            line-height: 1.2;
-            white-space: pre;
-            text-align: center;
-            color: hsl(var(--muted-foreground));
-            padding: 0.75rem;
-            background: hsl(var(--muted) / 0.3);
-            border-radius: var(--radius);
-        }
-
-        .ascii-cube .W {
-            color: #475569;
-            font-weight: 600;
-        }
-
-        .ascii-cube .R {
-            color: #dc2626;
-            font-weight: 600;
-        }
-
-        .ascii-cube .G {
-            color: #16a34a;
-            font-weight: 600;
-        }
-
-        .ascii-cube .Y {
-            color: #ca8a04;
-            font-weight: 600;
-        }
-
-        .ascii-cube .O {
-            color: #ea580c;
-            font-weight: 600;
-        }
-
-        .ascii-cube .B {
-            color: #2563eb;
-            font-weight: 600;
-        }
-
-        /* ===== Modal ===== */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: hsla(var(--background), 0.8);
-            backdrop-filter: blur(4px);
-            z-index: 100;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .modal-overlay.visible {
-            display: flex;
-            opacity: 1;
-        }
-
-        .modal {
-            background: hsl(var(--card));
-            border: 1px solid hsl(var(--border));
-            border-radius: var(--radius);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            width: 90%;
-            max-width: 560px;
-            max-height: 85vh;
-            display: flex;
-            flex-direction: column;
-            transform: scale(0.95);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .modal-overlay.visible .modal {
-            transform: scale(1);
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid hsl(var(--border));
-        }
-
-        .modal-header h2 {
-            font-size: 1.125rem;
-            font-weight: 600;
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-            overflow-y: auto;
-        }
-
-        .help-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .help-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .help-section h3 {
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .shortcut-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.5rem;
-        }
-
-        .shortcut-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.625rem 0.75rem;
-            background: hsl(var(--muted) / 0.5);
-            border-radius: calc(var(--radius) - 4px);
-            font-size: 0.8125rem;
-        }
-
-        .kbd {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 1.5rem;
-            height: 1.5rem;
-            padding: 0 0.375rem;
-            font-family: var(--font-mono);
-            font-size: 0.6875rem;
-            font-weight: 600;
-            background: hsl(var(--background));
-            border: 1px solid hsl(var(--border));
-            border-radius: 0.25rem;
-            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
-        }
-
-        .algo-card {
-            padding: 1rem;
-            background: hsl(var(--muted) / 0.5);
-            border-radius: calc(var(--radius) - 4px);
-            margin-bottom: 0.75rem;
-        }
-
-        .algo-card:last-child {
-            margin-bottom: 0;
-        }
-
-        .algo-card h4 {
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 0.375rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .algo-card p {
-            font-size: 0.8125rem;
-            color: hsl(var(--muted-foreground));
-            line-height: 1.5;
-        }
-
-        .badge {
-            display: inline-flex;
-            padding: 0.125rem 0.5rem;
-            font-size: 0.6875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            border-radius: 9999px;
-            background: hsl(var(--success) / 0.1);
-            color: hsl(var(--success));
-        }
-
-        /* Utility */
-        .divider {
-            height: 1px;
-            background: hsl(var(--border));
-            margin: 1rem 0;
-        }
-
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .state-display {
-            display: none;
-        }
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .main-grid > .card:nth-child(2) {
+          grid-column: span 2;
+          order: -1;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .main-grid > .card:nth-child(2) {
+          grid-column: auto;
+        }
+      }
+
+      /* ===== 3D Cube Container ===== */
+      .cube-card {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .cube-viewport {
+        background: linear-gradient(
+          180deg,
+          hsl(var(--muted) / 0.3) 0%,
+          hsl(var(--muted) / 0.1) 100%
+        );
+        border-radius: var(--radius) var(--radius) 0 0;
+        position: relative;
+        overflow: hidden;
+        min-height: 380px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .cube-viewport canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      /* Status Badge - Bottom of Cube */
+      .cube-status {
+        position: absolute;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: hsla(var(--background), 0.95);
+        backdrop-filter: blur(8px);
+        border: 1px solid hsl(var(--border));
+        border-radius: 2rem;
+        padding: 0.5rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        z-index: 10;
+      }
+
+      .cube-status.success {
+        background: hsla(142, 76%, 36%, 0.15);
+        border-color: hsl(var(--success));
+        color: hsl(var(--success));
+      }
+
+      .cube-status.error {
+        background: hsla(0, 84%, 60%, 0.15);
+        border-color: hsl(var(--destructive));
+        color: hsl(var(--destructive));
+      }
+
+      /* ===== Current Move Overlay - Inside Cube Viewport ===== */
+      .move-overlay {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        right: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        z-index: 10;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        pointer-events: none;
+      }
+
+      .move-overlay.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .current-move-badge {
+        background: hsla(var(--background), 0.95);
+        backdrop-filter: blur(8px);
+        border: 1px solid hsl(var(--success));
+        border-radius: var(--radius);
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        animation: moveHighlight 1s ease infinite;
+      }
+
+      .move-step-number {
+        width: 1.75rem;
+        height: 1.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: hsl(var(--success));
+        color: white;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .move-details {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .move-name {
+        font-family: var(--font-mono);
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: hsl(var(--foreground));
+      }
+
+      .move-description {
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+      }
+
+      .move-progress-text {
+        background: hsla(var(--background), 0.95);
+        backdrop-filter: blur(8px);
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: hsl(var(--muted-foreground));
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Progress bar */
+      .progress-container {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: hsl(var(--muted));
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .progress-container.visible {
+        opacity: 1;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, hsl(var(--success)), hsl(var(--info)));
+        width: 0%;
+        transition: width 0.15s ease;
+        border-radius: 0 2px 2px 0;
+      }
+
+      /* ===== Solution Strip - Below Cube ===== */
+      .solution-strip {
+        background: hsl(var(--muted) / 0.5);
+        border-top: 1px solid hsl(var(--border));
+        border-radius: 0 0 var(--radius) var(--radius);
+        padding: 1rem 1.25rem;
+      }
+
+      .solution-strip-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+      }
+
+      .solution-strip-title {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.075em;
+        color: hsl(var(--muted-foreground));
+      }
+
+      .solution-move-count {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: hsl(var(--muted-foreground));
+      }
+
+      .solution-moves {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+      }
+
+      .solution-move {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        background: hsl(var(--background));
+        border: 1px solid hsl(var(--border));
+        border-radius: 0.25rem;
+        color: hsl(var(--muted-foreground));
+        transition: all 0.2s ease;
+      }
+
+      .solution-move.active {
+        background: hsl(var(--success));
+        border-color: hsl(var(--success));
+        color: white;
+        transform: scale(1.1);
+      }
+
+      .solution-move.completed {
+        background: hsl(var(--success) / 0.15);
+        border-color: hsl(var(--success) / 0.3);
+        color: hsl(var(--success));
+      }
+
+      .solution-placeholder {
+        font-size: 0.8125rem;
+        color: hsl(var(--muted-foreground));
+        font-style: italic;
+      }
+
+      /* ===== Manual Controls ===== */
+      .moves-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+      }
+
+      .move-btn {
+        height: 2.5rem;
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+        font-weight: 600;
+        background: hsl(var(--muted));
+        color: hsl(var(--foreground));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .move-btn:hover {
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        border-color: hsl(var(--primary));
+        transform: translateY(-2px);
+      }
+
+      /* ===== Results Panel ===== */
+      .result-group {
+        background: hsl(var(--muted) / 0.5);
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .result-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .result-label {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.075em;
+        color: hsl(var(--muted-foreground));
+        margin-bottom: 0.5rem;
+      }
+
+      .result-value {
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+        color: hsl(var(--foreground));
+        word-break: break-all;
+        line-height: 1.5;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .stat-label {
+        font-size: 0.6875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        color: hsl(var(--muted-foreground));
+      }
+
+      .stat-value {
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        font-weight: 600;
+        color: hsl(var(--foreground));
+      }
+
+      /* ===== ASCII Cube ===== */
+      .ascii-cube {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        line-height: 1.2;
+        white-space: pre;
+        text-align: center;
+        color: hsl(var(--muted-foreground));
+        padding: 0.75rem;
+        background: hsl(var(--muted) / 0.3);
+        border-radius: var(--radius);
+      }
+
+      .ascii-cube .W {
+        color: #475569;
+        font-weight: 600;
+      }
+
+      .ascii-cube .R {
+        color: #dc2626;
+        font-weight: 600;
+      }
+
+      .ascii-cube .G {
+        color: #16a34a;
+        font-weight: 600;
+      }
+
+      .ascii-cube .Y {
+        color: #ca8a04;
+        font-weight: 600;
+      }
+
+      .ascii-cube .O {
+        color: #ea580c;
+        font-weight: 600;
+      }
+
+      .ascii-cube .B {
+        color: #2563eb;
+        font-weight: 600;
+      }
+
+      /* ===== Modal ===== */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: hsla(var(--background), 0.8);
+        backdrop-filter: blur(4px);
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .modal-overlay.visible {
+        display: flex;
+        opacity: 1;
+      }
+
+      .modal {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        width: 90%;
+        max-width: 560px;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        transform: scale(0.95);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .modal-overlay.visible .modal {
+        transform: scale(1);
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid hsl(var(--border));
+      }
+
+      .modal-header h2 {
+        font-size: 1.125rem;
+        font-weight: 600;
+      }
+
+      .modal-body {
+        padding: 1.5rem;
+        overflow-y: auto;
+      }
+
+      .help-section {
+        margin-bottom: 1.5rem;
+      }
+
+      .help-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .help-section h3 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .shortcut-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+      }
+
+      .shortcut-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.625rem 0.75rem;
+        background: hsl(var(--muted) / 0.5);
+        border-radius: calc(var(--radius) - 4px);
+        font-size: 0.8125rem;
+      }
+
+      .kbd {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.5rem;
+        height: 1.5rem;
+        padding: 0 0.375rem;
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        background: hsl(var(--background));
+        border: 1px solid hsl(var(--border));
+        border-radius: 0.25rem;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+      }
+
+      .algo-card {
+        padding: 1rem;
+        background: hsl(var(--muted) / 0.5);
+        border-radius: calc(var(--radius) - 4px);
+        margin-bottom: 0.75rem;
+      }
+
+      .algo-card:last-child {
+        margin-bottom: 0;
+      }
+
+      .algo-card h4 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.375rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .algo-card p {
+        font-size: 0.8125rem;
+        color: hsl(var(--muted-foreground));
+        line-height: 1.5;
+      }
+
+      .badge {
+        display: inline-flex;
+        padding: 0.125rem 0.5rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        border-radius: 9999px;
+        background: hsl(var(--success) / 0.1);
+        color: hsl(var(--success));
+      }
+
+      /* Utility */
+      .divider {
+        height: 1px;
+        background: hsl(var(--border));
+        margin: 1rem 0;
+      }
+
+      .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .state-display {
+        display: none;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <!-- Header -->
     <header class="animate-fade-in">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <div class="logo-icon">🧊</div>
-                    <div class="logo-text">
-                        <h1>2×2 Cube Solver</h1>
-                        <span>AI-Powered • BFS • A* • IDS</span>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-ghost btn-icon" id="helpBtn" title="Help & Shortcuts">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                            <path d="M12 17h.01"></path>
-                        </svg>
-                    </button>
-                </div>
+      <div class="container">
+        <div class="header-content">
+          <div class="logo">
+            <div class="logo-icon">🧊</div>
+            <div class="logo-text">
+              <h1>2×2 Cube Solver</h1>
+              <span>AI-Powered • BFS • A* • IDS</span>
             </div>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-ghost btn-icon" id="helpBtn" title="Help & Shortcuts">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <path d="M12 17h.01"></path>
+              </svg>
+            </button>
+          </div>
         </div>
+      </div>
     </header>
 
     <!-- Main Content -->
     <main>
-        <div class="container">
-            <div class="main-grid">
-
-                <!-- Controls Panel -->
-                <div class="card animate-slide-in-left delay-100">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <span>⚙️</span> Controls
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <div class="form-group" style="margin-bottom: 1rem;">
-                            <label class="form-label" for="algorithm">Algorithm</label>
-                            <select id="algorithm">
-                                <option value="bfs">BFS (Fast & Reliable) ⭐</option>
-                                <option value="astar">A* (Heuristic Search)</option>
-                                <option value="ids">IDA* (Memory Efficient)</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="margin-bottom: 1rem;">
-                            <label class="form-label" for="scrambleLength">
-                                <span>Scramble Length</span>
-                                <span class="value" id="scrambleLengthValue">10</span>
-                            </label>
-                            <input type="range" id="scrambleLength" min="5" max="20" value="10">
-                        </div>
-
-                        <div class="form-group" style="margin-bottom: 1.5rem;">
-                            <label class="form-label" for="speed">
-                                <span>Animation Speed</span>
-                                <span class="value" id="speedValue">300ms</span>
-                            </label>
-                            <input type="range" id="speed" min="50" max="1000" value="300" step="50">
-                        </div>
-
-                        <div class="btn-group" style="margin-bottom: 1.5rem;">
-                            <button class="btn btn-secondary btn-lg" id="scrambleBtn">
-                                <span>🔀</span> Scramble
-                            </button>
-                            <button class="btn btn-success btn-lg" id="solveBtn">
-                                <span>✨</span> Solve Cube
-                            </button>
-                            <button class="btn btn-secondary" id="resetBtn">
-                                <span>↺</span> Reset
-                            </button>
-                        </div>
-
-                        <div class="divider"></div>
-
-                        <div class="form-group">
-                            <span class="form-label">Manual Moves</span>
-                            <div class="moves-grid">
-                                <button class="move-btn" data-move="U">U</button>
-                                <button class="move-btn" data-move="U'">U'</button>
-                                <button class="move-btn" data-move="R">R</button>
-                                <button class="move-btn" data-move="R'">R'</button>
-                                <button class="move-btn" data-move="F">F</button>
-                                <button class="move-btn" data-move="F'">F'</button>
-                                <button class="move-btn" data-move="D">D</button>
-                                <button class="move-btn" data-move="D'">D'</button>
-                                <button class="move-btn" data-move="L">L</button>
-                                <button class="move-btn" data-move="L'">L'</button>
-                                <button class="move-btn" data-move="B">B</button>
-                                <button class="move-btn" data-move="B'">B'</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3D Cube Viewport with Embedded Solution Strip -->
-                <div class="card cube-card animate-scale-in delay-200">
-                    <div class="cube-viewport">
-                        <canvas id="cubeCanvas"></canvas>
-
-                        <!-- Current Move Overlay (shows during solve) -->
-                        <div class="move-overlay" id="moveOverlay">
-                            <div class="current-move-badge">
-                                <div class="move-step-number" id="currentStepNum">1</div>
-                                <div class="move-details">
-                                    <div class="move-name" id="currentMoveName">U</div>
-                                    <div class="move-description" id="currentMoveDesc">Rotate top face clockwise</div>
-                                </div>
-                            </div>
-                            <div class="move-progress-text" id="moveProgressText">Step 1 of 5</div>
-                        </div>
-
-                        <div class="cube-status" id="statusBadge">
-                            <span id="statusIcon">⚡</span>
-                            <span id="status">Ready to solve</span>
-                        </div>
-
-                        <div class="progress-container" id="progressContainer">
-                            <div class="progress-bar" id="progressFill"></div>
-                        </div>
-                    </div>
-
-                    <!-- Solution Strip - Always visible below cube -->
-                    <div class="solution-strip">
-                        <div class="solution-strip-header">
-                            <span class="solution-strip-title">💡 Solution Moves</span>
-                            <span class="solution-move-count" id="solutionMoveCount"></span>
-                        </div>
-                        <div class="solution-moves" id="solutionMoves">
-                            <span class="solution-placeholder">Scramble the cube, then click Solve</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Results Panel -->
-                <div class="card animate-slide-in-right delay-300">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <span>📊</span> Results
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <div class="result-group">
-                            <div class="result-label">Scramble Sequence</div>
-                            <div class="result-value" id="scrambleDisplay">—</div>
-                        </div>
-
-                        <div class="result-group">
-                            <div class="result-label">Solution</div>
-                            <div class="result-value" id="solutionDisplay">—</div>
-                        </div>
-
-                        <div class="result-group">
-                            <div class="result-label">Statistics</div>
-                            <div class="stats-grid">
-                                <div class="stat-item">
-                                    <div class="stat-label">Algorithm</div>
-                                    <div class="stat-value" id="algoUsed">—</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-label">Moves</div>
-                                    <div class="stat-value" id="moveCount">—</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-label">Nodes Explored</div>
-                                    <div class="stat-value" id="nodesExplored">—</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-label">Time</div>
-                                    <div class="stat-value" id="solveTime">—</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="result-group">
-                            <div class="result-label">ASCII View</div>
-                            <div class="ascii-cube" id="asciiCube"> W W
-                                W W
-                                O O G G R R B B
-                                O O G G R R B B
-                                Y Y
-                                Y Y</div>
-                        </div>
-                    </div>
-                </div>
+      <div class="container">
+        <div class="main-grid">
+          <!-- Controls Panel -->
+          <div class="card animate-slide-in-left delay-100">
+            <div class="card-header">
+              <div class="card-title"><span>⚙️</span> Controls</div>
             </div>
+            <div class="card-content">
+              <div class="form-group" style="margin-bottom: 1rem">
+                <label class="form-label" for="algorithm">Algorithm</label>
+                <select id="algorithm">
+                  <option value="bfs">BFS (Fast & Reliable) ⭐</option>
+                  <option value="astar">A* (Heuristic Search)</option>
+                  <option value="ids">IDA* (Memory Efficient)</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1rem">
+                <label class="form-label" for="scrambleLength">
+                  <span>Scramble Length</span>
+                  <span class="value" id="scrambleLengthValue">10</span>
+                </label>
+                <input type="range" id="scrambleLength" min="5" max="20" value="10" />
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1.5rem">
+                <label class="form-label" for="speed">
+                  <span>Animation Speed</span>
+                  <span class="value" id="speedValue">300ms</span>
+                </label>
+                <input type="range" id="speed" min="50" max="1000" value="300" step="50" />
+              </div>
+
+              <div class="btn-group" style="margin-bottom: 1.5rem">
+                <button class="btn btn-secondary btn-lg" id="scrambleBtn">
+                  <span>🔀</span> Scramble
+                </button>
+                <button class="btn btn-success btn-lg" id="solveBtn">
+                  <span>✨</span> Solve Cube
+                </button>
+                <button class="btn btn-secondary" id="resetBtn"><span>↺</span> Reset</button>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="form-group">
+                <span class="form-label">Manual Moves</span>
+                <div class="moves-grid">
+                  <button class="move-btn" data-move="U">U</button>
+                  <button class="move-btn" data-move="U'">U'</button>
+                  <button class="move-btn" data-move="R">R</button>
+                  <button class="move-btn" data-move="R'">R'</button>
+                  <button class="move-btn" data-move="F">F</button>
+                  <button class="move-btn" data-move="F'">F'</button>
+                  <button class="move-btn" data-move="D">D</button>
+                  <button class="move-btn" data-move="D'">D'</button>
+                  <button class="move-btn" data-move="L">L</button>
+                  <button class="move-btn" data-move="L'">L'</button>
+                  <button class="move-btn" data-move="B">B</button>
+                  <button class="move-btn" data-move="B'">B'</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3D Cube Viewport with Embedded Solution Strip -->
+          <div class="card cube-card animate-scale-in delay-200">
+            <div class="cube-viewport">
+              <canvas id="cubeCanvas"></canvas>
+
+              <!-- Current Move Overlay (shows during solve) -->
+              <div class="move-overlay" id="moveOverlay">
+                <div class="current-move-badge">
+                  <div class="move-step-number" id="currentStepNum">1</div>
+                  <div class="move-details">
+                    <div class="move-name" id="currentMoveName">U</div>
+                    <div class="move-description" id="currentMoveDesc">
+                      Rotate top face clockwise
+                    </div>
+                  </div>
+                </div>
+                <div class="move-progress-text" id="moveProgressText">Step 1 of 5</div>
+              </div>
+
+              <div class="cube-status" id="statusBadge">
+                <span id="statusIcon">⚡</span>
+                <span id="status">Ready to solve</span>
+              </div>
+
+              <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressFill"></div>
+              </div>
+            </div>
+
+            <!-- Solution Strip - Always visible below cube -->
+            <div class="solution-strip">
+              <div class="solution-strip-header">
+                <span class="solution-strip-title">💡 Solution Moves</span>
+                <span class="solution-move-count" id="solutionMoveCount"></span>
+              </div>
+              <div class="solution-moves" id="solutionMoves">
+                <span class="solution-placeholder">Scramble the cube, then click Solve</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results Panel -->
+          <div class="card animate-slide-in-right delay-300">
+            <div class="card-header">
+              <div class="card-title"><span>📊</span> Results</div>
+            </div>
+            <div class="card-content">
+              <div class="result-group">
+                <div class="result-label">Scramble Sequence</div>
+                <div class="result-value" id="scrambleDisplay">—</div>
+              </div>
+
+              <div class="result-group">
+                <div class="result-label">Solution</div>
+                <div class="result-value" id="solutionDisplay">—</div>
+              </div>
+
+              <div class="result-group">
+                <div class="result-label">Statistics</div>
+                <div class="stats-grid">
+                  <div class="stat-item">
+                    <div class="stat-label">Algorithm</div>
+                    <div class="stat-value" id="algoUsed">—</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">Moves</div>
+                    <div class="stat-value" id="moveCount">—</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">Nodes Explored</div>
+                    <div class="stat-value" id="nodesExplored">—</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">Time</div>
+                    <div class="stat-value" id="solveTime">—</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="result-group">
+                <div class="result-label">ASCII View</div>
+                <div class="ascii-cube" id="asciiCube">
+                  W W W W O O G G R R B B O O G G R R B B Y Y Y Y
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </main>
 
     <!-- Hidden state display -->
@@ -1159,67 +1164,80 @@
 
     <!-- Help Modal -->
     <div class="modal-overlay" id="helpModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h2>📚 Help & Guide</h2>
-                <button class="btn btn-ghost btn-icon" id="closeHelpBtn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6 6 18"></path>
-                        <path d="m6 6 12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="help-section">
-                    <h3>⌨️ Keyboard Shortcuts</h3>
-                    <div class="shortcut-grid">
-                        <div class="shortcut-item">
-                            <span>Scramble</span>
-                            <span class="kbd">Space</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Solve</span>
-                            <span class="kbd">Enter</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Reset</span>
-                            <span class="kbd">R</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Help</span>
-                            <span class="kbd">H</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="help-section">
-                    <h3>🧠 Algorithm Guide</h3>
-                    <div class="algo-card">
-                        <h4>BFS (Bidirectional) <span class="badge">Recommended</span></h4>
-                        <p>Searches from both start and goal. Fast and reliable for any scramble length. Always finds
-                            optimal solution.</p>
-                    </div>
-                    <div class="algo-card">
-                        <h4>A* (Heuristic Search)</h4>
-                        <p>Uses heuristics to guide search. Good for short scrambles (&lt;15 moves). May timeout on
-                            complex scrambles.</p>
-                    </div>
-                    <div class="algo-card">
-                        <h4>IDA* (Memory Efficient)</h4>
-                        <p>Iterative deepening with heuristics. Uses minimal memory. Best for constrained environments.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="help-section">
-                    <h3>🔤 Move Notation</h3>
-                    <p style="font-size: 0.8125rem; color: hsl(var(--muted-foreground)); line-height: 1.6;">
-                        <strong>U, D, L, R, F, B</strong> = Clockwise 90° rotation<br>
-                        <strong>U', D', L', R', F', B'</strong> = Counter-clockwise (prime moves)
-                    </p>
-                </div>
-            </div>
+      <div class="modal">
+        <div class="modal-header">
+          <h2>📚 Help & Guide</h2>
+          <button class="btn btn-ghost btn-icon" id="closeHelpBtn">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6 6 18"></path>
+              <path d="m6 6 12 12"></path>
+            </svg>
+          </button>
         </div>
+        <div class="modal-body">
+          <div class="help-section">
+            <h3>⌨️ Keyboard Shortcuts</h3>
+            <div class="shortcut-grid">
+              <div class="shortcut-item">
+                <span>Scramble</span>
+                <span class="kbd">Space</span>
+              </div>
+              <div class="shortcut-item">
+                <span>Solve</span>
+                <span class="kbd">Enter</span>
+              </div>
+              <div class="shortcut-item">
+                <span>Reset</span>
+                <span class="kbd">R</span>
+              </div>
+              <div class="shortcut-item">
+                <span>Help</span>
+                <span class="kbd">H</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="help-section">
+            <h3>🧠 Algorithm Guide</h3>
+            <div class="algo-card">
+              <h4>BFS (Bidirectional) <span class="badge">Recommended</span></h4>
+              <p>
+                Searches from both start and goal. Fast and reliable for any scramble length. Always
+                finds optimal solution.
+              </p>
+            </div>
+            <div class="algo-card">
+              <h4>A* (Heuristic Search)</h4>
+              <p>
+                Uses heuristics to guide search. Good for short scrambles (&lt;15 moves). May
+                timeout on complex scrambles.
+              </p>
+            </div>
+            <div class="algo-card">
+              <h4>IDA* (Memory Efficient)</h4>
+              <p>
+                Iterative deepening with heuristics. Uses minimal memory. Best for constrained
+                environments.
+              </p>
+            </div>
+          </div>
+
+          <div class="help-section">
+            <h3>🔤 Move Notation</h3>
+            <p style="font-size: 0.8125rem; color: hsl(var(--muted-foreground)); line-height: 1.6">
+              <strong>U, D, L, R, F, B</strong> = Clockwise 90° rotation<br />
+              <strong>U', D', L', R', F', B'</strong> = Counter-clockwise (prime moves)
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Scripts -->
@@ -1229,6 +1247,5 @@
     <script src="a-star-solver.js"></script>
     <script src="cube-engine.js"></script>
     <script src="app.js"></script>
-</body>
-
+  </body>
 </html>

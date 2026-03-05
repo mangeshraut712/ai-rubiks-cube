@@ -1,14 +1,17 @@
 {
-    "$schema": "https://openapi.vercel.sh/vercel.json",
-    "framework": "vite",
-    "installCommand": "npm ci --prefix frontend",
-    "buildCommand": "npm run build --prefix frontend",
-    "outputDirectory": "frontend/dist",
-    "cleanUrls": true,
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
-        }
-    ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "npm ci --prefix frontend",
+  "buildCommand": "npm run build --prefix frontend",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    {
+      "source": "/legacy-2x2-solver/:path*",
+      "destination": "/legacy-2x2-solver/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

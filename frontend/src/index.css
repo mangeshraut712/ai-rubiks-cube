@@ -1,7 +1,11 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
+/* ========================================
+   CSS Variables for Theming
+   ======================================== */
 :root {
+  /* Light mode colors */
   --g-blue: #4285f4;
   --g-red: #ea4335;
   --g-yellow: #fbbc04;
@@ -9,8 +13,67 @@
   --g-bg: #f6f9fe;
   --g-text: #202124;
   --gemini-grad: linear-gradient(90deg, #4285f4, #9b72cb, #d96570);
+
+  /* Component-specific variables */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #eef4fe;
+  --text-primary: #202124;
+  --text-secondary: #5f6368;
+  --border-color: #d2d8e3;
+  --shadow-color: rgba(32, 33, 36, 0.08);
+  --accent-primary: #4285f4;
+  --accent-success: #34a853;
+  --accent-warning: #fbbc04;
+  --accent-danger: #ea4335;
+  --accent-info: #9b72cb;
 }
 
+/* Dark mode colors */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light-mode) {
+    --g-bg: #0f172a;
+    --g-text: #e8eaed;
+    --gemini-grad: linear-gradient(90deg, #5b9aff, #b794f6, #ff8a8a);
+
+    --bg-primary: #1e293b;
+    --bg-secondary: #0f172a;
+    --bg-tertiary: #334155;
+    --text-primary: #e8eaed;
+    --text-secondary: #9aa0a6;
+    --border-color: #475569;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --accent-primary: #5b9aff;
+    --accent-success: #5cdb6d;
+    --accent-warning: #ffd54f;
+    --accent-danger: #ff6b6b;
+    --accent-info: #b794f6;
+  }
+}
+
+/* Manual dark mode override */
+.dark-mode {
+  --g-bg: #0f172a;
+  --g-text: #e8eaed;
+  --gemini-grad: linear-gradient(90deg, #5b9aff, #b794f6, #ff8a8a);
+
+  --bg-primary: #1e293b;
+  --bg-secondary: #0f172a;
+  --bg-tertiary: #334155;
+  --text-primary: #e8eaed;
+  --text-secondary: #9aa0a6;
+  --border-color: #475569;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --accent-primary: #5b9aff;
+  --accent-success: #5cdb6d;
+  --accent-warning: #ffd54f;
+  --accent-danger: #ff6b6b;
+  --accent-info: #b794f6;
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
 * {
   box-sizing: border-box;
 }
@@ -22,9 +85,22 @@ body,
   min-height: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: "Google Sans", "Product Sans", "Noto Sans", "Outfit", sans-serif;
-  color: var(--g-text);
+  font-family:
+    "Google Sans",
+    "Product Sans",
+    "Noto Sans",
+    "Outfit",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  color: var(--text-primary);
   background:
     radial-gradient(circle at 10% 16%, rgba(66, 133, 244, 0.22), transparent 35%),
     radial-gradient(circle at 90% 12%, rgba(234, 67, 53, 0.18), transparent 32%),
@@ -32,8 +108,32 @@ body {
     radial-gradient(circle at 6% 80%, rgba(52, 168, 83, 0.16), transparent 33%),
     linear-gradient(180deg, #f8fbff 0%, #eef4fe 100%);
   background-attachment: fixed;
+  transition: background-color 0.3s ease;
 }
 
+@media (prefers-color-scheme: dark) {
+  body:not(.light-mode) {
+    background:
+      radial-gradient(circle at 10% 16%, rgba(91, 154, 255, 0.15), transparent 35%),
+      radial-gradient(circle at 90% 12%, rgba(255, 107, 107, 0.12), transparent 32%),
+      radial-gradient(circle at 84% 84%, rgba(255, 213, 79, 0.15), transparent 30%),
+      radial-gradient(circle at 6% 80%, rgba(92, 219, 109, 0.1), transparent 33%),
+      linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  }
+}
+
+.dark-mode body {
+  background:
+    radial-gradient(circle at 10% 16%, rgba(91, 154, 255, 0.15), transparent 35%),
+    radial-gradient(circle at 90% 12%, rgba(255, 107, 107, 0.12), transparent 32%),
+    radial-gradient(circle at 84% 84%, rgba(255, 213, 79, 0.15), transparent 30%),
+    radial-gradient(circle at 6% 80%, rgba(92, 219, 109, 0.1), transparent 33%),
+    linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* ========================================
+   Typography
+   ======================================== */
 button {
   font-family: inherit;
   cursor: pointer;
@@ -78,4 +178,153 @@ button {
 
 .gemini-bg-gradient {
   background: var(--gemini-grad);
+}
+
+/* ========================================
+   Animation Utilities
+   ======================================== */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 5px var(--accent-primary),
+      0 0 10px var(--accent-primary);
+  }
+
+  50% {
+    box-shadow:
+      0 0 20px var(--accent-primary),
+      0 0 30px var(--accent-primary);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce-subtle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 1s ease-in-out infinite;
+}
+
+/* ========================================
+   Glass Morphism
+   ======================================== */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark-mode .glass {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ========================================
+   Scrollbar Styling
+   ======================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* ========================================
+   Accessibility
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.focus-visible:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   Selection Styling
+   ======================================== */
+::selection {
+  background: var(--accent-primary);
+  color: white;
+}
+
+/* ========================================
+   Print Styles
+   ======================================== */
+@media print {
+  body {
+    background: white !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
 }

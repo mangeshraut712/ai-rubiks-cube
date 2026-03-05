@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, memo } from "react";
+import { useEffect, useMemo, useRef, useState, memo } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
@@ -85,16 +85,19 @@ function getMoveAngle(move) {
   return base;
 }
 
-function easeOutCubic(t) {
-  return 1 - (1 - t) ** 3;
+// Improved easing function for smoother animation
+function easeInOutQuart(t) {
+  return t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
 }
 
 /**
  * Three.js Rubik's Cube viewer with sticker-level rendering and move guidance animation.
+ * Enhanced with smoother animations and better visual feedback.
  * @param {{cubeState: Record<string, string[][]>, activeMove: string}} props
  */
 const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
   const containerRef = useRef(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const threeRef = useRef({
     scene: null,
@@ -121,8 +124,9 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     camera.position.set(5.5, 5.5, 6.2);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -130,10 +134,12 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
     controls.enablePan = false;
     controls.minDistance = 5;
     controls.maxDistance = 12;
+    controls.dampingFactor = 0.08;
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    // Improved lighting setup for better 3D appearance
+    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
     keyLight.position.set(7, 9, 8);
     scene.add(keyLight);
 
@@ -145,9 +151,14 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
     accentLight.position.set(-4, 6, 3);
     scene.add(accentLight);
 
+    // Add subtle rim light for depth
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.15);
+    rimLight.position.set(-5, -5, -8);
+    scene.add(rimLight);
+
     const core = new THREE.Mesh(
       new THREE.BoxGeometry(3.1, 3.1, 3.1),
-      new THREE.MeshStandardMaterial({ color: "#161616", roughness: 0.6, metalness: 0.1 })
+      new THREE.MeshStandardMaterial({ color: "#1a1a1a", roughness: 0.7, metalness: 0.05 })
     );
     scene.add(core);
 
@@ -160,7 +171,7 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
         for (let col = 0; col < 3; col += 1) {
           const key = `${face}-${row}-${col}`;
           const transform = stickerTransform(face, row, col);
-          const color = cubeState?.[face]?.[row]?.[col] || face;
+          const color = face;
 
           const material = new THREE.MeshStandardMaterial({
             color: colorForFaceLetter(color),
@@ -210,7 +221,8 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
 
       if (animation) {
         const progress = Math.min(1, (now - animation.startTime) / animation.durationMs);
-        const eased = easeOutCubic(progress);
+        // Use improved easing for smoother animation
+        const eased = easeInOutQuart(progress);
         const angle = animation.totalAngle * eased;
         const rotationQuat = new THREE.Quaternion().setFromAxisAngle(animation.axis, angle);
 
@@ -232,6 +244,7 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
             mesh.quaternion.copy(base.quaternion);
           }
           threeRef.current.animation = null;
+          setIsAnimating(false);
         }
       }
 
@@ -311,6 +324,19 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
       return;
     }
 
+    // Clear previous animation state
+    if (threeRef.current.animation) {
+      // Complete current animation instantly before starting new one
+      for (const [key, mesh] of stickers.entries()) {
+        const base = baseTransforms.get(key);
+        if (base) {
+          mesh.position.copy(base.position);
+          mesh.quaternion.copy(base.quaternion);
+        }
+      }
+      threeRef.current.animation = null;
+    }
+
     const activeFace = faceFromMove(normalizedActiveMove);
 
     for (const mesh of stickers.values()) {
@@ -331,6 +357,7 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
 
     const axis = FACE_NORMAL[activeFace].clone();
 
+    // Improved arrow material with better glow
     const arcMaterial = new THREE.MeshStandardMaterial({
       color: "#4285f4",
       emissive: new THREE.Color("#4285f4"),
@@ -339,7 +366,10 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
       metalness: 0.2
     });
 
-    const arc = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.035, 10, 80, Math.PI * 1.25), arcMaterial);
+    const arc = new THREE.Mesh(
+      new THREE.TorusGeometry(1.7, 0.035, 10, 80, Math.PI * 1.25),
+      arcMaterial
+    );
     arc.position.copy(axis.clone().multiplyScalar(1.62));
 
     const arcGroup = new THREE.Group();
@@ -356,6 +386,7 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
       arcGroup.rotateOnAxis(axis, Math.PI);
     }
 
+    // Improved arrow cone with better visibility
     const cone = new THREE.Mesh(
       new THREE.ConeGeometry(0.09, 0.24, 12),
       new THREE.MeshStandardMaterial({
@@ -379,6 +410,9 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
     }
 
     const totalAngle = getMoveAngle(normalizedActiveMove);
+
+    // Set animation with state tracking
+    setIsAnimating(true);
     threeRef.current.animation = {
       startTime: performance.now(),
       durationMs: 420,
@@ -388,6 +422,11 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
     };
   }, [normalizedActiveMove]);
 
-  return <div ref={containerRef} className="h-full w-full rounded-2xl border border-[#d2d8e3] shadow-[0_10px_24px_rgba(24,39,75,0.12)]" />;
+  return (
+    <div
+      ref={containerRef}
+      className={`h-full w-full rounded-2xl border border-[#d2d8e3] shadow-[0_10px_24px_rgba(24,39,75,0.12)] transition-shadow duration-300 ${isAnimating ? "shadow-lg" : ""}`}
+    />
+  );
 });
 export default CubeViewer;

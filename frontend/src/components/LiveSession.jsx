@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState
-} from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import {
   captureVideoFrame,
@@ -115,7 +109,9 @@ const LiveSession = forwardRef(function LiveSession(
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
 
     const pushUnique = (url) => {
-      const normalized = String(url || "").trim().replace(/\/+$/, "");
+      const normalized = String(url || "")
+        .trim()
+        .replace(/\/+$/, "");
       if (!normalized || candidates.includes(normalized)) {
         return;
       }
@@ -123,7 +119,9 @@ const LiveSession = forwardRef(function LiveSession(
     };
 
     const fromBackendOrigin = (origin) => {
-      const normalized = String(origin || "").trim().replace(/\/+$/, "");
+      const normalized = String(origin || "")
+        .trim()
+        .replace(/\/+$/, "");
       if (normalized.startsWith("https://")) {
         return `${normalized.replace("https://", "wss://")}/ws`;
       }
@@ -214,11 +212,7 @@ const LiveSession = forwardRef(function LiveSession(
 
       if (mimeType?.includes("pcm")) {
         // Gemini Live API sends audio at 24kHz PCM by default
-        decoded = pcm16ToAudioBuffer(
-          audioContext,
-          arrayBuffer,
-          parsePcmRate(mimeType, 24000)
-        );
+        decoded = pcm16ToAudioBuffer(audioContext, arrayBuffer, parsePcmRate(mimeType, 24000));
       } else {
         decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
       }
@@ -239,7 +233,11 @@ const LiveSession = forwardRef(function LiveSession(
       source.onended = () => {
         // Remove from tracked sources
         currentSourcesRef.current = currentSourcesRef.current.filter((s) => s !== source);
-        try { source.disconnect(); } catch (_e) { /* noop */ }
+        try {
+          source.disconnect();
+        } catch (_e) {
+          /* noop */
+        }
       };
 
       currentSourcesRef.current.push(source);
@@ -262,7 +260,11 @@ const LiveSession = forwardRef(function LiveSession(
             return;
           }
           const ctx = playbackContextRef.current;
-          if (ctx && ctx.currentTime >= scheduledEndTimeRef.current && currentSourcesRef.current.length === 0) {
+          if (
+            ctx &&
+            ctx.currentTime >= scheduledEndTimeRef.current &&
+            currentSourcesRef.current.length === 0
+          ) {
             isPlayingRef.current = false;
             tutorSpeechStartedAtRef.current = 0;
             updateTutorSpeakingState(false);
@@ -321,8 +323,7 @@ const LiveSession = forwardRef(function LiveSession(
               onError?.("");
               onTranscriptEntry?.({
                 speaker: "cubey",
-                text:
-                  "Demo mode enabled. You can test the tutor without a physical cube or camera feed.",
+                text: "Demo mode enabled. You can test the tutor without a physical cube or camera feed.",
                 ts: new Date().toISOString()
               });
             }
@@ -584,50 +585,48 @@ const LiveSession = forwardRef(function LiveSession(
     updateTutorSpeakingState(false);
   }
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      requestHint() {
-        if (!lastFrameRef.current) {
-          onError?.("No video frame available yet for hint.");
-          return;
-        }
-
-        sendJson({ type: "hint_request", frame: lastFrameRef.current });
-      },
-
-      setChallengeMode(enabled) {
-        sendJson({ type: "challenge_mode", enabled: Boolean(enabled) });
-      },
-
-      sendUserText(text) {
-        const trimmed = String(text || "").trim();
-        if (!trimmed) {
-          return;
-        }
-        onTranscriptEntry?.({
-          speaker: "user",
-          text: trimmed,
-          ts: new Date().toISOString()
-        });
-        sendJson({ type: "user_text", text: trimmed });
-      },
-
-      solvePreview() {
-        sendJson({ type: "solve_request" });
-      },
-
-      autoSolve() {
-        sendJson({ type: "auto_solve" });
-      },
-
-      async endSession() {
-        await cleanupMediaAndSocket();
-        emitStatus("disconnected");
+  useImperativeHandle(ref, () => ({
+    requestHint() {
+      if (!lastFrameRef.current) {
+        onError?.("No video frame available yet for hint.");
+        return;
       }
-    })
-  );
 
+      sendJson({ type: "hint_request", frame: lastFrameRef.current });
+    },
+
+    setChallengeMode(enabled) {
+      sendJson({ type: "challenge_mode", enabled: Boolean(enabled) });
+    },
+
+    sendUserText(text) {
+      const trimmed = String(text || "").trim();
+      if (!trimmed) {
+        return;
+      }
+      onTranscriptEntry?.({
+        speaker: "user",
+        text: trimmed,
+        ts: new Date().toISOString()
+      });
+      sendJson({ type: "user_text", text: trimmed });
+    },
+
+    solvePreview() {
+      sendJson({ type: "solve_request" });
+    },
+
+    autoSolve() {
+      sendJson({ type: "auto_solve" });
+    },
+
+    async endSession() {
+      await cleanupMediaAndSocket();
+      emitStatus("disconnected");
+    }
+  }));
+
+  /* eslint-disable react-hooks/exhaustive-deps -- intentionally keyed by session activity only */
   useEffect(() => {
     unmountedRef.current = false;
     wsCandidatesRef.current = wsUrls();
@@ -652,16 +651,11 @@ const LiveSession = forwardRef(function LiveSession(
       cleanupMediaAndSocket();
     };
   }, [active]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-[20px] bg-white/40 shadow-inner">
-      <video
-        ref={videoRef}
-        className="h-full w-full object-cover"
-        autoPlay
-        muted
-        playsInline
-      />
+      <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
       <canvas ref={canvasRef} className="hidden" />
 
       {permissionError ? (

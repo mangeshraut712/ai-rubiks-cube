@@ -1,21 +1,86 @@
 <!doctype html>
 <html lang="en">
-
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#4285f4" />
-    <meta name="description" content="AI-powered Rubik's Cube tutoring with Google Gemini Live API. Real-time voice and vision coaching to solve your cube step by step." />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="AI-powered Rubik's Cube tutoring with Google Gemini Live API. Real-time voice and vision coaching to solve your cube step by step."
+    />
+    <meta name="keywords" content="rubiks cube, solver, AI tutor, gemini, 3D cube" />
+    <meta name="author" content="Mangesh Raut" />
+
+    <!-- Open Graph / Social Media -->
     <meta property="og:title" content="Gemini Rubik's Tutor" />
-    <meta property="og:description" content="Meet Cubey – your AI tutor that sees your cube and talks you to victory. Real-time webcam + voice coaching with step-by-step move verification." />
+    <meta
+      property="og:description"
+      content="Meet Cubey – your AI tutor that sees your cube and talks you to victory. Real-time webcam + voice coaching with step-by-step move verification."
+    />
     <meta property="og:type" content="website" />
-    <link rel="icon" href="/favicon.ico" />
+    <meta property="og:image" content="/og-image.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Gemini Rubik's Tutor" />
+    <meta
+      name="twitter:description"
+      content="Meet Cubey – your AI tutor that sees your cube and talks you to victory."
+    />
+    <meta name="twitter:image" content="/og-image.png" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Icons -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <title>Gemini Rubik's Tutor</title>
+
+    <!-- Critical CSS for dark mode to prevent flash -->
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        html {
+          background-color: #0f172a;
+        }
+      }
+
+      /* Prevent FOUC (Flash of Unstyled Content) */
+      html.loading {
+        visibility: hidden;
+      }
+
+      /* Smooth transitions for theme changes */
+      *,
+      *::before,
+      *::after {
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease,
+          border-color 0.3s ease;
+      }
+    </style>
   </head>
 
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
-</body>
-
+  <body>
+    <noscript>
+      <div style="padding: 2rem; text-align: center; font-family: system-ui, sans-serif">
+        <h1>JavaScript Required</h1>
+        <p>Please enable JavaScript to use the Gemini Rubik's Tutor.</p>
+      </div>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

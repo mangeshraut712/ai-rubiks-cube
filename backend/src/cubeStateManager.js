@@ -376,10 +376,7 @@ export function solveCube(faceString) {
     return [];
   }
 
-  return solution
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  return solution.trim().split(/\s+/).filter(Boolean);
 }
 
 /**

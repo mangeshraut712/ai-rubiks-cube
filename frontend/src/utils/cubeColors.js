@@ -1,12 +1,23 @@
 export const FACE_ORDER = ["U", "R", "F", "D", "L", "B"];
 
+// Improved color palette with more vibrant, standard Rubik's cube colors
 export const FACE_TO_HEX = {
-  U: "#f7f7f5",
-  R: "#d54343",
-  F: "#2f9f56",
-  D: "#f2c94c",
-  L: "#f08b35",
-  B: "#2c66d6"
+  U: "#FFFFFF", // White - Up (clean white)
+  R: "#B71234", // Red - Right (standard Rubik's red)
+  F: "#009B48", // Green - Front (vibrant green)
+  D: "#FFD500", // Yellow - Down (bright yellow)
+  L: "#FF5800", // Orange - Left (vibrant orange)
+  B: "#0046AD" // Blue - Back (standard blue)
+};
+
+// Alternative dark theme colors
+export const FACE_TO_HEX_DARK = {
+  U: "#F0F0F0", // Off-white
+  R: "#D32F2F", // Material Red
+  F: "#388E3C", // Material Green
+  D: "#FBC02D", // Material Yellow
+  L: "#F57C00", // Material Orange
+  B: "#1976D2" // Material Blue
 };
 
 /**

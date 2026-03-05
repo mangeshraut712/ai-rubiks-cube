@@ -1,0 +1,34 @@
+# Keep Cloud Build uploads lean and reproducible.
+.git
+.gitignore
+.github
+
+# Local environment and secrets
+.env
+.env.local
+.env.*.local
+frontend/.env
+
+# Node and frontend build artifacts
+local-cache/
+node_modules/
+**/node_modules/
+frontend/.vite/
+frontend/dist/
+frontend/local-cache/
+
+# Local runtime artifacts
+.runtime/
+.trash/
+*.pid
+*.log
+backend.log
+frontend.log
+
+# OS/editor noise
+.DS_Store
+.vscode/
+.idea/
+
+# Local submission drafts (if present)
+submission/
