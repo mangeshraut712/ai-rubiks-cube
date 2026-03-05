@@ -230,6 +230,7 @@ Gemini-Rubiks-Tutor/
 | `GEMINI_API_KEY` | Google Gemini API key | Yes* |
 | `DEMO_MODE` | Enable demo mode (default: false) | No |
 | `CORS_ORIGIN` | Comma-separated allowlist (supports `https://*.run.app`) | No |
+| `FRONTEND_REDIRECT_URL` | Optional URL to redirect Cloud Run `/` requests to your hosted frontend (for example Vercel) | No |
 | `GEMINI_LIVE_MODEL` | Primary Gemini Live model | No |
 | `GEMINI_FALLBACK_MODEL` | One-shot fallback model for hints | No |
 

@@ -24,6 +24,9 @@ const PORT = Number(process.env.PORT || 8080);
 const API_KEY = String(process.env.GEMINI_API_KEY || "").trim();
 const LIVE_MODEL = process.env.GEMINI_LIVE_MODEL || "gemini-live";
 const DEMO_MODE = process.env.DEMO_MODE === "true";
+const FRONTEND_REDIRECT_URL = String(process.env.FRONTEND_REDIRECT_URL || "")
+  .trim()
+  .replace(/\/+$/, "");
 
 function hasUsableApiKey(value) {
   return typeof value === "string" && value.startsWith("AIza") && value.length > 20;
@@ -257,6 +260,21 @@ app.use(
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", model: "gemini-live" });
+});
+
+app.get("/", (req, res, next) => {
+  if (!FRONTEND_REDIRECT_URL) {
+    next();
+    return;
+  }
+
+  const acceptsHtml = req.accepts(["html", "json"]) === "html";
+  if (!acceptsHtml) {
+    next();
+    return;
+  }
+
+  res.redirect(302, FRONTEND_REDIRECT_URL);
 });
 
 const frontendDistPath = path.resolve(__dirname, "../../frontend/dist");
