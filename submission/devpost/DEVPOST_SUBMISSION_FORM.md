@@ -28,7 +28,7 @@
 `Individual` *(or organization, if applicable)*
 
 **Submitter country of residence**
-`TODO_ADD_COUNTRY`
+`USA`
 
 **Which category are you submitting to?**
 `Live Agents`
@@ -119,4 +119,4 @@ Draft source in repo: `https://github.com/mangeshraut712/ai-rubiks-cube/blob/mai
 `https://github.com/mangeshraut712/ai-rubiks-cube/blob/main/deploy.sh`
 
 **OPTIONAL for Bonus Points (Max 0.2) URL to PUBLIC Google Developer Group profile.**  
-*(Add your GDG profile link here, or leave blank if you haven't joined one)*
+`https://gdg.community.dev/u/m4z8dp/#/about`
