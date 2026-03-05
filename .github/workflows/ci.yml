@@ -17,11 +17,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: |
             backend/package-lock.json
             frontend/package-lock.json
+
+      - name: Setup npm
+        run: npm install --global npm@11.11.0
 
       - name: Install backend deps
         run: npm ci --prefix backend
