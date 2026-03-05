@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 import { GeminiLiveClient } from "./geminiLiveClient.js";
 import { CubeState, generateScramble, solveCube } from "./cubeStateManager.js";
 import { TUTOR_SYSTEM_PROMPT } from "./tutorPrompt.js";
+import SignalingServer from "./signalingServer.js";
 
 dotenv.config();
 dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
@@ -960,6 +961,10 @@ const heartbeatInterval = setInterval(() => {
 wss.on("close", () => {
   clearInterval(heartbeatInterval);
 });
+
+// Initialize WebRTC Signaling Server for multiplayer
+const _signalingServer = new SignalingServer(server);
+console.log("[server] WebRTC Signaling Server initialized for multiplayer");
 
 const fallbackPorts = Array.from(
   new Set([PORT, 3005, 3000, 8081].filter((value) => Number.isInteger(value) && value > 0))
