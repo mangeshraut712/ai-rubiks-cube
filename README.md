@@ -17,6 +17,17 @@ AI-powered Rubik's Cube tutoring with Google Gemini Live API - real-time voice +
   </a>
 </p>
 
+## Contest Snapshot (2026)
+
+- Challenge: **Gemini Live Agent Challenge**
+- Deadline: **March 16, 2026 @ 8:00 PM EDT**
+- Prize pool: **$80,000**
+- Category target: **Live Agents**
+- Mandatory stack: **Gemini model + Google GenAI SDK/ADK + Google Cloud hosting**
+- Must-submit assets: text description, public repo + spin-up steps, cloud proof, architecture diagram, <4m demo video
+
+This repository is aligned to those constraints and uses the checklist in `DEVPOST_SUBMISSION_CHECKLIST.md` as the source of truth.
+
 - ✅ **Category:** Live Agents (Real-time Audio/Vision Interaction)
 - ✅ **Technology:** Gemini Live API with `@google/genai` SDK
 - ✅ **Cloud Platform:** Google Cloud Run (see [`terraform/`](terraform/) and [`cloudbuild.yaml`](cloudbuild.yaml))
@@ -50,12 +61,20 @@ Quick launch:
 
 ## 🧾 Devpost-Ready Artifacts (Fill Before Final Submit)
 
-- **Demo video** (YouTube/Vimeo, up to 4 minutes): `TODO: Add URL Here`
-- **Public code repository URL**: `TODO: Add URL Here`
-- **Published blog/article** with `#GeminiLiveAgentChallenge`: `TODO: Add URL Here`
-- **Live Cloud Run API URL**: `TODO: Add URL Here`
-  - *How to verify:* Open your terminal and run `curl -fsS https://<YOUR-CLOUD-RUN-URL>/health`. It will return `{"status":"ok","model":"gemini-live"}` proving it is actively running.
-- **Architecture diagram location**: See the [Architecture Diagram](#%EF%B8%8F-architecture-diagram) section below.
+- **Demo video** (YouTube/Vimeo, up to 4 minutes): `<final video URL placeholder>` *(publish the <240-second demo, confirm runtime via `ffprobe` or the player so it stays under 240 seconds, then replace this placeholder with the shareable link before submitting).*  
+- **Public code repository URL**: `https://github.com/mangeshraut712/ai-rubiks-cube`
+- **Published blog/article** with `#GeminiLiveAgentChallenge`: `TODO: Add URL Here` *(publish + link this post; include the live URL in both the README and Devpost entry to claim the bonus).* 
+- **Live Cloud Run API URL**: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app`
+- **Cloud Run proof artifacts**: [`terraform/main.tf`](terraform/main.tf), [`cloudbuild.yaml`](cloudbuild.yaml), [`deploy.sh`](deploy.sh), [`backend/src/geminiLiveClient.js`](backend/src/geminiLiveClient.js)
+- **Architecture diagram location**: See the [Architecture Diagram](#%EF%B8%8F-architecture-diagram) section below and [`architecture.mmd`](architecture.mmd).
+
+## ☁️ Cloud Run Proof Checklist
+
+1. Run `./deploy.sh <PROJECT_ID>` (or the equivalent `gcloud run deploy ...`) and capture the Cloud Run URL for the live service.
+2. Export `CLOUD_RUN_URL` for reuse in demos/docs, noting the recorded URL in this document.
+3. Confirm the service health via `curl -fsS $CLOUD_RUN_URL/health` and record the `{ "status": "ok", "model": "gemini-live" }` response.
+4. Highlight the IaC proof (`terraform/main.tf`, `cloudbuild.yaml`, `deploy.sh`, `contest/deploy-cloud-run.sh`) so judges can see how the environment was provisioned.
+5. Paste the verified Cloud Run URL + health output into the README/checklist/Devpost entry before final submission.
 
 ---
 

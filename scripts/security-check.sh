@@ -66,7 +66,7 @@ esac
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-RUNTIME_DIR="$ROOT_DIR/.runtime"
+RUNTIME_DIR="/tmp/.runtime"
 MEMORY_FILE="$RUNTIME_DIR/security-memory.log"
 mkdir -p "$RUNTIME_DIR"
 

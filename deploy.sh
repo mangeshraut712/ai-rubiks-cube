@@ -31,6 +31,10 @@ gcloud services enable \
   secretmanager.googleapis.com \
   artifactregistry.googleapis.com
 
+PROJECT_NUMBER="$(gcloud projects describe "${PROJECT_ID}" --format='value(projectNumber)')"
+EXISTING_SERVICE_ACCOUNT="$(gcloud run services describe "${SERVICE_NAME}" --region "${REGION}" --format='value(spec.template.spec.serviceAccountName)' 2>/dev/null || true)"
+RUNTIME_SERVICE_ACCOUNT="${CLOUD_RUN_SERVICE_ACCOUNT:-${EXISTING_SERVICE_ACCOUNT:-${PROJECT_NUMBER}-compute@developer.gserviceaccount.com}}"
+
 echo "Ensuring Artifact Registry repository exists (${REPO_NAME})..."
 if ! gcloud artifacts repositories describe "${REPO_NAME}" --location "${REGION}" >/dev/null 2>&1; then
   gcloud artifacts repositories create "${REPO_NAME}" \
@@ -54,6 +58,11 @@ fi
 
 printf "%s" "${GEMINI_KEY_INPUT}" | gcloud secrets versions add GEMINI_API_KEY --data-file=- >/dev/null
 unset GEMINI_KEY_INPUT
+
+echo "Granting Secret Manager accessor role to ${RUNTIME_SERVICE_ACCOUNT}..."
+gcloud secrets add-iam-policy-binding GEMINI_API_KEY \
+  --member="serviceAccount:${RUNTIME_SERVICE_ACCOUNT}" \
+  --role="roles/secretmanager.secretAccessor" >/dev/null
 
 echo "Building container image with Cloud Build..."
 gcloud builds submit --tag "${IMAGE_URI}" .

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, memo } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
@@ -93,7 +93,7 @@ function easeOutCubic(t) {
  * Three.js Rubik's Cube viewer with sticker-level rendering and move guidance animation.
  * @param {{cubeState: Record<string, string[][]>, activeMove: string}} props
  */
-export default function CubeViewer({ cubeState, activeMove }) {
+const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
   const containerRef = useRef(null);
 
   const threeRef = useRef({
@@ -389,4 +389,5 @@ export default function CubeViewer({ cubeState, activeMove }) {
   }, [normalizedActiveMove]);
 
   return <div ref={containerRef} className="h-full w-full rounded-2xl border border-[#d2d8e3] shadow-[0_10px_24px_rgba(24,39,75,0.12)]" />;
-}
+});
+export default CubeViewer;
