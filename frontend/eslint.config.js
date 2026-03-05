@@ -4,7 +4,13 @@ import reactHooksPlugin from "eslint-plugin-react-hooks";
 
 export default [
   {
-    ignores: ["node_modules/**", "dist/**", "coverage/**", "public/legacy-2x2-solver/**"]
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "dev-dist/**",
+      "coverage/**",
+      "public/legacy-2x2-solver/**"
+    ]
   },
   js.configs.recommended,
   {

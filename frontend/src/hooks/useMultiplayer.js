@@ -20,7 +20,17 @@ const RTC_CONFIG = {
   ]
 };
 
-const SIGNALING_SERVER = process.env.VITE_SIGNALING_SERVER || "ws://localhost:8081";
+function toWsOrigin(origin) {
+  if (!origin) return "";
+  if (origin.startsWith("https://")) return origin.replace("https://", "wss://");
+  if (origin.startsWith("http://")) return origin.replace("http://", "ws://");
+  return origin;
+}
+
+const SIGNALING_SERVER =
+  import.meta.env.VITE_SIGNALING_SERVER ||
+  toWsOrigin(import.meta.env.VITE_BACKEND_ORIGIN) ||
+  "ws://localhost:8081";
 
 export function useMultiplayer() {
   const [connectionState, setConnectionState] = useState("idle"); // idle, connecting, connected, disconnected, error
