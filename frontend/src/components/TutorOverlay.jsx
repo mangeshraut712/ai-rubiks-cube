@@ -22,9 +22,16 @@ function formatMarkdown(text) {
 /**
  * Right-side tutor pane with latest instruction + transcript stream.
  * Auto-scrolls to show newest messages.
- * @param {{latestInstruction:string,hintText:string,transcript:Array<{speaker:string,text:string,ts:string}>}} props
+ * @param {{latestInstruction:string,hintText:string,transcript:Array<{speaker:string,text:string,ts:string}>,connectionStatus?:string,errorText?:string,isLocalEnvironment?:boolean}} props
  */
-export default function TutorOverlay({ latestInstruction, hintText, transcript }) {
+export default function TutorOverlay({
+  latestInstruction,
+  hintText,
+  transcript,
+  connectionStatus = "disconnected",
+  errorText = "",
+  isLocalEnvironment = false
+}) {
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -32,6 +39,40 @@ export default function TutorOverlay({ latestInstruction, hintText, transcript }
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [transcript]);
+
+  let emptyStateMessage = (
+    <>
+      Connection established.
+      <br />
+      Speak to start the session.
+    </>
+  );
+
+  if (connectionStatus === "connecting") {
+    emptyStateMessage = (
+      <>
+        Connecting to the tutor backend.
+        <br />
+        Camera preview and transcript will appear shortly.
+      </>
+    );
+  } else if (connectionStatus === "permission_denied") {
+    emptyStateMessage = (
+      <>
+        Camera or microphone access is blocked.
+        <br />
+        Allow permissions and restart the session.
+      </>
+    );
+  } else if (errorText) {
+    emptyStateMessage = (
+      <>
+        {isLocalEnvironment
+          ? "Backend is not reachable yet. Start the local backend and retry the session."
+          : "Tutor backend is not reachable right now. Retry the connection in a moment."}
+      </>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col rounded-3xl border border-white/60 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 p-5 text-[#202124] dark:text-white shadow-[0_8px_32px_rgba(32,33,36,0.08)] backdrop-blur-xl">
@@ -80,9 +121,7 @@ export default function TutorOverlay({ latestInstruction, hintText, transcript }
       <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto pr-1 scroll-smooth">
         {transcript.length === 0 ? (
           <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-[#d2d8e3] dark:border-gray-700 bg-white/50 dark:bg-gray-900/50 p-4 text-center text-sm text-[#5f6368] dark:text-gray-400">
-            Connection established.
-            <br />
-            Speak to start the session.
+            {emptyStateMessage}
           </div>
         ) : null}
 

@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import WebSocket, { WebSocketServer } from "ws";
-import { fileURLToPath } from "url";
+import { URL, fileURLToPath } from "url";
 
 import { GeminiLiveClient } from "./geminiLiveClient.js";
 import { CubeState, generateScramble, solveCube } from "./cubeStateManager.js";
@@ -30,6 +30,7 @@ function hasUsableApiKey(value) {
 }
 
 const HAS_USABLE_API_KEY = hasUsableApiKey(API_KEY);
+const WS_DEBUG = process.env.WS_DEBUG === "true";
 
 // Rate limiting and connection limits
 const MAX_CONNECTIONS = 10;
@@ -285,7 +286,7 @@ if (fs.existsSync(frontendDistPath)) {
   app.use(express.static(frontendDistPath));
 }
 
-app.get("*", (req, res, next) => {
+app.get("/{*path}", (req, res, next) => {
   if (req.path === "/health") {
     next();
     return;
@@ -303,7 +304,41 @@ app.get("*", (req, res, next) => {
 });
 
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, path: "/ws" });
+const wss = new WebSocketServer({
+  noServer: true,
+  perMessageDeflate: false
+});
+const signalingServer = new SignalingServer();
+
+server.on("upgrade", (request, socket, head) => {
+  const host = request.headers.host || "localhost";
+  const url = new URL(request.url || "/", `http://${host}`);
+  const origin = typeof request.headers.origin === "string" ? request.headers.origin : "";
+
+  if (!isOriginAllowed(origin, host)) {
+    socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+    socket.destroy();
+    return;
+  }
+
+  const handleConnection = (serverInstance) => {
+    serverInstance.handleUpgrade(request, socket, head, (ws) => {
+      serverInstance.emit("connection", ws, request);
+    });
+  };
+
+  if (url.pathname === "/ws") {
+    handleConnection(wss);
+    return;
+  }
+
+  if (url.pathname === "/multiplayer") {
+    signalingServer.handleUpgrade(request, socket, head);
+    return;
+  }
+
+  socket.destroy();
+});
 
 wss.on("error", (error) => {
   // During startup, ws can mirror server listen errors before fallback logic retries.
@@ -320,7 +355,11 @@ function sendJson(ws, payload) {
     return;
   }
 
-  ws.send(JSON.stringify(payload));
+  if (WS_DEBUG) {
+    console.log("[ws] send", payload?.type, payload?.status || "");
+  }
+
+  ws.send(JSON.stringify(payload), { compress: false });
 }
 
 function decodeBinaryEnvelope(buffer) {
@@ -388,6 +427,20 @@ function pushTranscript(record, speaker, text) {
     speaker,
     text
   });
+}
+
+function scheduleTutorTurn(client, text) {
+  if (!client || typeof client.sendTextTurn !== "function" || !text) {
+    return;
+  }
+
+  setTimeout(() => {
+    try {
+      client.sendTextTurn(text, true);
+    } catch (error) {
+      console.warn("[ws] scheduled tutor turn failed", error?.message ?? error);
+    }
+  }, 0);
 }
 
 wss.on("connection", async (ws, req) => {
@@ -574,53 +627,59 @@ wss.on("connection", async (ws, req) => {
 
     await gemini.startSession();
 
-    sendJson(ws, {
-      type: "status",
-      status: "connected",
-      model: gemini.activeModel || LIVE_MODEL,
-      message: "Live tutor session connected."
-    });
+    setTimeout(() => {
+      if (closed || ws.readyState !== WebSocket.OPEN) {
+        return;
+      }
 
-    sendJson(ws, {
-      type: "cube_state_update",
-      cubeState: cubeState.getSnapshot()
-    });
+      sendJson(ws, {
+        type: "status",
+        status: "connected",
+        model: gemini.activeModel || LIVE_MODEL,
+        message: "Live tutor session connected."
+      });
 
-    if (DEMO_MODE) {
-      gemini.sendTextTurn(
-        "Demo mode is active. There is no guaranteed camera feed. Start a virtual walkthrough and give exactly one move now with plain-English explanation.",
-        true
-      );
+      sendJson(ws, {
+        type: "cube_state_update",
+        cubeState: cubeState.getSnapshot()
+      });
 
-      demoAutoplayTimer = setInterval(() => {
-        if (closed || !gemini || challengeMode) {
-          return;
-        }
-        if (tutorIsThinking) {
-          return;
-        }
-        if (Date.now() - lastTutorResponseAt < 2400) {
-          return;
-        }
-
-        const tutorMoves = sessionRecord.moveHistory.filter((entry) => entry.source === "tutor");
-        if (tutorMoves.length >= DEMO_AUTOPLAY_TARGET_MOVES) {
-          clearInterval(demoAutoplayTimer);
-          demoAutoplayTimer = null;
-          return;
-        }
-
-        gemini.sendTextTurn(
-          "Continue demo walkthrough with exactly one next move and a short confirmation.",
-          true
+      if (DEMO_MODE) {
+        scheduleTutorTurn(
+          gemini,
+          "Demo mode is active. There is no guaranteed camera feed. Start a virtual walkthrough and give exactly one move now with plain-English explanation."
         );
-      }, DEMO_AUTOPLAY_INTERVAL_MS);
-    } else {
-      gemini.sendTextTurn(
-        "Session started. Introduce yourself as Cubey, ask the user to show the full cube, then give the first single move guidance.",
-        true
-      );
-    }
+
+        demoAutoplayTimer = setInterval(() => {
+          if (closed || !gemini || challengeMode) {
+            return;
+          }
+          if (tutorIsThinking) {
+            return;
+          }
+          if (Date.now() - lastTutorResponseAt < 2400) {
+            return;
+          }
+
+          const tutorMoves = sessionRecord.moveHistory.filter((entry) => entry.source === "tutor");
+          if (tutorMoves.length >= DEMO_AUTOPLAY_TARGET_MOVES) {
+            clearInterval(demoAutoplayTimer);
+            demoAutoplayTimer = null;
+            return;
+          }
+
+          scheduleTutorTurn(
+            gemini,
+            "Continue demo walkthrough with exactly one next move and a short confirmation."
+          );
+        }, DEMO_AUTOPLAY_INTERVAL_MS);
+      } else {
+        scheduleTutorTurn(
+          gemini,
+          "Session started. Introduce yourself as Cubey, ask the user to show the full cube, then give the first single move guidance."
+        );
+      }
+    }, 0);
   } catch (error) {
     console.error("[ws] session init error", {
       ip: req.socket.remoteAddress,
@@ -773,9 +832,9 @@ wss.on("connection", async (ws, req) => {
               cubeState: cubeState.getSnapshot()
             });
 
-            gemini.sendTextTurn(
+            scheduleTutorTurn(
+              gemini,
               `Challenge mode is ON. Scramble sequence applied: ${scramble.join(" ")}. Start coaching quickly and keep one move at a time.`,
-              true
             );
           } else {
             sendJson(ws, {
@@ -836,9 +895,9 @@ wss.on("connection", async (ws, req) => {
 
           // Ask Gemini to coach the solve
           if (gemini && typeof gemini.sendTextTurn === "function") {
-            gemini.sendTextTurn(
+            scheduleTutorTurn(
+              gemini,
               `I am now auto-solving the cube. The solution is: ${solutionMoves.join(" ")}. Coach the user through each move enthusiastically! Start with the first move ${solutionMoves[0]}.`,
-              true
             );
           }
 
@@ -962,8 +1021,6 @@ wss.on("close", () => {
   clearInterval(heartbeatInterval);
 });
 
-// Initialize WebRTC Signaling Server for multiplayer
-const _signalingServer = new SignalingServer(server);
 console.log("[server] WebRTC Signaling Server initialized for multiplayer");
 
 const fallbackPorts = Array.from(

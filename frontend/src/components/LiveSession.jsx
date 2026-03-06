@@ -11,6 +11,7 @@ const INTERRUPT_THRESHOLD = 0.82;
 const INTERRUPT_HOLD_MS = 1500;
 const INTERRUPT_COOLDOWN_MS = 7000;
 const INTERRUPT_ARM_DELAY_MS = 3000;
+const DEFAULT_PUBLIC_BACKEND_ORIGIN = "https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app";
 
 function base64ToArrayBuffer(base64) {
   const binary = atob(base64);
@@ -72,6 +73,8 @@ const LiveSession = forwardRef(function LiveSession(
   ref
 ) {
   const [permissionError, setPermissionError] = useState("");
+  const [previewStatus, setPreviewStatus] = useState("disconnected");
+  const [hasVideoPreview, setHasVideoPreview] = useState(false);
 
   const wsRef = useRef(null);
   const streamRef = useRef(null);
@@ -101,12 +104,16 @@ const LiveSession = forwardRef(function LiveSession(
 
   function emitStatus(nextStatus) {
     statusRef.current = nextStatus;
+    setPreviewStatus(nextStatus);
     onStatusChange?.(nextStatus);
   }
 
   function wsUrls() {
     const candidates = [];
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+    const isVercelHost = hostname.endsWith("vercel.app");
 
     const pushUnique = (url) => {
       const normalized = String(url || "")
@@ -131,19 +138,20 @@ const LiveSession = forwardRef(function LiveSession(
       return "";
     };
 
-    // 1. Same-origin first — in dev, Vite proxies /ws to the backend seamlessly
-    //    In production, backend serves frontend so same-origin works directly
-    pushUnique(`${protocol}://${window.location.host}/ws`);
-
-    // 2. Explicit overrides from env (if different from same-origin)
+    // 1. Explicit runtime config first (best for production deployments like Vercel)
     pushUnique(import.meta.env.VITE_WS_URL);
     pushUnique(fromBackendOrigin(import.meta.env.VITE_BACKEND_ORIGIN));
+    pushUnique(
+      fromBackendOrigin(import.meta.env.VITE_PUBLIC_BACKEND_ORIGIN || (isVercelHost ? DEFAULT_PUBLIC_BACKEND_ORIGIN : ""))
+    );
+
+    // 2. Same-origin fallback — ideal when frontend is served by backend origin
+    pushUnique(`${protocol}://${window.location.host}/ws`);
 
     // 3. Localhost fallback ports for dev
-    const localHostname = window.location.hostname;
-    if (localHostname === "localhost" || localHostname === "127.0.0.1") {
+    if (isLocalhost) {
       for (const port of [8080, 3005, 3000, 8081]) {
-        pushUnique(`${protocol}://${localHostname}:${port}/ws`);
+        pushUnique(`${protocol}://${hostname}:${port}/ws`);
       }
     }
 
@@ -444,12 +452,14 @@ const LiveSession = forwardRef(function LiveSession(
 
   async function startMedia() {
     try {
+      setHasVideoPreview(false);
       const stream = await requestMediaStream();
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
+        setHasVideoPreview(true);
       }
 
       audioCaptureRef.current = startPcmCapture(
@@ -525,6 +535,7 @@ const LiveSession = forwardRef(function LiveSession(
       console.error("[LiveSession] media permission denied", error);
       const message =
         "Camera/Microphone permission denied. Please allow access and restart session.";
+      setHasVideoPreview(false);
       setPermissionError(message);
       onError?.(message);
       emitStatus("permission_denied");
@@ -581,6 +592,7 @@ const LiveSession = forwardRef(function LiveSession(
       videoRef.current.srcObject = null;
     }
 
+    setHasVideoPreview(false);
     onMicLevel?.(0);
     updateTutorSpeakingState(false);
   }
@@ -620,6 +632,16 @@ const LiveSession = forwardRef(function LiveSession(
       sendJson({ type: "auto_solve" });
     },
 
+    async retryConnection() {
+      reconnectAttemptRef.current = 0;
+      wsCandidatesRef.current = wsUrls();
+      wsTargetRef.current = "";
+      setPermissionError("");
+      await cleanupMediaAndSocket();
+      await startMedia();
+      setupWebSocket();
+    },
+
     async endSession() {
       await cleanupMediaAndSocket();
       emitStatus("disconnected");
@@ -657,6 +679,21 @@ const LiveSession = forwardRef(function LiveSession(
     <div className="relative h-full w-full overflow-hidden rounded-[20px] bg-white/40 shadow-inner">
       <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
       <canvas ref={canvasRef} className="hidden" />
+
+      {!permissionError && !hasVideoPreview ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/70 px-4 text-center text-sm font-medium text-slate-600 backdrop-blur-sm">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+              Camera Preview
+            </div>
+            <div className="mt-2">
+              {previewStatus === "connecting"
+                ? "Opening media devices and backend session..."
+                : "Preview will appear here once the camera is available."}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {permissionError ? (
         <div className="absolute inset-0 flex items-center justify-center bg-white/95 p-4 text-center text-sm text-[#7a2d24]">

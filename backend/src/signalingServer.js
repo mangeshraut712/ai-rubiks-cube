@@ -5,10 +5,10 @@
 import { WebSocketServer } from "ws";
 
 class SignalingServer {
-  constructor(httpServer) {
+  constructor() {
     this.wss = new WebSocketServer({
-      server: httpServer,
-      path: "/multiplayer"
+      noServer: true,
+      perMessageDeflate: false
     });
 
     this.rooms = new Map(); // roomId -> { clients: [], host: null }
@@ -21,13 +21,14 @@ class SignalingServer {
           const message = JSON.parse(data);
           this.handleMessage(ws, message);
         } catch (error) {
-          console.error("[Signaling] Invalid message:", error);
-          ws.send(
-            JSON.stringify({
-              type: "error",
-              message: "Invalid message format"
-            })
-          );
+        console.error("[Signaling] Invalid message:", error);
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            message: "Invalid message format"
+          }),
+          { compress: false }
+        );
         }
       });
 
@@ -41,6 +42,12 @@ class SignalingServer {
     });
 
     console.log("[Signaling] Server initialized");
+  }
+
+  handleUpgrade(request, socket, head) {
+    this.wss.handleUpgrade(request, socket, head, (ws) => {
+      this.wss.emit("connection", ws, request);
+    });
   }
 
   /**
@@ -121,7 +128,8 @@ class SignalingServer {
         roomId,
         isHost: ws.isHost || false,
         clientCount: room.clients.length
-      })
+      }),
+      { compress: false }
     );
 
     // Notify other clients
@@ -256,7 +264,7 @@ class SignalingServer {
 
     room.clients.forEach((client) => {
       if (client !== excludeWs && client.readyState === 1) {
-        client.send(data);
+        client.send(data, { compress: false });
       }
     });
   }

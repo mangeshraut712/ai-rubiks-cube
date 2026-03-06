@@ -135,27 +135,35 @@ export default function Tutorial({ onClose, onComplete }) {
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           className="relative w-full max-w-lg overflow-hidden rounded-3xl glass-effect shadow-2xl dark:text-white"
         >
-          {/* Header with progress */}
-          <div className="relative h-2 bg-gray-100 dark:bg-white/10">
+          {/* Header Title Layer */}
+          <div className="flex items-center justify-between border-b border-gray-200/50 p-6 dark:border-white/10">
+            <div className="flex flex-col">
+              <h2 className="text-xl font-bold tracking-tight">Tutorial</h2>
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                Step {currentStep + 1} of {TUTORIAL_STEPS.length}
+              </p>
+            </div>
+            <button
+              onClick={handleSkip}
+              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              aria-label="Skip tutorial"
+            >
+              <FiX className="w-6 h-6 text-gray-400" />
+            </button>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="relative h-1 bg-gray-100 dark:bg-white/10">
             <motion.div
-              className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+              className="h-full bg-gradient-to-r from-[#4285f4] via-[#9b72cb] to-[#d96570]"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}
             />
           </div>
 
-          {/* Close button */}
-          <button
-            onClick={handleSkip}
-            className="absolute right-4 top-4 p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors z-10"
-            aria-label="Skip tutorial"
-          >
-            <FiX className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </button>
-
           {/* Content */}
-          <div className="p-8">
+          <div className="p-8 sm:p-10">
             <AnimatePresence mode="wait">
               <motion.div
                 key={step.id}
@@ -166,12 +174,12 @@ export default function Tutorial({ onClose, onComplete }) {
                 className="text-center"
               >
                 {/* Icon */}
-                <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#9b72cb] text-white shadow-xl shadow-blue-500/20">
+                <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4285f4] to-[#9b72cb] text-white shadow-xl shadow-blue-500/20">
                   <Icon className="h-10 w-10" />
                 </div>
 
                 {/* Title */}
-                <h2 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                <h2 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-tight">
                   {step.title}
                 </h2>
 
@@ -180,13 +188,13 @@ export default function Tutorial({ onClose, onComplete }) {
                   {step.content}
                 </p>
 
-                {/* Step indicator */}
-                <div className="flex justify-center items-center gap-1.5 mb-8">
+                {/* Step indicator dots */}
+                <div className="flex justify-center items-center gap-2 mb-8">
                   {TUTORIAL_STEPS.map((_, i) => (
                     <div
                       key={i}
                       className={`h-1.5 rounded-full transition-all duration-300 ${i === currentStep
-                        ? "w-8 bg-blue-500"
+                        ? "w-8 bg-[#4285f4]"
                         : "w-1.5 bg-gray-200 dark:bg-gray-700"
                         }`}
                     />
@@ -203,7 +211,7 @@ export default function Tutorial({ onClose, onComplete }) {
                 className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 <FiChevronLeft className="w-5 h-5" />
-                Back
+                <span className="hidden sm:inline">Back</span>
               </button>
 
               <div className="flex gap-2">
@@ -211,7 +219,7 @@ export default function Tutorial({ onClose, onComplete }) {
                   <button
                     onClick={handleRestart}
                     className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
-                    title="Restart tutorial"
+                    title="Restart"
                   >
                     <FiRotateCcw className="w-4 h-4" />
                   </button>
@@ -237,8 +245,8 @@ export default function Tutorial({ onClose, onComplete }) {
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="bg-gray-50/50 dark:bg-black/20 px-8 py-5 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 dark:border-white/5">
+          {/* Footer (Responsive padding fix) */}
+          <div className="bg-gray-50/50 dark:bg-black/20 px-6 sm:px-10 py-5 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 dark:border-white/5">
             <label className="flex items-center gap-3 text-sm font-semibold text-gray-600 dark:text-gray-400 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors">
               <div className="relative">
                 <input
@@ -247,8 +255,8 @@ export default function Tutorial({ onClose, onComplete }) {
                   onChange={(e) => setShowHints(e.target.checked)}
                   className="sr-only"
                 />
-                <div className={`w-10 h-5 rounded-full transition-colors ${showHints ? "bg-green-500" : "bg-gray-300 dark:bg-gray-700"}`}>
-                  <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${showHints ? "translate-x-5" : ""}`} />
+                <div className={`w-11 h-6 rounded-full transition-colors ${showHints ? "bg-green-500" : "bg-gray-300 dark:bg-gray-700"}`}>
+                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${showHints ? "translate-x-5" : ""}`} />
                 </div>
               </div>
               Show hints during solving
@@ -258,7 +266,7 @@ export default function Tutorial({ onClose, onComplete }) {
               onClick={handleSkip}
               className="text-sm font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
-              Skip Tutorial
+              Skip Walkthrough
             </button>
           </div>
         </motion.div>

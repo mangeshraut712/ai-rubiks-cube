@@ -6,9 +6,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap");
 @import "tailwindcss";
 
-/* Enable class-based dark mode for Tailwind v4 */
-@custom-variant dark (&:where(.dark, .dark *));
-
 /* ===== Google-Inspired Design System ===== */
 :root {
   --background: 0 0% 100%;
@@ -69,10 +66,18 @@ html {
 body {
   font-family: var(--font-sans);
   background-color: #ffffff;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(66, 133, 244, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(217, 101, 112, 0.12) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(155, 114, 203, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(52, 168, 83, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(66, 133, 244, 0.15) 0px, transparent 50%);
+  background-attachment: fixed;
   color: #202124;
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background-color 0.5s ease;
 }
 
 :where(button, a, input, select, textarea, [role="button"]):focus-visible {
@@ -134,46 +139,34 @@ h6 {
   background-clip: text;
 }
 
-/* Premium Mesh Gradient Background */
-.mesh-gradient-bg {
-  background-color: #ffffff;
-  background-image:
-    radial-gradient(at 0% 0%, hsla(217, 100%, 95%, 1) 0px, transparent 50%),
-    radial-gradient(at 50% 0%, hsla(250, 100%, 95%, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(217, 100%, 95%, 1) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(217, 100%, 95%, 1) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, hsla(250, 100%, 95%, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(217, 100%, 95%, 1) 0px, transparent 50%);
-  background-attachment: fixed;
-}
-
-.dark .mesh-gradient-bg {
-  background-color: #0c0d0e;
-  background-image:
-    radial-gradient(at 0% 0%, hsla(217, 50%, 15%, 1) 0px, transparent 50%),
-    radial-gradient(at 50% 0%, hsla(250, 50%, 15%, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(217, 50%, 15%, 1) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(217, 50%, 15%, 1) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, hsla(250, 50%, 15%, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(217, 50%, 15%, 1) 0px, transparent 50%);
-}
+/* Premium Mesh Gradient Colors are handled in body/dark body */
 
 /* Glassmorphism Utilities */
 .glass-effect {
   background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 }
 
 .dark .glass-effect {
-  background: rgba(30, 31, 32, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 17, 18, 0.75);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 /* Dark Mode Overrides */
 .dark body {
   background-color: #0c0d0e;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(66, 133, 244, 0.18) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(234, 67, 53, 0.12) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(30, 31, 32, 1) 0px, transparent 100%),
+    radial-gradient(at 100% 100%, rgba(52, 168, 83, 0.15) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(155, 114, 203, 0.18) 0px, transparent 50%);
   color: #e8eaed;
 }
 
