@@ -1,345 +1,131 @@
-# AI Rubik's Tutor
+# AI Rubik's Tutor 2026
+
+<div align="center">
+  <img src="frontend/public/rubiks-ai-logo.png" width="180" alt="AI Rubik's Tutor Logo" />
+  <h3>The future of 3D cognitive training, powered by Gemini 2.x Live.</h3>
+  
+  [![Vite](https://img.shields.io/badge/vite-7-646CFF?logo=vite)](https://vitejs.dev)
+  [![React](https://img.shields.io/badge/react-19-61DAFB?logo=react)](https://react.dev)
+  [![Tailwind CSS](https://img.shields.io/badge/tailwind-4-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
+  [![GCP](https://img.shields.io/badge/GCP-Cloud_Run-4285F4?logo=google-cloud)](https://cloud.google.com/run)
+  [![Gemini](https://img.shields.io/badge/Gemini-2.5_Live-8E75B2?logo=google-gemini)](https://deepmind.google/technologies/gemini/)
+</div>
+
+---
 
 <p align="center">
-  <img src="frontend/public/rubiks-ai-logo.png" width="144" alt="AI Rubik's Tutor logo" />
+  <strong>A high-performance Rubik's Cube monorepo architecture. One integrated surface for AI coaching and deterministic logic.</strong>
 </p>
 
-<p align="center">
-  <strong>A two-project Rubik's Cube monorepo built around Gemini Live, React 19, and Google Cloud Run.</strong>
-</p>
+## 🚀 One Repo. Two Experiences.
 
-AI Rubik's Tutor is one repository with two distinct products:
+> [!NOTE]
+> AI Rubik's Tutor is a unified 2026 workspace that bridges high-level AI coaching with low-level deterministic logic. It's built around **one modern frontend system** and **one Cloud Run backend**.
 
-- **Part 1: Gemini Live Tutor**
-  A realtime 3x3 coaching workspace that uses voice, webcam frames, live tutor responses, hints, challenge mode, and multiplayer signaling.
-- **Part 2: Cubey Core 2x2 Lab**
-  A deterministic 2x2 solver/lab with shared cube-state logic, manual controls, and exact BFS, A*, and IDA* playback.
+### 🎙️ Part 1: Gemini Live Tutor
+**Realtime 3x3 coaching with voice, vision, and memory.**
+A realtime 3x3 coaching engine. It sees your physical cube via webcam, listens to your questions, and guides you to victory with voice, move-specific hints, and a shared 3D stage.
+- **Routes:** `/`, `/part-1`, `/part-1/live`, `/part-1/multiplayer`.
+- **Core:** [LiveSession.jsx](frontend/src/components/LiveSession.jsx) • [geminiLiveClient.js](backend/src/geminiLiveClient.js)
 
-## Repository Overview
+### 🧪 Part 2: Cubey Core 2x2 Lab
+**Deterministic cube logic and exact solving search.**
+A standalone 2x2 solver with one shared cube-state logic, manual controls, and exact BFS, A*, and IDA* playback on a shared 24-sticker state model.
+- **Routes:** `/part-2`, `/legacy-2x2-solver/index.html`.
+- **Core:** [cube-core.js](frontend/public/legacy-2x2-solver/cube-core.js) • [solver.js](frontend/public/legacy-2x2-solver/solver.js)
 
-| Area | What it contains |
-| --- | --- |
-| `frontend/` | React app shell, routed product UI, shared components, hooks, state, and the public Part 2 static app |
-| `backend/` | Express backend, Gemini integration, runtime APIs, cube-state logic, and websocket handling |
-| `scripts/` | Local developer entry scripts for Part 1 and Part 2 |
-| `.github/workflows/` | CI pipeline for lint, tests, and frontend build |
-| `Dockerfile` | Single-image build that serves the frontend from the backend container |
-| `cloudbuild.yaml` | Cloud Build pipeline for Google Cloud Run deployment |
-| `deploy.sh` | Manual Cloud Run deployment helper |
+---
 
-## The Two Projects
+## 🏗️ Technical Architecture
 
-### Part 1: Gemini Live Tutor
-
-Purpose:
-- coach a 3x3 solve in realtime
-- keep the interaction multimodal instead of text-only
-- combine camera input, microphone input, tutor guidance, move visualization, and session memory in one workspace
-
-Primary routes:
-- `/`
-- `/part-1`
-- `/part-1/live`
-- `/part-1/multiplayer`
-
-Main implementation areas:
-- [frontend/src/App.jsx](frontend/src/App.jsx)
-- [frontend/src/components/LiveSession.jsx](frontend/src/components/LiveSession.jsx)
-- [frontend/src/components/TutorOverlay.jsx](frontend/src/components/TutorOverlay.jsx)
-- [frontend/src/hooks/useMultiplayer.js](frontend/src/hooks/useMultiplayer.js)
-- [backend/src/server.js](backend/src/server.js)
-- [backend/src/geminiLiveClient.js](backend/src/geminiLiveClient.js)
-
-Core capabilities:
-- Gemini Live audio session handling
-- webcam frame capture and tutor grounding
-- interruptible tutor playback
-- hint requests and auto-solve flow
-- challenge mode and move coaching
-- WebRTC multiplayer signaling
-- runtime metadata via `/api/runtime`
-
-### Part 2: Cubey Core 2x2 Lab
-
-Purpose:
-- expose the deterministic cube core separately from the live tutor
-- provide an exact, inspectable 2x2 solving experience
-- keep manual controls, algorithm comparison, and playback available without the live stack
-
-Primary routes:
-- `/part-2`
-- `/legacy-2x2-solver/index.html`
-
-Main implementation areas:
-- [frontend/public/legacy-2x2-solver/index.html](frontend/public/legacy-2x2-solver/index.html)
-- [frontend/public/legacy-2x2-solver/app.js](frontend/public/legacy-2x2-solver/app.js)
-- [frontend/public/legacy-2x2-solver/cube-core.js](frontend/public/legacy-2x2-solver/cube-core.js)
-- [frontend/public/legacy-2x2-solver/solver.js](frontend/public/legacy-2x2-solver/solver.js)
-- [frontend/public/legacy-2x2-solver/a-star-solver.js](frontend/public/legacy-2x2-solver/a-star-solver.js)
-- [frontend/public/legacy-2x2-solver/cube-engine.js](frontend/public/legacy-2x2-solver/cube-engine.js)
-
-Core capabilities:
-- shared 24-sticker cube model
-- manual move controls
-- scramble/reset flow
-- BFS, A*, and IDA* solving
-- exact solution playback
-- theme-aware UI aligned with the main frontend
-
-## Current Stack
-
-### Frontend
-
-- React 19
-- React Router 7
-- Vite 7
-- Tailwind CSS 4
-- Framer Motion 12
-- Three.js 0.183
-- Zustand 5
-- Vitest 4
-
-Frontend package source:
-- [frontend/package.json](frontend/package.json)
-
-### Backend
-
-- Node.js 22
-- Express 5
-- Google GenAI SDK via `@google/genai`
-- `ws` for websocket transport
-- Zod 4 for message validation
-- Helmet, compression, and express-rate-limit
-
-Backend package source:
-- [backend/package.json](backend/package.json)
-
-## Runtime Surface
-
-The backend advertises the current runtime surface in [backend/src/runtimeInfo.js](backend/src/runtimeInfo.js).
-
-HTTP routes:
-- `GET /health`
-- `GET /api/health`
-- `GET /api/runtime`
-
-WebSocket paths:
-- `WS /ws`
-- `WS /multiplayer`
-
-App routes:
-- `/`
-- `/part-1`
-- `/part-1/live`
-- `/part-1/multiplayer`
-- `/live` -> redirect
-- `/labs/multiplayer` -> redirect
-- `/part-2` -> redirect to the static 2x2 app
-- `/classic` -> redirect
-
-Frontend routing source:
-- [frontend/src/router.jsx](frontend/src/router.jsx)
-
-## Architecture
+AI Rubik's Tutor uses a **Single-Origin Deployment** model. The frontend is compiled into production chunks and served directly by the Express backend, ensuring zero CORS friction in production.
 
 ```mermaid
 flowchart LR
-  A[Browser] --> B[React 19 App Shell]
-  B --> C[Part 1 Gemini Live Tutor]
-  B --> D[Part 2 Cubey Core 2x2 Lab]
-  C <-->|ws| E[Express 5 Backend]
-  C <-->|multiplayer| F[Signaling Transport]
-  E --> G[Google GenAI SDK]
-  E --> H[Cube State Manager]
-  E --> I[Runtime and health APIs]
-  J[Google Cloud Run] --> E
-  J --> B
+    A["Browser"] --> B["React 19 Shell"]
+    B --> C["Part 1: Gemini Live Tutor"]
+    B --> D["Part 2: Cubey Core Lab"]
+    C <-->|"WebSocket (ws)"| E["Express 5 Backend"]
+    C <-->|"Multiplayer / RTC"| F["Signaling Server"]
+    E --> G["Google GenAI SDK"]
+    E --> H["Cube Logic Core"]
+    E --> I["Runtime & Health APIs"]
+    J["Google Cloud Run"] --> E
+    J --> B
 ```
 
-## Root Structure
+---
+
+## 📁 Repository Blueprint
 
 ```text
 .
-├── backend/
-│   ├── src/
-│   ├── package.json
-│   └── eslint.config.js
-├── frontend/
-│   ├── public/
-│   │   └── legacy-2x2-solver/
-│   ├── src/
-│   ├── package.json
-│   ├── vite.config.js
-│   └── vitest.config.js
-├── scripts/
-│   ├── start-core.sh
-│   └── start-gemini.sh
-├── .github/workflows/
-│   └── ci.yml
-├── .env.example
-├── Dockerfile
-├── cloudbuild.yaml
-├── deploy.sh
-└── README.md
+├── backend/            # Express backend, Gemini integration, runtime APIs
+├── frontend/           # React product shell & static assets
+│   ├── public/         # Part 2 legacy assets
+│   └── src/            # Part 1 product source
+├── scripts/            # Unified developer entrypoints
+├── Dockerfile          # Integrated multi-stage production build
+├── cloudbuild.yaml     # CI/CD rollout pipeline
+└── deploy.sh           # Manual deployment automation
 ```
 
-Notes:
-- generated directories like `frontend/dist`, `frontend/dev-dist`, `backend/cache`, and `node_modules/` are local artifacts, not source
-- Part 2 intentionally remains under `frontend/public/legacy-2x2-solver/` because it is shipped as a static entry alongside the main routed app
+---
 
-## Local Development
+## 🚦 Local Developer Guide
 
-### Install dependencies
-
+### 1. Setup & Dependencies
 ```bash
 npm ci --prefix backend
 npm ci --prefix frontend
-```
-
-### Create `.env`
-
-```bash
 cp .env.example .env
 ```
 
-Minimum useful values:
-
+### 2. Environment Configuration
+**Minimum Required Settings:**
 ```bash
 PORT=8080
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+GEMINI_API_KEY=YOUR_KEY
 GEMINI_LIVE_MODEL=gemini-live-2.5-flash-preview
-GEMINI_FALLBACK_MODEL=gemini-2.5-flash
-DEMO_MODE=false
 VITE_BACKEND_ORIGIN=http://localhost:8080
 ```
 
-Optional values:
+### 3. Execution
+| Command | Mode | Target |
+| :--- | :--- | :--- |
+| `./scripts/start-gemini.sh` | **Full** | Starts Backend (8080) & Frontend (5173) |
+| `./scripts/start-core.sh` | **Frontend** | Starts only the visual workspace |
 
+---
+
+## 🛳️ Deployment & CI/CD
+
+The project is optimized for **Google Cloud Platform**. The entire repo ships as a single integrated container.
+
+### Manual Rollout
 ```bash
-CORS_ORIGIN=https://*.run.app,https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173
-VITE_WS_URL=ws://localhost:8080/ws
-VITE_SIGNALING_SERVER=ws://localhost:8080
-VITE_ICE_SERVERS_JSON=[{"urls":"stun:stun.l.google.com:19302"}]
-VITE_PUBLIC_BACKEND_ORIGIN=https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app
-ALLOW_INSECURE_CORS=false
-ENABLE_FRONTEND_REDIRECT=false
+./deploy.sh <YOUR_GCP_PROJECT_ID>
 ```
 
-Environment template:
-- [.env.example](.env.example)
+**Under the Hood:**
+1.  **Build Stage**: Vite compiles optimized React 19 chunks.
+2.  **Bundle Stage**: Assets are mapped into the Express 5 runtime.
+3.  **Deploy Stage**: Image is pushed to Artifact Registry & rolled out to Cloud Run.
+4.  **Health Check**: Real-time smoke tests verify `/health` and `/api/runtime`.
 
-### Run Part 1
+---
 
-```bash
-./scripts/start-gemini.sh
-```
+## 🎖️ Active Product Links
 
-This starts:
-- backend on `http://localhost:8080`
-- frontend on `http://localhost:5173`
+| Context | URL |
+| :--- | :--- |
+| **Production Root** | [Launch App](https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/) |
+| **Gemini Live** | [Start Tutor](https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/part-1/live) |
+| **2x2 Lab** | [Open Lab](https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/part-2) |
+| **System Sync** | [/api/runtime](https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime) |
 
-Useful URLs:
-- `http://localhost:5173/`
-- `http://localhost:5173/part-1/live`
-- `http://localhost:5173/part-1/multiplayer`
+---
 
-### Run Part 2
-
-```bash
-./scripts/start-core.sh
-```
-
-Useful URL:
-- `http://localhost:5173/part-2`
-
-## Validation
-
-### Frontend
-
-```bash
-cd frontend
-npm run lint
-npm run test -- --run
-npm run build
-```
-
-### Backend
-
-```bash
-cd backend
-npm run lint
-npm run test -- --run
-```
-
-### CI
-
-GitHub Actions runs:
-- backend lint
-- backend tests
-- frontend lint
-- frontend tests
-- frontend build
-
-Workflow:
-- [.github/workflows/ci.yml](.github/workflows/ci.yml)
-
-## Deployment
-
-The repository is designed for a single Google Cloud Run deployment where the backend serves the built frontend.
-
-### Manual deployment
-
-```bash
-./deploy.sh YOUR_GCP_PROJECT_ID
-```
-
-What `deploy.sh` does:
-1. validates the target project and required GCP APIs
-2. ensures Artifact Registry and Secret Manager are ready
-3. builds the container image
-4. deploys to Cloud Run
-5. smoke-tests health, runtime, and Part 2 entry routes
-
-Deployment script:
-- [deploy.sh](deploy.sh)
-
-### Cloud Build deployment
-
-```bash
-gcloud builds submit --config cloudbuild.yaml .
-```
-
-Pipeline source:
-- [cloudbuild.yaml](cloudbuild.yaml)
-
-### Container build
-
-The production image is a multi-stage build:
-- stage 1 builds the frontend
-- stage 2 installs backend production dependencies
-- the backend serves the built frontend assets
-
-Container source:
-- [Dockerfile](Dockerfile)
-
-## Public Deployment
-
-Current Cloud Run service:
-- `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/`
-
-Useful public URLs:
-- app root: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/`
-- runtime: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime`
-- health: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
-- Part 1 live: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/part-1/live`
-- Part 2: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/part-2`
-
-Latest verified ready revision:
-- `gemini-rubiks-tutor-00011-mn2`
-
-## Repository Notes
-
-- Part 1 and Part 2 intentionally live together because the tutor product and the cube logic product share state models, visual language, and deployment infrastructure.
-- Part 1 is the multimodal agent surface.
-- Part 2 is the deterministic algorithm surface.
-- The README is meant to describe the repository as a GitHub project first, not just as a hackathon artifact.
+<p align="center">
+  Designed and Engineered by <b>Mangesh Raut</b>
+</p>
