@@ -1,6 +1,7 @@
 # Stage 1: Build frontend assets
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app/frontend
+RUN npm install -g npm@11.11.0
 
 COPY frontend/package*.json ./
 RUN npm ci
@@ -9,8 +10,9 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Runtime backend + static frontend
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app/backend
+RUN npm install -g npm@11.11.0
 
 ENV NODE_ENV=production
 # kociemba uses strnlen(); expose feature declarations on musl/alpine builds.

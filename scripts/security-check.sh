@@ -92,18 +92,28 @@ run_npm_audit_check() {
   fi
 }
 
+file_contains() {
+  local pattern="$1"
+  local file="$2"
+  if command -v rg >/dev/null 2>&1; then
+    rg -n "$pattern" "$file" >/dev/null 2>&1
+  else
+    grep -nE "$pattern" "$file" >/dev/null 2>&1
+  fi
+}
+
 check_backend_security_basics() {
   [[ -f backend/src/server.js ]] || return 0
 
-  if ! rg -n 'helmet\(' backend/src/server.js >/dev/null 2>&1; then
+  if ! file_contains 'helmet\(' backend/src/server.js; then
     add_warning "backend/src/server.js does not appear to enable helmet()."
   fi
 
-  if ! rg -n 'compression\(' backend/src/server.js >/dev/null 2>&1; then
+  if ! file_contains 'compression\(' backend/src/server.js; then
     add_warning "backend/src/server.js does not appear to enable compression()."
   fi
 
-  if ! rg -n 'rateLimit\(' backend/src/server.js >/dev/null 2>&1; then
+  if ! file_contains 'rateLimit\(' backend/src/server.js; then
     add_warning "backend/src/server.js does not appear to use express-rate-limit for HTTP routes."
   fi
 }

@@ -230,13 +230,11 @@ What the deploy does:
 
 Checked on March 6, 2026:
 
+- Cloud Run app root: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/`
 - Cloud Run health: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
+- Cloud Run runtime metadata: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime`
+- Cloud Run Part 2 route: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/part-2`
 - Cloud Run Part 2 page: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/legacy-2x2-solver/index.html`
-
-Important:
-
-- The currently deployed Cloud Run revision still redirects `/` to the older frontend host.
-- This repo is now configured so the next Cloud Run deploy serves the website directly from Cloud Run instead of redirecting.
 
 ## Core Guardrails
 

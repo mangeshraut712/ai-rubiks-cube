@@ -14,17 +14,17 @@ steps:
     args:
       - build
       - -t
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${BUILD_ID}
       - .
 
   - id: Push Image
     name: gcr.io/cloud-builders/docker
     args:
       - push
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${BUILD_ID}
 
   - id: Security Gate
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    name: node:22
     entrypoint: bash
     env:
       - SECURITY_CORS_ORIGIN=${_CORS_ORIGIN}
@@ -44,7 +44,7 @@ steps:
       - deploy
       - ${_SERVICE}
       - --image
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${BUILD_ID}
       - --platform
       - managed
       - --region
@@ -64,11 +64,11 @@ steps:
       - -c
       - |
         set -euo pipefail
-        URL=$(gcloud run services describe ${_SERVICE} --region ${_REGION} --format='value(status.url)')
-        echo "Service URL: ${URL}"
-        curl -fsS "${URL}/health"
-        curl -fsS "${URL}/api/runtime"
-        curl -fsSI "${URL}/legacy-2x2-solver/index.html"
+        URL=$$(gcloud run services describe ${_SERVICE} --region ${_REGION} --format='value(status.url)')
+        echo "Service URL: $${URL}"
+        curl -fsS "$${URL}/health"
+        curl -fsS "$${URL}/api/runtime"
+        curl -fsSI "$${URL}/legacy-2x2-solver/index.html"
 
 images:
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${BUILD_ID}
