@@ -1,14 +1,23 @@
-# AI Rubik's Tutor
+# AI Rubik's Tutor 2026
 
-<p align="center">
+<div align="center">
   <img src="frontend/public/rubiks-ai-logo.png" width="160" alt="AI Rubik's Tutor logo" />
-</p>
+  <h3>Real-time 3D Cognitive Training powered by Gemini 2.x Live</h3>
+
+  [![Vite](https://img.shields.io/badge/vite-7-646CFF?logo=vite)](https://vitejs.dev)
+  [![React](https://img.shields.io/badge/react-19-61DAFB?logo=react)](https://react.dev)
+  [![Tailwind CSS](https://img.shields.io/badge/tailwind-4-38B2AC?logo=tailwindcss)](https://tailwindcss.com)
+  [![GCP](https://img.shields.io/badge/GCP-Cloud_Run-4285F4?logo=google-cloud)](https://cloud.google.com/run)
+  [![Gemini](https://img.shields.io/badge/Gemini-2.5_Live-8E75B2?logo=google-gemini)](https://deepmind.google/technologies/gemini/)
+</div>
+
+---
 
 <p align="center">
   <strong>One repository. Two Rubik's Cube products. One Google Cloud deployment path.</strong>
 </p>
 
-AI Rubik's Tutor is a two-project monorepo:
+AI Rubik's Tutor is a unified 2026 workspace:
 
 - **Part 1: Gemini Live Tutor**
   A realtime 3x3 coaching workspace with webcam input, microphone streaming, tutor responses, live move guidance, challenge mode, and multiplayer signaling.
@@ -17,50 +26,29 @@ AI Rubik's Tutor is a two-project monorepo:
 
 ## At A Glance
 
-| Area | Current stack / surface |
+| Area | 2026 High-Performance Stack |
 | --- | --- |
-| Frontend | React 19, React Router 7, Vite 7, Tailwind CSS 4, Framer Motion 12, Three.js 0.183, Zustand 5 |
-| Backend | Node.js 22, Express 5, `ws`, Zod 4, Helmet, compression, express-rate-limit |
-| Gemini integration | Google GenAI SDK via `@google/genai` |
-| Live model | `gemini-live-2.5-flash-preview` |
-| Fallback model | `gemini-2.5-flash` |
-| Hosting | Google Cloud Run, Cloud Build, Artifact Registry, Secret Manager |
-| Public app | `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/` |
-
-## Product Map
-
-| Part | Product | Purpose | Main routes |
-| --- | --- | --- | --- |
-| 1 | Gemini Live Tutor | Realtime AI tutoring for a physical or virtual cube using voice + vision | `/`, `/part-1`, `/part-1/live`, `/part-1/multiplayer` |
-| 2 | Cubey Core 2x2 Lab | Exact 2x2 core logic, solving algorithms, and interactive playback | `/part-2`, `/legacy-2x2-solver/index.html` |
-
-## Hackathon Fit
-
-This repo is structured around the Gemini Live Agent Challenge requirements:
-
-- **Leverages a Gemini model**
-  The backend uses Gemini Live plus a fallback Gemini model in [backend/src/geminiLiveClient.js](backend/src/geminiLiveClient.js) and [backend/src/server.js](backend/src/server.js).
-- **Built with the Google GenAI SDK**
-  The integration is implemented with `@google/genai` in [backend/package.json](backend/package.json).
-- **Uses Google Cloud**
-  Deployment is handled through [cloudbuild.yaml](cloudbuild.yaml), [deploy.sh](deploy.sh), [Dockerfile](Dockerfile), and [terraform/main.tf](terraform/main.tf).
-- **Moves beyond text-in/text-out**
-  Part 1 uses webcam frames, microphone capture, websocket transport, interrupt handling, voice replies, hinting, and tutor-driven move updates.
+| **Frontend** | React 19, React Router 7, Vite 7, Tailwind 4, Framer Motion 12, Three.js 0.183, Zustand 5 |
+| **Backend** | Node.js 22 LTS, Express 5, `ws` (High-perf WebSockets), Zod 4, Helmet security |
+| **Gemini Integration** | Google GenAI SDK (`@google/genai`) |
+| **Intelligence** | `gemini-live-2.5-flash-preview` (Live) + `gemini-2.5-flash` (Fallback) |
+| **Infra** | Google Cloud Run, Cloud Build, Artifact Registry, Secret Manager |
+| **Deployment** | [Production URL](https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/) |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  A[Browser] --> B[React 19 App Shell]
-  B --> C[Part 1: Gemini Live Tutor]
-  B --> D[Part 2: Cubey Core 2x2 Lab]
-  C <-->|/ws| E[Express 5 Backend]
-  C <-->|/multiplayer| F[Signaling Server]
-  E --> G[Google GenAI SDK]
-  E --> H[Cube State Manager]
-  E --> I[/api/runtime + /health]
-  J[Google Cloud Run] --> E
-  J --> B
+    A["Browser"] --> B["React 19 Shell"]
+    B --> C["Part 1: Gemini Live Tutor"]
+    B --> D["Part 2: Cubey Core 2x2 Lab"]
+    C <-->|"WebSockets (ws)"| E["Express 5 Backend"]
+    C <-->|"Multiplayer / RTC"| F["Signaling Server"]
+    E --> G["Google GenAI SDK"]
+    E --> H["Cube Logic Core"]
+    E --> I["Runtime & Health APIs"]
+    J["Google Cloud Run"] --> E
+    J --> B
 ```
 
 ## Root Structure
