@@ -1,7 +1,7 @@
 # AI Rubik's Tutor 2026
 
 <div align="center">
-  <img src="docs/assets/logo.png" width="180" alt="AI Rubik's Tutor Logo" />
+  <img src="frontend/public/rubiks-ai-logo.png" width="180" alt="AI Rubik's Tutor Logo" />
   <h3>The future of 3D cognitive training, powered by Gemini Live.</h3>
   
   [![Vite](https://img.shields.io/badge/vite-7-646CFF?logo=vite)](https://vitejs.dev)
@@ -95,16 +95,13 @@ flowchart LR
 ```text
 .
 ├── backend/                          # Express backend, Gemini integration, cube logic, WebSocket signaling
-├── docs/                             # Project assets, logos, and feature catalogs
 ├── frontend/                         # React product shell plus Part 2 static app
 │   ├── public/legacy-2x2-solver/     # Part 2 Cubey Core 2x2 lab
 │   └── src/                          # Part 1 app shell, routed pages, shared UI primitives
 ├── scripts/                          # Local start, cleanup, deploy, and security helpers
-├── terraform/                        # Cloud Run infrastructure definitions
 ├── cloudbuild.yaml                   # Cloud Build rollout pipeline
 ├── deploy.sh                         # High-level Cloud Run deploy entrypoint
 ├── Dockerfile                        # Integrated Frontend + Backend single-image build
-├── SECURITY.md                       # Security policies
 └── README.md                         # Product landing page and guide
 ```
 
