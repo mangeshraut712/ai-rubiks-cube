@@ -1,14 +1,14 @@
-# AI Rubik's Cube Suite 2026 🎲✨
+# AI Rubik's Cube Suite 2026
 
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](frontend/src/test)
-[![Vite](https://img.shields.io/badge/vite-6.4.1-646CFF?logo=vite)](https://vitejs.dev)
-[![React](https://img.shields.io/badge/react-19.0.0-61DAFB?logo=react)](https://react.dev)
-[![Three.js](https://img.shields.io/badge/three.js-0.179.1-000000?logo=three.js)](https://threejs.org)
-[![Tailwind CSS](https://img.shields.io/badge/tailwind-4.1.13-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
+[![Vite](https://img.shields.io/badge/vite-6-646CFF?logo=vite)](https://vitejs.dev)
+[![React](https://img.shields.io/badge/react-19-61DAFB?logo=react)](https://react.dev)
+[![Three.js](https://img.shields.io/badge/three.js-0.172-000000?logo=three.js)](https://threejs.org)
+[![Tailwind CSS](https://img.shields.io/badge/tailwind-4-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 [![WebRTC](https://img.shields.io/badge/webrtc-ready-333333?logo=webrtc)](https://webrtc.org)
 [![WebAssembly](https://img.shields.io/badge/webassembly-ready-654FF0?logo=webassembly)](https://webassembly.org)
 
-> **Gemini Live Agent Challenge 2026 Entry** - A comprehensive Rubik's Cube learning platform with AI tutoring, multiplayer racing, and advanced solving algorithms.
+> Gemini Live Agent Challenge 2026 entry: a single repository that contains the Gemini-powered live tutor and the original classic 2x2 solver.
 
 ## 🚀 Live Demo
 
@@ -88,23 +88,23 @@ ai-rubiks-cube/
 
 | Technology      | Version | Purpose          |
 | --------------- | ------- | ---------------- |
-| React           | 19.0.0  | UI framework     |
-| Vite            | 6.4.1   | Build tool       |
-| Three.js        | 0.179.1 | 3D graphics      |
-| Tailwind CSS    | 4.1.13  | Styling          |
+| React           | 19.x    | UI framework     |
+| Vite            | 6.x     | Build tool       |
+| Three.js        | 0.172.x | 3D graphics      |
+| Tailwind CSS    | 4.x     | Styling          |
 | Zustand         | 5.0.3   | State management |
-| Framer Motion   | 12.4.10 | Animations       |
-| React Hot Toast | 2.5.2   | Notifications    |
-| Vitest          | 3.0.7   | Testing          |
+| Framer Motion   | 11.x    | Animations       |
+| React Hot Toast | 2.5.x   | Notifications    |
+| Vitest          | 3.x     | Testing          |
 
 ### Backend
 
 | Technology     | Version | Purpose         |
 | -------------- | ------- | --------------- |
 | Node.js        | ≥20     | Runtime         |
-| Express        | 4.21.2  | Web framework   |
-| WebSocket (ws) | 8.18.3  | Real-time comms |
-| Google GenAI   | 1.43.0  | Gemini Live API |
+| Express        | 5.x     | Web framework   |
+| WebSocket (ws) | 8.18.x  | Real-time comms |
+| Google GenAI   | 1.x     | Gemini Live API |
 | Kociemba       | 1.0.1   | 3x3 solving     |
 
 ### Infrastructure
@@ -118,7 +118,7 @@ ai-rubiks-cube/
 
 ### Prerequisites
 
-- Node.js ≥20
+- Node.js ≥22
 - npm ≥10
 - Google Cloud account (for deployment)
 
@@ -135,7 +135,16 @@ cd ai-rubiks-cube
 
 ```bash
 cp .env.example .env
-# Edit .env with your Google API key
+# Edit .env with your Gemini API key
+```
+
+Minimum local `.env` values:
+
+```bash
+PORT=8080
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+VITE_BACKEND_ORIGIN=http://localhost:8080
+DEMO_MODE=false
 ```
 
 3. **Install dependencies**:
@@ -149,17 +158,29 @@ npm ci --prefix frontend
 
 ```bash
 cd backend
-npm run dev
+npm run start
 ```
 
 5. **Start frontend** (Terminal 2):
 
 ```bash
 cd frontend
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
 6. **Open** http://localhost:5173
+
+7. **Verify local services**:
+
+```bash
+curl http://127.0.0.1:8080/health
+curl http://127.0.0.1:5173
+```
+
+Notes:
+
+- If you want a judge/demo-friendly local session without a live API key, set `DEMO_MODE=true`.
+- Localhost now clears stale PWA/service-worker artifacts on boot so the dev build matches the current source more reliably.
 
 Or use the one-command launcher:
 
@@ -247,8 +268,8 @@ Use these Vercel project settings:
 
 - Framework Preset: `Vite`
 - Root Directory: repository root (same folder as `vercel.json`)
-- Install Command: `npm ci --prefix frontend`
-- Build Command: `npm run build --prefix frontend`
+- Install Command: `cd frontend && npm ci --cache /tmp/.npm --prefer-online`
+- Build Command: `cd frontend && npm run build`
 - Output Directory: `frontend/dist`
 
 Vercel environment variables:
@@ -311,19 +332,23 @@ Sync                   Logic                    Sync
 
 **Client → Server**:
 
-- `start_session` - Initialize Gemini Live session
 - `end_session` - Terminate session
-- `frame` - Send webcam frame (base64)
+- `video_frame` - Send webcam frame (base64 JPEG)
 - `audio_chunk` - Send audio data
-- `request_hint` - Ask for solving hint
-- `set_challenge_mode` - Toggle challenge mode
+- `hint_request` - Ask for solving hint
+- `challenge_mode` - Toggle challenge mode
+- `interrupt` - Barge in during tutor playback
+- `auto_solve` - Start auto-solve playback
 
 **Server → Client**:
 
 - `status` - Connection status updates
 - `instruction` - Move instructions
-- `cube_state` - Current cube state
+- `cube_state_update` - Current cube state
 - `audio_response` - Audio data from tutor
+- `hint_response` - Short corrective hint
+- `thinking` - Tutor thinking state
+- `interruption` - Tutor/user interruption event
 - `error` - Error messages
 
 ## 🤝 Contributing
