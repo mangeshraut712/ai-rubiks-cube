@@ -2,12 +2,19 @@ import { BRAND_COLORS } from "../content/appContent";
 
 export function BrandWordmark({ word = "Cubey", className = "" }) {
   return (
-    <span className={`brand-wordmark ${className}`.trim()}>
-      {word.split("").map((letter, index) => (
-        <span key={`${letter}-${index}`} style={{ color: BRAND_COLORS[index % BRAND_COLORS.length] }}>
-          {letter}
-        </span>
-      ))}
+    <span className={`inline-flex items-center gap-2.5 ${className}`.trim()}>
+      <img
+        src="/rubiks-ai-logo.png"
+        alt="Logo"
+        className="h-9 w-9 shrink-0 rounded-xl object-contain shadow-sm"
+      />
+      <span className="brand-wordmark">
+        {word.split("").map((letter, index) => (
+          <span key={`${letter}-${index}`} style={{ color: BRAND_COLORS[index % BRAND_COLORS.length] }}>
+            {letter}
+          </span>
+        ))}
+      </span>
     </span>
   );
 }
