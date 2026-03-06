@@ -101,9 +101,9 @@ function ModalFallback() {
 
 function AppNavigation() {
   const items = [
-    { to: "/", label: "Home", end: true },
-    { to: "/live", label: "Live" },
-    { to: "/labs/multiplayer", label: "Multiplayer" }
+    { to: "/", label: "Overview", end: true },
+    { to: "/part-1/live", label: "Part 1" },
+    { to: "/part-1/multiplayer", label: "Multiplayer" }
   ];
 
   return (
@@ -120,8 +120,8 @@ function AppNavigation() {
           {item.label}
         </NavLink>
       ))}
-      <a href="/legacy-2x2-solver/index.html" className="surface-chip">
-        Classic 2x2
+      <a href="/part-2" className="surface-chip">
+        Part 2
       </a>
     </nav>
   );
@@ -352,7 +352,7 @@ export default function App({ routeView = "home" }) {
   function startSession() {
     resetSessionUiState();
     setSessionActive(true);
-    navigate("/live");
+    navigate("/part-1/live");
     toast.success("Live coaching launched");
   }
 
@@ -483,7 +483,7 @@ export default function App({ routeView = "home" }) {
   function handleCloseMultiplayer() {
     setShowMultiplayer(false);
     if (routeView === "multiplayer") {
-      navigate(storeSessionActive ? "/live" : "/");
+      navigate(storeSessionActive ? "/part-1/live" : "/");
     }
   }
 
@@ -545,9 +545,9 @@ export default function App({ routeView = "home" }) {
             <header className="surface-panel flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <div className="space-y-3">
                 <div className="rounded-[22px] border border-white/80 bg-white/90 px-4 py-2 shadow-sm dark:border-white/10 dark:bg-slate-950/40">
-                  <div className="surface-kicker">Gemini Live Agent Challenge 2026</div>
+                  <div className="surface-kicker">Two products. One cube workspace.</div>
                   <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
-                    Google-inspired tutoring interface for a physical cube.
+                    Part 1 is the Gemini live tutor. Part 2 is the Cubey Core 2x2 lab.
                   </div>
                 </div>
                 <AppNavigation />
@@ -580,19 +580,19 @@ export default function App({ routeView = "home" }) {
               <div className="space-y-6">
                 <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(66,133,244,0.18)] bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 shadow-sm dark:border-white/10 dark:bg-slate-950/40 dark:text-slate-300">
                   <span className="h-2 w-2 rounded-full bg-[#4285F4]" />
-                  Search calm. Live coaching. Physical cube.
+                  Part 1 coaches. Part 2 proves the core.
                 </div>
 
                 <div className="space-y-4">
                   <h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.08em] text-slate-950 dark:text-white sm:text-6xl lg:text-7xl">
                     <BrandWordmark className="mr-3" />
-                    builds a live coaching stage around your Rubik&apos;s Cube.
+                    now ships as two clear Rubik&apos;s Cube projects instead of one app plus a hidden legacy page.
                   </h1>
 
                   <p className="max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-                    I redesigned the product like a Google Labs experiment: quiet search-page clarity,
-                    layered Workspace-style panels, and one central stage for voice, vision, hints,
-                    solve previews, and multiplayer.
+                    Part 1 is the realtime Gemini tutor for voice, camera vision, hints, and multiplayer.
+                    Part 2 is the exact 2x2 lab for shared cube-state logic, deterministic search, and
+                    playback. Both now live under the same design system and route structure.
                   </p>
                 </div>
 
@@ -600,27 +600,56 @@ export default function App({ routeView = "home" }) {
                   <FiMessageSquare className="h-5 w-5 text-[#4285F4]" />
                   <div>
                     <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                      “Ask the cube what to do next.”
+                      “Open Part 1 to coach. Open Part 2 to inspect the core.”
                     </div>
                     <div className="text-sm text-slate-500 dark:text-slate-400">
-                      The new interface uses a search-like command language instead of hiding the tutor
-                      behind buttons alone.
+                      The repo navigation now makes both projects explicit instead of hiding the second
+                      one behind a legacy path.
                     </div>
                   </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <a
+                    href="/part-1"
+                    className="surface-panel surface-panel--muted p-5 transition duration-200 hover:-translate-y-1"
+                  >
+                    <div className="surface-kicker">Part 1</div>
+                    <div className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+                      Gemini Live Tutor
+                    </div>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      A 3x3 coaching workspace built around speech, webcam frames, live instruction,
+                      session memory, and multiplayer.
+                    </p>
+                  </a>
+                  <a
+                    href="/part-2"
+                    className="surface-panel surface-panel--muted p-5 transition duration-200 hover:-translate-y-1"
+                  >
+                    <div className="surface-kicker">Part 2</div>
+                    <div className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+                      Cubey Core 2x2 Lab
+                    </div>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      A deterministic 2x2 solver with one shared cube core, manual move controls, and
+                      exact BFS, A*, and IDA* playback.
+                    </p>
+                  </a>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
                   <button type="button" onClick={startSession} className="surface-button-primary">
                     <FiPlay className="h-4 w-4" />
-                    Launch live coaching
+                    Open Part 1 live
                   </button>
                   <button
                     type="button"
-                    onClick={() => navigate("/labs/multiplayer")}
+                    onClick={() => navigate("/part-1/multiplayer")}
                     className="surface-button-secondary"
                   >
                     <FiUsers className="h-4 w-4" />
-                    Open multiplayer lab
+                    Open Part 1 multiplayer
                   </button>
                 </div>
 
@@ -631,21 +660,13 @@ export default function App({ routeView = "home" }) {
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  <a
-                    href="/legacy-2x2-solver/index.html"
-                    className="surface-chip"
-                  >
+                  <a href="/part-2" className="surface-chip">
                     <FiArrowRight className="h-4 w-4" />
-                    Open the classic 2x2 solver
+                    Open Part 2 core lab
                   </a>
-                  <a
-                    href="https://geminiliveagentchallenge.devpost.com/"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="surface-chip"
-                  >
-                    <FiArrowRight className="h-4 w-4" />
-                    View the challenge page
+                  <a href="/part-1/live" className="surface-chip">
+                    <FiPlay className="h-4 w-4" />
+                    Jump straight into Part 1
                   </a>
                 </div>
               </div>

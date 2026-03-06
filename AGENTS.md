@@ -2,16 +2,15 @@
 
 ## Project Surfaces
 
-- `frontend/`: React 19 app for the live tutor, multiplayer lab, and routed product shell.
-- `backend/`: Express 5 service for runtime metadata, Gemini Live integration, cube solving, and WebSocket signaling.
-- `frontend/public/legacy-2x2-solver/`: classic 2x2 solver surface kept for demos and comparison.
-- `submission/devpost-2026/`: submission assets and judge-facing documentation.
+- `frontend/`: React 19 product shell for the repo overview and Part 1 Gemini live tutor.
+- `backend/`: Express 5 service for runtime metadata, Gemini Live integration, cube solving, WebSocket signaling, and Cloud Run hosting.
+- `frontend/public/legacy-2x2-solver/`: Part 2 Cubey Core 2x2 lab with the shared 24-sticker cube core.
 
 ## Start Here
 
 - Read `README.md` for product/deploy context.
 - Read `docs/FEATURES.md` before making broad product changes.
-- If touching the classic solver, preserve the shared cube core in `frontend/public/legacy-2x2-solver/cube-core.js`.
+- If touching Part 2, preserve the shared cube core in `frontend/public/legacy-2x2-solver/cube-core.js`.
 
 ## High-Value Commands
 
@@ -23,7 +22,7 @@
 
 ## Project Guardrails
 
-- Keep the live tutor shell and the classic 2x2 surface visually aligned unless the user asks for intentional divergence.
+- Keep Part 1 and Part 2 visually aligned unless the user asks for intentional divergence.
 - Preserve cube logic correctness first. Do not rewrite solving behavior for style-only requests.
 - Do not commit secrets or edit tracked env examples casually.
 - Prefer small, testable changes over wide rewrites unless the user explicitly asks for a full redesign.

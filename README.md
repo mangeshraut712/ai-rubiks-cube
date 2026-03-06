@@ -1,222 +1,181 @@
 # AI Rubik's Tutor
 
-AI Rubik's Tutor is a Gemini Live Agent Challenge project built as a single repo with two cube products:
+AI Rubik's Tutor is a two-product Rubik's Cube repo built around one modern frontend system and one Cloud Run backend.
 
-1. A real-time **3x3 Gemini tutor** with voice, vision, live coaching, session memory, and multiplayer.
-2. A polished **2x2 classic solver lab** with deterministic search algorithms and a shared modern visual system.
+- Part 1: `Gemini Live Tutor` for realtime 3x3 coaching with voice, webcam vision, hints, move guidance, and multiplayer.
+- Part 2: `Cubey Core 2x2 Lab` for deterministic cube logic, BFS/A*/IDA* solving, and exact playback on a shared 24-sticker state model.
 
-The repo is organized so both surfaces feel like one product family instead of a main app plus an abandoned side demo.
+## Two Products
 
-## Projects In This Repo
+| Part | Product | What it does | Main routes |
+| --- | --- | --- | --- |
+| 1 | Gemini Live Tutor | Realtime tutoring with Gemini, webcam frames, mic input, transcript memory, move hints, and multiplayer | `/`, `/part-1`, `/part-1/live`, `/part-1/multiplayer` |
+| 2 | Cubey Core 2x2 Lab | Standalone 2x2 solver with one shared cube core, exact algorithms, manual controls, and solve playback | `/part-2`, `/legacy-2x2-solver/index.html` |
 
-### 1. Gemini Live Tutor
-
-- Location: `frontend/` + `backend/`
-- Purpose: live Rubik's Cube coaching with Gemini, webcam frames, transcript memory, guided moves, hints, auto-solve, and multiplayer
-- Frontend routes:
-  ` /`
-  ` /live`
-  ` /labs/multiplayer`
-  ` /classic`
-- Backend surfaces:
-  ` /health`
-  ` /api/health`
-  ` /api/runtime`
-  ` /ws`
-  ` /multiplayer`
-
-### 2. Cubey Core 2x2 Lab
-
-- Location: `frontend/public/legacy-2x2-solver/`
-- Purpose: standalone 2x2 solver workspace with BFS, A*, and IDA*
-- Entry point:
-  ` /legacy-2x2-solver/index.html`
-- Notes:
-  It now uses one shared 24-sticker cube core across scramble generation, solving, rendering, and playback.
-
-## What The Repo Currently Ships
-
-- Real-time Gemini tutoring over WebSocket transport
-- Voice + webcam workflow for live cube coaching
-- Routed React workspace with home, live, multiplayer, and classic solver entry points
-- Shared theme-aware design system across the modern app and the 2x2 lab
-- 3D cube visualization with Three.js
-- WebRTC multiplayer signaling
-- Runtime metadata endpoint used by the frontend route loader
-- PWA-ready frontend with `vite-plugin-pwa`
-- Security hardening with `helmet`, compression, rate limiting, payload validation, and deploy-time checks
-- Devpost submission assets and packaging scripts
-
-## Tech Stack
+## Modern Stack
 
 ### Frontend
 
-- React `19.2.4`
-- React Router `7.13.1`
-- Vite `7.3.1`
-- Tailwind CSS `4.2.1`
-- Framer Motion `12.35.0`
-- Three.js `0.183.2`
-- Zustand `5.0.11`
-- Vitest `4.0.18`
+- React 19
+- React Router 7
+- Vite 7
+- Tailwind CSS 4
+- Framer Motion 12
+- Three.js 0.183
+- Zustand 5
+- Vitest 4
 
 ### Backend
 
-- Node.js `22+`
-- Express `5.2.1`
-- `@google/genai` `1.44.0`
-- `ws` `8.19.0`
-- Zod `4.3.6`
-- `express-rate-limit` `8.3.0`
-- Winston `3.17.0`
-- Kociemba `1.0.1`
+- Node.js 22+
+- Express 5
+- Google GenAI SDK `@google/genai`
+- WebSocket transport with `ws`
+- Zod 4 validation
+- Helmet + compression + rate limiting
 
 ### Deployment
 
-- Vercel for the frontend
-- Google Cloud Run for the backend
-- Cloud Build for container build/deploy automation
-- GitHub Actions for CI and Vercel workflow automation
+- Google Cloud Run for the full website and backend APIs
+- Cloud Build for container build + rollout
+- Artifact Registry + Secret Manager
+- Docker multi-stage build with frontend assets bundled into the backend image
 
-## Live URLs
+## What Changed In This Repo
 
-- Frontend: `https://ai-rubiks-cube.vercel.app/`
-- Backend health: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
-- Runtime metadata: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime`
-- 2x2 classic lab: `https://ai-rubiks-cube.vercel.app/legacy-2x2-solver/index.html`
+- The repo is now framed around exactly two products instead of a main app plus an ambiguous legacy page.
+- Part 1 and Part 2 use one shared visual language.
+- Cloud Run is the primary deployment target instead of splitting frontend and backend hosting.
+- The classic 2x2 lab keeps its exact solving behavior but now lives under the same product story.
+- Devpost submission-only assets were removed from the tracked repo.
+
+## Routes And Runtime Surface
+
+### Product routes
+
+- `/`
+- `/part-1`
+- `/part-1/live`
+- `/part-1/multiplayer`
+- `/part-2`
+- `/legacy-2x2-solver/index.html`
+
+### Backend routes
+
+- `GET /health`
+- `GET /api/health`
+- `GET /api/runtime`
+- `WS /ws`
+- `WS /multiplayer`
 
 ## Architecture
 
-The React frontend talks to the backend in two ways:
-
-- HTTP for runtime metadata and health
-- WebSocket for live tutor events and multiplayer signaling
-
-The backend hosts the Gemini Live integration, cube-state helpers, and signaling server. The classic 2x2 lab is served as part of the frontend app and stays visually aligned with the main workspace.
-
-![AI Rubik's Tutor architecture](submission/devpost-2026/architecture-diagram.svg)
+```mermaid
+flowchart LR
+  A[Browser] --> B[React 19 Product Shell]
+  B --> C[Part 1: Gemini Live Tutor]
+  B --> D[Part 2: Cubey Core 2x2 Lab]
+  C --> E[Express 5 Backend]
+  C --> F[WebSocket /ws]
+  C --> G[WebSocket /multiplayer]
+  E --> H[Google GenAI SDK]
+  E --> I[Cube State Manager]
+  E --> J[Runtime + Health APIs]
+  K[Cloud Run] --> E
+  K --> B
+  K --> D
+```
 
 ## Repository Layout
 
 ```text
 .
-├── backend/                          # Express backend, Gemini integration, routes, WebSocket/signaling
-├── docs/                             # Feature and project documentation
-├── frontend/                         # React app, shared UI, classic 2x2 static app
-│   ├── public/legacy-2x2-solver/     # Standalone 2x2 solver lab
-│   └── src/                          # Routed frontend app
-├── scripts/                          # Local run, security, packaging, cleanup
-├── submission/devpost-2026/          # Judge-facing assets
-├── cloudbuild.yaml                   # Cloud Build deploy pipeline
+├── backend/                          # Express backend, Gemini integration, cube logic, WebSocket signaling
+├── docs/                             # Product and feature notes
+├── frontend/                         # React product shell plus Part 2 static app
+│   ├── public/legacy-2x2-solver/     # Part 2 Cubey Core 2x2 lab
+│   └── src/                          # Part 1 app shell, routed pages, shared UI
+├── scripts/                          # Local start, cleanup, deploy, security helpers
+├── terraform/                        # Cloud Run infrastructure inputs/outputs
+├── cloudbuild.yaml                   # Cloud Build rollout
 ├── deploy.sh                         # Manual Cloud Run deploy helper
+├── Dockerfile                        # Frontend + backend single-image build
 ├── SECURITY.md
-└── vercel.json
+└── README.md
 ```
 
-## Local Development
+## Quick Start
 
-### Prerequisites
-
-- Node.js `22+`
-- npm `10+`
-- Gemini API key for full live tutoring
-
-### Install
+<details>
+<summary>Install</summary>
 
 ```bash
 npm ci --prefix backend
 npm ci --prefix frontend
 ```
 
-### Environment
+</details>
 
-Start from the template:
+<details>
+<summary>Environment</summary>
+
+Start from:
 
 ```bash
 cp .env.example .env
 ```
 
-Minimum useful local values:
+Minimum useful values:
 
 ```bash
 PORT=8080
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 GEMINI_LIVE_MODEL=gemini-live-2.5-flash-preview
 GEMINI_FALLBACK_MODEL=gemini-2.5-flash
 DEMO_MODE=false
 VITE_BACKEND_ORIGIN=http://localhost:8080
 ```
 
-Useful optional values:
+Optional values:
 
 ```bash
 CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
-FRONTEND_REDIRECT_URL=
-VITE_SIGNALING_SERVER=ws://localhost:8080
 VITE_WS_URL=ws://localhost:8080/ws
+VITE_SIGNALING_SERVER=ws://localhost:8080
 VITE_ICE_SERVERS_JSON=[{"urls":"stun:stun.l.google.com:19302"}]
-VITE_SOURCEMAP=true
+ALLOW_INSECURE_CORS=false
+ENABLE_FRONTEND_REDIRECT=false
 ```
 
-### Run Both Main Services
+</details>
+
+<details>
+<summary>Run Part 1</summary>
 
 ```bash
 ./scripts/start-gemini.sh
 ```
 
-This starts:
-
-- backend on `http://localhost:8080`
-- frontend on `http://localhost:5173`
-
 Open:
 
 - `http://localhost:5173/`
-- `http://localhost:5173/live`
-- `http://localhost:5173/labs/multiplayer`
-- `http://localhost:5173/legacy-2x2-solver/index.html`
+- `http://localhost:5173/part-1/live`
+- `http://localhost:5173/part-1/multiplayer`
 
-### Run Services Separately
+</details>
 
-```bash
-cd backend && npm run dev
-cd frontend && npm run dev
-```
-
-### Run Only The 2x2 Lab
+<details>
+<summary>Run Part 2</summary>
 
 ```bash
 ./scripts/start-core.sh
 ```
 
-### Clean Local Artifacts
+Open:
 
-```bash
-./scripts/clean-workspace.sh
-```
+- `http://localhost:5173/part-2`
 
-## API And Runtime Surface
-
-### HTTP
-
-- `GET /health`
-- `GET /api/health`
-- `GET /api/runtime`
-
-### WebSocket
-
-- `/ws` for live tutor transport
-- `/multiplayer` for multiplayer signaling
-
-### Runtime Metadata
-
-`/api/runtime` reports:
-
-- environment and backend package info
-- active live model and fallback model
-- active WebSocket session counts
-- frontend/backend route surface
-- feature flags exposed to the routed frontend
+</details>
 
 ## Quality Checks
 
@@ -237,53 +196,61 @@ npm run lint
 npm test
 ```
 
-### Security Gate
+### Security gate
 
 ```bash
 ./scripts/security-check.sh --scope deploy
 ```
 
-## Deployment
+## Google Cloud Run Deployment
 
-### Frontend
+The repo is set up to ship the built frontend and backend as one Cloud Run service.
 
-The frontend is configured for Vercel in `vercel.json`.
-
-### Backend
-
-The backend is configured for Google Cloud Run:
-
-- manual helper: `deploy.sh`
-- CI pipeline: `cloudbuild.yaml`
-
-The deploy path enables required GCP APIs, builds a container, deploys to Cloud Run, injects the Gemini API key from Secret Manager, and runs a smoke test against `/health`.
-
-## Devpost Submission Assets
-
-The repo includes a submission-ready bundle in `submission/devpost-2026/`.
-
-- package overview: `submission/devpost-2026/README.md`
-- project description: `submission/devpost-2026/project-description.md`
-- requirement crosscheck: `submission/devpost-2026/requirements-crosscheck.md`
-- Google Cloud proof: `submission/devpost-2026/google-cloud-proof.md`
-- demo script: `submission/devpost-2026/demo-video-script.md`
-- architecture diagram: `submission/devpost-2026/architecture-diagram.svg`
-
-Generate the zip with:
+### Manual deploy
 
 ```bash
-./scripts/package-devpost.sh
+./deploy.sh YOUR_GCP_PROJECT_ID
 ```
 
-Output:
+What the deploy does:
 
-```bash
-submission/ai-rubiks-tutor-devpost-2026.zip
-```
+- builds frontend assets
+- builds a single Docker image
+- pushes to Artifact Registry
+- deploys Cloud Run
+- wires `GEMINI_API_KEY` from Secret Manager
+- keeps `ENABLE_FRONTEND_REDIRECT=false` so Cloud Run serves the site directly
+- smoke-tests `/health`, `/api/runtime`, and the Part 2 entry page
 
-## Notes For Contributors
+### Cloud Build
 
-- The repo intentionally contains two cube experiences. Keep them visually aligned unless divergence is explicitly requested.
-- Preserve cube-logic correctness first. Styling work should not change solver behavior.
-- If you touch the classic 2x2 lab, keep `frontend/public/legacy-2x2-solver/cube-core.js` as the source of truth for 2x2 state and move logic.
-- Read `AGENTS.md` for repo-specific agent guidance.
+`cloudbuild.yaml` mirrors the same rollout path for CI/CD.
+
+## Verified Public Cloud Links
+
+Checked on March 6, 2026:
+
+- Cloud Run health: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
+- Cloud Run Part 2 page: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/legacy-2x2-solver/index.html`
+
+Important:
+
+- The currently deployed Cloud Run revision still redirects `/` to the older frontend host.
+- This repo is now configured so the next Cloud Run deploy serves the website directly from Cloud Run instead of redirecting.
+
+## Core Guardrails
+
+- If you touch Part 2, keep `frontend/public/legacy-2x2-solver/cube-core.js` as the source of truth for 2x2 state and move logic.
+- Keep visual alignment between Part 1 and Part 2 unless there is a deliberate reason to diverge.
+- Preserve cube correctness before polishing visuals.
+
+## Useful Files
+
+- `frontend/src/App.jsx`
+- `frontend/src/router.jsx`
+- `frontend/public/legacy-2x2-solver/index.html`
+- `frontend/public/legacy-2x2-solver/cube-core.js`
+- `backend/src/server.js`
+- `backend/src/runtimeInfo.js`
+- `deploy.sh`
+- `cloudbuild.yaml`

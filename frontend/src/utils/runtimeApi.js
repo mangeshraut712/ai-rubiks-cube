@@ -38,12 +38,16 @@ export const FALLBACK_RUNTIME_INFO = {
   },
   routes: [],
   features: [
-    "React Router workspace navigation",
-    "Theme-aware main app and legacy solver",
+    "Part 1 Gemini live tutor",
+    "Part 2 Cubey Core 2x2 lab",
     "WebRTC multiplayer signaling"
   ],
   links: {
-    classicSolver: "/legacy-2x2-solver/index.html",
+    partOne: "/part-1",
+    partOneLive: "/part-1/live",
+    partOneMultiplayer: "/part-1/multiplayer",
+    partTwoLab: "/part-2",
+    partTwoStatic: "/legacy-2x2-solver/index.html",
     frontendRedirectEnabled: false
   },
   connectionState: "offline"

@@ -31,6 +31,7 @@ const DEMO_MODE = process.env.DEMO_MODE === "true";
 const NODE_ENV = process.env.NODE_ENV || "development";
 const IS_PRODUCTION = NODE_ENV === "production";
 const ALLOW_INSECURE_CORS = process.env.ALLOW_INSECURE_CORS === "true";
+const ENABLE_FRONTEND_REDIRECT = process.env.ENABLE_FRONTEND_REDIRECT === "true";
 const FRONTEND_REDIRECT_URL = String(process.env.FRONTEND_REDIRECT_URL || "")
   .trim()
   .replace(/\/+$/, "");
@@ -269,7 +270,7 @@ function getSystemRuntimePayload() {
     liveModel: LIVE_MODEL,
     fallbackModel: FALLBACK_MODEL,
     nodeEnv: NODE_ENV,
-    frontendRedirectUrl: FRONTEND_REDIRECT_URL,
+    frontendRedirectUrl: ENABLE_FRONTEND_REDIRECT ? FRONTEND_REDIRECT_URL : "",
     activeTutorSessions: getConnectionCount(),
     signalingStats: getSignalingStats()
   });
@@ -377,9 +378,11 @@ function getSafeRedirectUrl(urlValue) {
   }
 }
 
-const SAFE_FRONTEND_REDIRECT_URL = getSafeRedirectUrl(FRONTEND_REDIRECT_URL);
+const SAFE_FRONTEND_REDIRECT_URL = ENABLE_FRONTEND_REDIRECT
+  ? getSafeRedirectUrl(FRONTEND_REDIRECT_URL)
+  : "";
 
-if (FRONTEND_REDIRECT_URL && !SAFE_FRONTEND_REDIRECT_URL) {
+if (ENABLE_FRONTEND_REDIRECT && FRONTEND_REDIRECT_URL && !SAFE_FRONTEND_REDIRECT_URL) {
   console.warn(
     "[security] FRONTEND_REDIRECT_URL was configured but rejected because it is not in the allowed origin list."
   );

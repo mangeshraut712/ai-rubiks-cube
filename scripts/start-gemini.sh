@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT_VALUE="${PORT:-8080}"
 DEMO_MODE_VALUE="${DEMO_MODE:-false}"
 
-echo "Starting Gemini contest tutor..."
+echo "Starting Part 1: Gemini Live Tutor..."
 echo "Backend: http://localhost:${PORT_VALUE}"
 echo "Frontend: http://localhost:5173"
 

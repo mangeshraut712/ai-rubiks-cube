@@ -12,9 +12,10 @@ SERVICE_NAME="gemini-rubiks-tutor"
 REPO_NAME="gemini-rubiks-tutor"
 IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${SERVICE_NAME}:latest"
 DEMO_MODE_VALUE="${DEMO_MODE_VALUE:-false}"
-CORS_ORIGIN_VALUE="${CORS_ORIGIN_VALUE:-https://gemini-rubiks-tutor.vercel.app}"
+CORS_ORIGIN_VALUE="${CORS_ORIGIN_VALUE:-https://*.run.app}"
 GEMINI_LIVE_MODEL_VALUE="${GEMINI_LIVE_MODEL_VALUE:-gemini-live-2.5-flash-preview}"
 GEMINI_FALLBACK_MODEL_VALUE="${GEMINI_FALLBACK_MODEL_VALUE:-gemini-2.5-flash}"
+ENABLE_FRONTEND_REDIRECT_VALUE="${ENABLE_FRONTEND_REDIRECT_VALUE:-false}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SECURITY_CORS_ORIGIN="${CORS_ORIGIN_VALUE}" \
@@ -74,10 +75,15 @@ gcloud run deploy "${SERVICE_NAME}" \
   --region "${REGION}" \
   --allow-unauthenticated \
   --port "8080" \
-  --set-env-vars "^##^DEMO_MODE=${DEMO_MODE_VALUE}##CORS_ORIGIN=${CORS_ORIGIN_VALUE}##GEMINI_LIVE_MODEL=${GEMINI_LIVE_MODEL_VALUE}##GEMINI_FALLBACK_MODEL=${GEMINI_FALLBACK_MODEL_VALUE}" \
+  --set-env-vars "^##^DEMO_MODE=${DEMO_MODE_VALUE}##CORS_ORIGIN=${CORS_ORIGIN_VALUE}##GEMINI_LIVE_MODEL=${GEMINI_LIVE_MODEL_VALUE}##GEMINI_FALLBACK_MODEL=${GEMINI_FALLBACK_MODEL_VALUE}##ENABLE_FRONTEND_REDIRECT=${ENABLE_FRONTEND_REDIRECT_VALUE}" \
   --set-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest"
 
 SERVICE_URL=$(gcloud run services describe "${SERVICE_NAME}" --region "${REGION}" --format='value(status.url)')
+
+echo "Running smoke checks..."
+curl -fsS "${SERVICE_URL}/health" >/dev/null
+curl -fsS "${SERVICE_URL}/api/runtime" | grep -q '"app"'
+curl -fsSI "${SERVICE_URL}/legacy-2x2-solver/index.html" >/dev/null
 
 echo "Deployment complete."
 echo "Service URL: ${SERVICE_URL}"

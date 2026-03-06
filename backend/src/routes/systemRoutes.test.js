@@ -16,7 +16,7 @@ function createApp() {
       getRuntimePayload: () => ({
         app: "AI Rubik's Tutor",
         version: "2.0.0",
-        routes: [{ path: "/live", type: "spa" }]
+        routes: [{ path: "/part-1/live", type: "spa" }]
       })
     })
   );
@@ -31,7 +31,7 @@ describe("system routes", () => {
     expect(response.status).toBe(200);
     expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.body.app).toBe("AI Rubik's Tutor");
-    expect(response.body.routes[0].path).toBe("/live");
+    expect(response.body.routes[0].path).toBe("/part-1/live");
   });
 
   it("serves health metadata on both endpoints", async () => {

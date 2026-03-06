@@ -8,15 +8,15 @@ This document outlines all the features and improvements added in the 2026 editi
 
 ## 📦 Core Projects
 
-### 1. Main 3x3 Rubik's Cube Tutor (frontend + backend)
+### 1. Part 1: Gemini Live Tutor (frontend + backend)
 
 - **Location**: `frontend/` and `backend/`
 - **Description**: AI-powered Rubik's Cube tutoring with Google Gemini Live API
 
-### 2. Legacy 2x2 Solver
+### 2. Part 2: Cubey Core 2x2 Lab
 
 - **Location**: `frontend/public/legacy-2x2-solver/`
-- **Description**: Standalone 2x2 cube solver with BFS/A\*/IDS algorithms
+- **Description**: Standalone 2x2 cube solver with the shared cube core plus BFS/A\*/IDS algorithms
 
 ---
 

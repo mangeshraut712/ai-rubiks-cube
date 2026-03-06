@@ -3,9 +3,10 @@ substitutions:
   _SERVICE: gemini-rubiks-tutor
   _REPOSITORY: gemini-rubiks-tutor
   _DEMO_MODE: "false"
-  _CORS_ORIGIN: "https://gemini-rubiks-tutor.vercel.app"
+  _CORS_ORIGIN: "https://*.run.app"
   _GEMINI_LIVE_MODEL: gemini-live-2.5-flash-preview
   _GEMINI_FALLBACK_MODEL: gemini-2.5-flash
+  _ENABLE_FRONTEND_REDIRECT: "false"
 
 steps:
   - id: Build Image
@@ -52,7 +53,7 @@ steps:
       - --port
       - "8080"
       - --set-env-vars
-      - ^##^DEMO_MODE=${_DEMO_MODE}##CORS_ORIGIN=${_CORS_ORIGIN}##GEMINI_LIVE_MODEL=${_GEMINI_LIVE_MODEL}##GEMINI_FALLBACK_MODEL=${_GEMINI_FALLBACK_MODEL}
+      - ^##^DEMO_MODE=${_DEMO_MODE}##CORS_ORIGIN=${_CORS_ORIGIN}##GEMINI_LIVE_MODEL=${_GEMINI_LIVE_MODEL}##GEMINI_FALLBACK_MODEL=${_GEMINI_FALLBACK_MODEL}##ENABLE_FRONTEND_REDIRECT=${_ENABLE_FRONTEND_REDIRECT}
       - --set-secrets
       - GEMINI_API_KEY=GEMINI_API_KEY:latest
 
@@ -66,6 +67,8 @@ steps:
         URL=$(gcloud run services describe ${_SERVICE} --region ${_REGION} --format='value(status.url)')
         echo "Service URL: ${URL}"
         curl -fsS "${URL}/health"
+        curl -fsS "${URL}/api/runtime"
+        curl -fsSI "${URL}/legacy-2x2-solver/index.html"
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$SHORT_SHA

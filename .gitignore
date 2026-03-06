@@ -20,7 +20,6 @@ coverage/
 
 # npm config (may contain sensitive settings)
 .npmrc
-.vercel/
 
 # IDE and editor files
 .vscode/
@@ -38,7 +37,6 @@ build/
 # Runtime process/log artifacts
 .runtime/
 .trash/
-submission/**/*.zip
 *.pid
 backend.log
 frontend.log

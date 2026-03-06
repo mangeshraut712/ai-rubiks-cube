@@ -11,8 +11,6 @@ const INTERRUPT_THRESHOLD = 0.82;
 const INTERRUPT_HOLD_MS = 1500;
 const INTERRUPT_COOLDOWN_MS = 7000;
 const INTERRUPT_ARM_DELAY_MS = 3000;
-const DEFAULT_PUBLIC_BACKEND_ORIGIN = "https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app";
-
 function base64ToArrayBuffer(base64) {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -125,7 +123,6 @@ const LiveSession = forwardRef(function LiveSession(
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     const hostname = window.location.hostname;
     const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-    const isVercelHost = hostname.endsWith("vercel.app");
 
     const pushUnique = (url) => {
       const normalized = String(url || "")
@@ -150,12 +147,10 @@ const LiveSession = forwardRef(function LiveSession(
       return "";
     };
 
-    // 1. Explicit runtime config first (best for production deployments like Vercel)
+    // 1. Explicit runtime config first.
     pushUnique(import.meta.env.VITE_WS_URL);
     pushUnique(fromBackendOrigin(import.meta.env.VITE_BACKEND_ORIGIN));
-    pushUnique(
-      fromBackendOrigin(import.meta.env.VITE_PUBLIC_BACKEND_ORIGIN || (isVercelHost ? DEFAULT_PUBLIC_BACKEND_ORIGIN : ""))
-    );
+    pushUnique(fromBackendOrigin(import.meta.env.VITE_PUBLIC_BACKEND_ORIGIN));
 
     // 2. Same-origin fallback — ideal when frontend is served by backend origin
     pushUnique(`${protocol}://${window.location.host}/ws`);

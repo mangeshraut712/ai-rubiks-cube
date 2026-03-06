@@ -40,9 +40,14 @@ export function buildRuntimePayload({
     },
     routes: [
       { path: "/", type: "spa" },
-      { path: "/live", type: "spa" },
-      { path: "/labs/multiplayer", type: "spa" },
+      { path: "/part-1", type: "spa" },
+      { path: "/part-1/live", type: "spa" },
+      { path: "/part-1/multiplayer", type: "spa" },
+      { path: "/live", type: "redirect" },
+      { path: "/labs/multiplayer", type: "redirect" },
+      { path: "/part-2", type: "redirect" },
       { path: "/classic", type: "redirect" },
+      { path: "/legacy-2x2-solver/index.html", type: "static" },
       { path: "/health", type: "system" },
       { path: "/api/health", type: "api" },
       { path: "/api/runtime", type: "api" },
@@ -50,15 +55,20 @@ export function buildRuntimePayload({
       { path: "/multiplayer", type: "websocket" }
     ],
     features: [
-      "Gemini Live tutor transport",
+      "Part 1 Gemini Live tutor transport",
+      "Part 2 Cubey Core 2x2 solver lab",
       "React Router workspace navigation",
-      "Theme-aware main app and legacy solver",
+      "Theme-aware shared product shell",
       "WebRTC multiplayer signaling",
       "PWA-ready frontend",
       "Validated WebSocket payloads"
     ],
     links: {
-      classicSolver: "/legacy-2x2-solver/index.html",
+      partOne: "/part-1",
+      partOneLive: "/part-1/live",
+      partOneMultiplayer: "/part-1/multiplayer",
+      partTwoLab: "/part-2",
+      partTwoStatic: "/legacy-2x2-solver/index.html",
       frontendRedirectEnabled: Boolean(frontendRedirectUrl)
     }
   };
