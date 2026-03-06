@@ -5,7 +5,6 @@
 - `frontend/`: React 19 product shell for the repo overview and Part 1 Gemini live tutor.
 - `backend/`: Express 5 service for runtime metadata, Gemini Live integration, cube solving, WebSocket signaling, and Cloud Run hosting.
 - `frontend/public/legacy-2x2-solver/`: Part 2 Cubey Core 2x2 lab with the shared 24-sticker cube core.
-- `submission/devpost-2026/`: submission-only docs bundle for Devpost text, proof, checklist, and architecture assets.
 
 ## Start Here
 

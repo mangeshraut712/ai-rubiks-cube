@@ -100,7 +100,6 @@ flowchart LR
 │   ├── public/legacy-2x2-solver/     # Part 2 Cubey Core 2x2 lab
 │   └── src/                          # Part 1 app shell, routed pages, shared UI primitives
 ├── scripts/                          # Local start, cleanup, deploy, and security helpers
-├── submission/devpost-2026/          # Submission evidence pack: proof, description, checklists
 ├── terraform/                        # Cloud Run infrastructure definitions
 ├── cloudbuild.yaml                   # Cloud Build rollout pipeline
 ├── deploy.sh                         # High-level Cloud Run deploy entrypoint
@@ -193,27 +192,14 @@ The repository is built for **Cloud Run**, shipping the built frontend and backe
 
 ---
 
-## 📜 Submission Pack Details
-Pre-packaged evidence for the **Gemini Live Agent Challenge 2026** can be found in `submission/devpost-2026/`:
-- `project-description.md` • `requirements-crosscheck.md` • `google-cloud-proof.md` • `submission-checklist.md`.
-
-Use the helper script for easy packaging:
-```bash
-./scripts/package-devpost.sh
-```
-
----
-
 ## 🏛️ Project Governance & Guardrails
 
 - **Shared State:** Part 2 `cube-core.js` is the single source of truth for 2x2 state logic.
 - **Visual Integrity:** Maintain alignment between Part 1 and Part 2 design primitives.
-- **Logic First:** Always prioritize cube solving correctness before aesthetic refinements.
-
 ---
 
 <p align="center">
-  MADE WITH ❤️ FOR THE GEMINI LIVE AGENT CHALLENGE 2026
+  <b>Built with Gemini 2.x & React 19</b>
   <br/>
-  <b>BY MANGESH RAUT</b>
+  Designed by Mangesh Raut
 </p>
