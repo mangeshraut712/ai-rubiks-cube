@@ -47,7 +47,7 @@ AI Rubik's Tutor is a two-product Rubik's Cube repo built around one modern fron
 - Part 1 and Part 2 use one shared visual language.
 - Cloud Run is the primary deployment target instead of splitting frontend and backend hosting.
 - The classic 2x2 lab keeps its exact solving behavior but now lives under the same product story.
-- Devpost submission-only assets were removed from the tracked repo.
+- The submission evidence pack now lives in `submission/devpost-2026/` as documentation, not as a third project.
 
 ## Routes And Runtime Surface
 
@@ -96,6 +96,7 @@ flowchart LR
 │   ├── public/legacy-2x2-solver/     # Part 2 Cubey Core 2x2 lab
 │   └── src/                          # Part 1 app shell, routed pages, shared UI
 ├── scripts/                          # Local start, cleanup, deploy, security helpers
+├── submission/devpost-2026/          # Submission checklist, proof docs, description, architecture asset
 ├── terraform/                        # Cloud Run infrastructure inputs/outputs
 ├── cloudbuild.yaml                   # Cloud Build rollout
 ├── deploy.sh                         # Manual Cloud Run deploy helper
@@ -226,9 +227,27 @@ What the deploy does:
 
 `cloudbuild.yaml` mirrors the same rollout path for CI/CD.
 
+## Submission Pack
+
+The repo includes a clean Devpost-ready submission bundle:
+
+- `submission/devpost-2026/README.md`
+- `submission/devpost-2026/project-description.md`
+- `submission/devpost-2026/requirements-crosscheck.md`
+- `submission/devpost-2026/google-cloud-proof.md`
+- `submission/devpost-2026/demo-video-script.md`
+- `submission/devpost-2026/submission-checklist.md`
+- `submission/devpost-2026/architecture-diagram.svg`
+
+Optional packaging helper:
+
+```bash
+./scripts/package-devpost.sh
+```
+
 ## Verified Public Cloud Links
 
-Checked on March 6, 2026:
+Checked on March 7, 2026:
 
 - Cloud Run app root: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/`
 - Cloud Run health: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
