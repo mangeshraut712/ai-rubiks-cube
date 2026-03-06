@@ -119,10 +119,10 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
     }
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#eef4fe");
+    scene.background = new THREE.Color("#edf4ff");
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    camera.position.set(5.5, 5.5, 6.2);
+    camera.position.set(5.4, 5.8, 6.4);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -158,7 +158,7 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
 
     const core = new THREE.Mesh(
       new THREE.BoxGeometry(3.1, 3.1, 3.1),
-      new THREE.MeshStandardMaterial({ color: "#1a1a1a", roughness: 0.7, metalness: 0.05 })
+      new THREE.MeshStandardMaterial({ color: "#111827", roughness: 0.7, metalness: 0.05 })
     );
     scene.add(core);
 
@@ -425,7 +425,7 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
   return (
     <div
       ref={containerRef}
-      className={`h-full w-full rounded-2xl border border-[#d2d8e3] shadow-[0_10px_24px_rgba(24,39,75,0.12)] transition-shadow duration-300 ${isAnimating ? "shadow-lg" : ""}`}
+      className={`h-full w-full rounded-[28px] transition duration-300 ${isAnimating ? "scale-[1.01] saturate-[1.04]" : ""}`}
     />
   );
 });

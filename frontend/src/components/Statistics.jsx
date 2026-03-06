@@ -1,92 +1,64 @@
-/**
- * Statistics Dashboard Component
- * 2026: Comprehensive analytics for tracking progress
- */
 import { motion } from "framer-motion";
 import {
-  FiClock,
   FiActivity,
-  FiTrendingUp,
   FiAward,
-  FiTarget,
-  FiCalendar,
   FiBarChart2,
-  FiRotateCcw
+  FiClock,
+  FiRotateCcw,
+  FiTarget,
+  FiTrendingUp,
+  FiX
 } from "react-icons/fi";
 import { useCubeStore } from "../store/cubeStore";
 
 function formatTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return "--:--";
+  }
+
   const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
+  const secs = Math.round(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-function StatCard({ icon: Icon, title, value, subtitle, trend, color = "blue" }) {
-  const colorClasses = {
-    blue: "from-blue-500 to-blue-600",
-    green: "from-green-500 to-green-600",
-    purple: "from-purple-500 to-purple-600",
-    orange: "from-orange-500 to-orange-600",
-    red: "from-red-500 to-red-600"
-  };
-
+function SummaryCard({ icon: Icon, title, value, subtitle, accent, soft }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02 }}
-      className="relative overflow-hidden rounded-xl bg-white p-6 shadow-lg dark:bg-slate-800 dark:text-white"
-    >
-      <div
-        className={`absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-gradient-to-br ${colorClasses[color]} opacity-10`}
-      />
-
-      <div className="flex items-start justify-between">
+    <div className="modal-card p-5">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
-          {subtitle && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
+          <div className="surface-kicker">{title}</div>
+          <div className="mt-3 text-3xl font-semibold tracking-[-0.07em] text-slate-950 dark:text-white">
+            {value}
+          </div>
+          <div className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{subtitle}</div>
         </div>
-        <div className={`rounded-lg bg-gradient-to-br ${colorClasses[color]} p-3 text-white`}>
-          <Icon className="h-6 w-6" />
+
+        <div
+          className="flex h-12 w-12 items-center justify-center rounded-[18px]"
+          style={{ backgroundColor: soft, color: accent }}
+        >
+          <Icon className="h-5 w-5" />
         </div>
       </div>
-
-      {trend && (
-        <div className="mt-4 flex items-center gap-2">
-          <span className={`text-sm font-medium ${trend > 0 ? "text-green-600" : "text-red-600"}`}>
-            {trend > 0 ? "+" : ""}
-            {trend}%
-          </span>
-          <span className="text-sm text-gray-500 dark:text-gray-400">vs last week</span>
-        </div>
-      )}
-    </motion.div>
+    </div>
   );
 }
 
-function ProgressBar({ current, total, label, color = "blue" }) {
-  const percentage = Math.round((current / total) * 100);
-
-  const colorClasses = {
-    blue: "bg-blue-500",
-    green: "bg-green-500",
-    purple: "bg-purple-500",
-    orange: "bg-orange-500"
-  };
+function ProgressLane({ label, current, target, accent }) {
+  const percentage = Math.max(0, Math.min(100, Math.round((current / target) * 100)));
 
   return (
-    <div className="mb-4">
-      <div className="mb-1 flex justify-between text-sm">
-        <span className="font-medium text-gray-700 dark:text-gray-300">{label}</span>
-        <span className="text-gray-500 dark:text-gray-400">{percentage}%</span>
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+          {Math.min(current, target)}/{target}
+        </span>
       </div>
-      <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-slate-700">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 1, delay: 0.2 }}
-          className={`h-full rounded-full ${colorClasses[color]} transition-all duration-500`}
+      <div className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+        <div
+          className="h-full rounded-full transition-[width] duration-500"
+          style={{ width: `${percentage}%`, backgroundColor: accent }}
         />
       </div>
     </div>
@@ -95,233 +67,192 @@ function ProgressBar({ current, total, label, color = "blue" }) {
 
 export default function Statistics({ onClose }) {
   const statistics = useCubeStore((state) => state.statistics);
-  const resetStats = useCubeStore((state) => state.updateStatistics);
+  const updateStatistics = useCubeStore((state) => state.updateStatistics);
 
-  const handleReset = () => {
-    if (confirm("Are you sure you want to reset all statistics? This cannot be undone.")) {
-      resetStats({
-        totalSessions: 0,
-        totalMoves: 0,
-        totalTimeSeconds: 0,
-        solvedCubes: 0,
-        bestTime: null,
-        averageTime: null,
-        moveAccuracy: 100
-      });
-    }
-  };
-
+  const totalSessions = statistics.totalSessions;
   const avgMovesPerSession =
-    statistics.totalSessions > 0 ? Math.round(statistics.totalMoves / statistics.totalSessions) : 0;
-
+    totalSessions > 0 ? Math.round(statistics.totalMoves / totalSessions) : 0;
   const avgTimePerSession =
-    statistics.totalSessions > 0
-      ? Math.round(statistics.totalTimeSeconds / statistics.totalSessions)
-      : 0;
+    totalSessions > 0 ? Math.round(statistics.totalTimeSeconds / totalSessions) : 0;
+
+  const masteryBand =
+    statistics.solvedCubes >= 100
+      ? "Advanced"
+      : statistics.solvedCubes >= 50
+        ? "Intermediate"
+        : statistics.solvedCubes >= 10
+          ? "Beginner+"
+          : "Starter";
+
+  function handleReset() {
+    if (
+      !window.confirm("Reset all local statistics? This cannot be undone.")
+    ) {
+      return;
+    }
+
+    updateStatistics({
+      totalSessions: 0,
+      totalMoves: 0,
+      totalTimeSeconds: 0,
+      solvedCubes: 0,
+      bestTime: null,
+      averageTime: null,
+      moveAccuracy: 100
+    });
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      className="modal-backdrop"
+      onClick={(event) => event.target === event.currentTarget && onClose()}
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-gray-50 shadow-2xl dark:bg-slate-900 dark:text-white"
+        initial={{ opacity: 0, scale: 0.96, y: 18 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 18 }}
+        transition={{ type: "spring", stiffness: 250, damping: 24 }}
+        className="modal-shell max-w-6xl"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 p-2 text-white">
-              <FiBarChart2 className="h-6 w-6" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Statistics</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Track your Rubik&apos;s Cube journey
-              </p>
-            </div>
+        <header className="modal-header">
+          <div>
+            <p className="modal-eyebrow">Statistics</p>
+            <h2 className="modal-title">Practice metrics with a cleaner signal.</h2>
+            <p className="modal-subtitle">
+              The redesign turns the old analytics screen into a compact dashboard with progress,
+              efficiency, and session volume visible at a glance.
+            </p>
           </div>
 
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-700"
-          >
-            <FiActivity className="h-6 w-6" />
+          <button type="button" onClick={onClose} className="modal-close" aria-label="Close statistics">
+            <FiX className="h-5 w-5" />
           </button>
-        </div>
+        </header>
 
-        {/* Content */}
-        <div className="max-h-[70vh] overflow-y-auto p-6">
-          {/* Stats Grid */}
-          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
+        <div className="modal-body space-y-5">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <SummaryCard
               icon={FiAward}
-              title="Solved Cubes"
+              title="Solved cubes"
               value={statistics.solvedCubes}
-              subtitle={`${statistics.totalSessions} sessions`}
-              color="purple"
+              subtitle={`${totalSessions} recorded sessions`}
+              accent="#4285F4"
+              soft="rgba(66,133,244,0.14)"
             />
-
-            <StatCard
+            <SummaryCard
               icon={FiClock}
-              title="Best Time"
-              value={statistics.bestTime ? formatTime(statistics.bestTime) : "--:--"}
+              title="Best time"
+              value={formatTime(statistics.bestTime)}
               subtitle={
                 statistics.averageTime
-                  ? `Avg: ${formatTime(statistics.averageTime)}`
-                  : "No times recorded"
+                  ? `Average ${formatTime(statistics.averageTime)}`
+                  : "Average time appears after completed solves"
               }
-              color="green"
+              accent="#34A853"
+              soft="rgba(52,168,83,0.14)"
             />
-
-            <StatCard
+            <SummaryCard
               icon={FiActivity}
-              title="Total Moves"
+              title="Total moves"
               value={statistics.totalMoves.toLocaleString()}
-              subtitle={`${avgMovesPerSession} avg per session`}
-              color="blue"
+              subtitle={`${avgMovesPerSession} average moves per session`}
+              accent="#FBBC05"
+              soft="rgba(251,188,5,0.18)"
             />
-
-            <StatCard
+            <SummaryCard
               icon={FiTrendingUp}
               title="Accuracy"
               value={`${statistics.moveAccuracy}%`}
-              subtitle="Based on correct moves"
-              color="orange"
+              subtitle={`${masteryBand} coaching profile`}
+              accent="#EA4335"
+              soft="rgba(234,67,53,0.14)"
             />
           </div>
 
-          {/* Progress Section */}
-          <div className="mb-8 rounded-xl bg-white p-6 shadow-md dark:bg-slate-800">
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-              <FiTarget className="h-5 w-5 text-blue-500" />
-              Progress Towards Mastery
-            </h3>
-
-            <ProgressBar
-              current={Math.min(statistics.solvedCubes, 10)}
-              total={10}
-              label="Beginner (10 solves)"
-              color="blue"
-            />
-
-            <ProgressBar
-              current={Math.min(statistics.solvedCubes, 50)}
-              total={50}
-              label="Intermediate (50 solves)"
-              color="green"
-            />
-
-            <ProgressBar
-              current={Math.min(statistics.solvedCubes, 100)}
-              total={100}
-              label="Advanced (100 solves)"
-              color="purple"
-            />
-
-            <ProgressBar
-              current={Math.min(statistics.solvedCubes, 500)}
-              total={500}
-              label="Expert (500 solves)"
-              color="orange"
-            />
-          </div>
-
-          {/* Additional Stats */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-xl bg-white p-6 shadow-md dark:bg-slate-800">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-                <FiCalendar className="h-5 w-5 text-purple-500" />
-                Session History
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Total Sessions</span>
-                  <span className="font-semibold">{statistics.totalSessions}</span>
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+            <section className="modal-card p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[rgba(66,133,244,0.14)] text-[#1a73e8]">
+                  <FiTarget className="h-5 w-5" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Total Time</span>
-                  <span className="font-semibold">{formatTime(statistics.totalTimeSeconds)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Avg Time/Session</span>
-                  <span className="font-semibold">{formatTime(avgTimePerSession)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Avg Moves/Session</span>
-                  <span className="font-semibold">{avgMovesPerSession}</span>
+                <div>
+                  <div className="surface-kicker">Mastery path</div>
+                  <h3 className="mt-2 text-xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+                    Solves translate directly into progression.
+                  </h3>
                 </div>
               </div>
-            </div>
 
-            <div className="rounded-xl bg-white p-6 shadow-md dark:bg-slate-800">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-                <FiTrendingUp className="h-5 w-5 text-green-500" />
-                Achievements
-              </h3>
-              <div className="space-y-2">
-                {statistics.solvedCubes >= 1 && (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <FiAward className="h-5 w-5" />
-                    <span>First Solve!</span>
-                  </div>
-                )}
-                {statistics.solvedCubes >= 10 && (
-                  <div className="flex items-center gap-2 text-blue-600">
-                    <FiTarget className="h-5 w-5" />
-                    <span>Getting Started (10 solves)</span>
-                  </div>
-                )}
-                {statistics.solvedCubes >= 50 && (
-                  <div className="flex items-center gap-2 text-purple-600">
-                    <FiActivity className="h-5 w-5" />
-                    <span>Intermediate Solver (50 solves)</span>
-                  </div>
-                )}
-                {statistics.solvedCubes >= 100 && (
-                  <div className="flex items-center gap-2 text-orange-600">
-                    <FiTrendingUp className="h-5 w-5" />
-                    <span>Speed Cuber (100 solves)</span>
-                  </div>
-                )}
-                {statistics.bestTime && statistics.bestTime < 60 && (
-                  <div className="flex items-center gap-2 text-red-600">
-                    <FiClock className="h-5 w-5" />
-                    <span>Sub-1 Minute Solve!</span>
-                  </div>
-                )}
-                {statistics.solvedCubes < 1 && (
-                  <p className="text-gray-500 dark:text-gray-400 italic">
-                    Complete your first solve to earn achievements!
-                  </p>
-                )}
+              <div className="mt-6 space-y-5">
+                <ProgressLane label="Beginner" current={statistics.solvedCubes} target={10} accent="#4285F4" />
+                <ProgressLane label="Intermediate" current={statistics.solvedCubes} target={50} accent="#34A853" />
+                <ProgressLane label="Advanced" current={statistics.solvedCubes} target={100} accent="#FBBC05" />
+                <ProgressLane label="Expert" current={statistics.solvedCubes} target={500} accent="#EA4335" />
               </div>
+            </section>
+
+            <div className="space-y-4">
+              <section className="modal-card p-5">
+                <div className="surface-kicker">Session signal</div>
+                <h3 className="mt-2 text-xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+                  What the data says right now.
+                </h3>
+                <div className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center justify-between gap-3 rounded-[20px] bg-white/60 px-4 py-3 dark:bg-white/5">
+                    <span>Total sessions</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{totalSessions}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-[20px] bg-white/60 px-4 py-3 dark:bg-white/5">
+                    <span>Total practice time</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      {formatTime(statistics.totalTimeSeconds)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-[20px] bg-white/60 px-4 py-3 dark:bg-white/5">
+                    <span>Average session time</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      {formatTime(avgTimePerSession)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-[20px] bg-white/60 px-4 py-3 dark:bg-white/5">
+                    <span>Average moves</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{avgMovesPerSession}</span>
+                  </div>
+                </div>
+              </section>
+
+              <section className="modal-card p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[rgba(52,168,83,0.14)] text-[#19733c]">
+                    <FiBarChart2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="surface-kicker">Design note</div>
+                    <h3 className="mt-2 text-xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+                      Analytics now fit the product language.
+                    </h3>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  This panel now reads like a Google Labs experiment: fewer heavy cards, stronger hierarchy,
+                  and clearer separation between progress, efficiency, and totals.
+                </p>
+              </section>
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between border-t border-gray-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
-          <button
-            onClick={handleReset}
-            className="flex items-center gap-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-          >
-            <FiRotateCcw className="h-4 w-4" />
-            Reset Statistics
-          </button>
-
-          <button
-            onClick={onClose}
-            className="rounded-lg bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
-          >
-            Close
-          </button>
+          <div className="flex flex-col gap-3 border-t border-[rgba(15,23,42,0.08)] pt-5 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Statistics are stored locally in the browser through the existing Zustand store.
+            </p>
+            <button type="button" onClick={handleReset} className="surface-button-danger">
+              <FiRotateCcw className="h-4 w-4" />
+              Reset local statistics
+            </button>
+          </div>
         </div>
       </motion.div>
     </motion.div>

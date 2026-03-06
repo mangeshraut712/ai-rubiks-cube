@@ -38,12 +38,18 @@ export function useMultiplayer() {
   const [error, setError] = useState(null);
   const [latency, setLatency] = useState(0);
 
+  const connectionStateRef = useRef("idle");
   const peerConnectionRef = useRef(null);
   const dataChannelRef = useRef(null);
   const signalingSocketRef = useRef(null);
   const roomIdRef = useRef(null);
   const pingIntervalRef = useRef(null);
   const localIdRef = useRef(uuidv4());
+
+  const updateConnectionState = useCallback((nextState) => {
+    connectionStateRef.current = nextState;
+    setConnectionState(nextState);
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -58,7 +64,7 @@ export function useMultiplayer() {
   const connect = useCallback(
     async (roomId) => {
       try {
-        setConnectionState("connecting");
+        updateConnectionState("connecting");
         setError(null);
         roomIdRef.current = roomId;
 
@@ -67,6 +73,27 @@ export function useMultiplayer() {
         signalingSocketRef.current = ws;
 
         return new Promise((resolve, reject) => {
+          let settled = false;
+          const settle = (handler) => {
+            if (settled) {
+              return;
+            }
+            settled = true;
+            clearTimeout(timeoutId);
+            handler();
+          };
+
+          const timeoutId = window.setTimeout(() => {
+            if (connectionStateRef.current !== "connecting") {
+              return;
+            }
+
+            console.error("[Multiplayer] Connection timed out");
+            updateConnectionState("error");
+            ws.close();
+            settle(() => reject(new Error("Connection timeout")));
+          }, 10000);
+
           ws.onopen = () => {
             console.log("[Multiplayer] Connected to signaling server");
 
@@ -85,39 +112,36 @@ export function useMultiplayer() {
             await handleSignalingMessage(message);
 
             if (message.type === "joined" || message.type === "peer-joined") {
-              resolve(true);
+              settle(() => resolve(true));
             }
           };
 
           ws.onerror = (error) => {
             console.error("[Multiplayer] Signaling error:", error);
             setError("Failed to connect to signaling server");
-            setConnectionState("error");
-            reject(error);
+            updateConnectionState("error");
+            settle(() => reject(error));
           };
 
           ws.onclose = () => {
             console.log("[Multiplayer] Signaling connection closed");
-            if (connectionState !== "disconnected") {
-              setConnectionState("disconnected");
+            if (connectionStateRef.current !== "disconnected") {
+              updateConnectionState("disconnected");
+            }
+
+            if (!settled) {
+              settle(() => reject(new Error("Signaling connection closed")));
             }
           };
-
-          // Timeout after 10 seconds
-          setTimeout(() => {
-            if (connectionState === "connecting") {
-              reject(new Error("Connection timeout"));
-            }
-          }, 10000);
         });
       } catch (error) {
         console.error("[Multiplayer] Connection failed:", error);
         setError(error.message);
-        setConnectionState("error");
+        updateConnectionState("error");
         throw error;
       }
     },
-    [connectionState]
+    [updateConnectionState]
   );
 
   /**
@@ -185,7 +209,7 @@ export function useMultiplayer() {
       // Handle connection state changes
       pc.onconnectionstatechange = () => {
         console.log("[Multiplayer] Connection state:", pc.connectionState);
-        setConnectionState(pc.connectionState);
+        updateConnectionState(pc.connectionState);
       };
 
       // Handle data channel (for host)
@@ -220,10 +244,10 @@ export function useMultiplayer() {
     } catch (error) {
       console.error("[Multiplayer] Failed to create peer connection:", error);
       setError("Failed to create peer connection");
-      setConnectionState("error");
+      updateConnectionState("error");
       throw error;
     }
-  }, []);
+  }, [updateConnectionState]);
 
   /**
    * Setup data channel
@@ -233,7 +257,7 @@ export function useMultiplayer() {
 
     dataChannel.onopen = () => {
       console.log("[Multiplayer] Data channel opened");
-      setConnectionState("connected");
+      updateConnectionState("connected");
       startPingInterval();
     };
 
@@ -250,7 +274,7 @@ export function useMultiplayer() {
     dataChannel.onmessage = (event) => {
       handleDataMessage(JSON.parse(event.data));
     };
-  }, []);
+  }, [updateConnectionState]);
 
   /**
    * Handle incoming data messages
@@ -404,11 +428,11 @@ export function useMultiplayer() {
       signalingSocketRef.current = null;
     }
 
-    setConnectionState("disconnected");
+    updateConnectionState("disconnected");
     setPeerState(null);
     setLatency(0);
     roomIdRef.current = null;
-  }, [stopPingInterval]);
+  }, [stopPingInterval, updateConnectionState]);
 
   return {
     connectionState,

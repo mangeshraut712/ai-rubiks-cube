@@ -1,93 +1,133 @@
-/**
- * Interactive Tutorial/Walkthrough Component
- * 2026: Comprehensive learning mode for beginners
- */
-import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  FiX,
-  FiChevronRight,
+  FiAward,
   FiChevronLeft,
+  FiChevronRight,
+  FiCommand,
+  FiLayers,
+  FiMic,
   FiPlay,
   FiRotateCcw,
   FiTarget,
-  FiLayers,
-  FiZap,
-  FiAward
+  FiX,
+  FiZap
 } from "react-icons/fi";
-import { useCubeStore } from "../store/cubeStore";
+import { useCubeStore, useSettings } from "../store/cubeStore";
 
 const TUTORIAL_STEPS = [
   {
     id: "welcome",
-    title: "Welcome to Gemini Rubik's Tutor!",
-    content:
-      "Let's learn how to solve a Rubik's Cube together. I'll guide you through the basics and get you ready to solve your first cube.",
+    title: "Meet Cubey",
+    summary: "The redesigned product behaves like a live search page for cube coaching.",
+    bullets: [
+      "One stage holds the cube, camera, transcript, and commands together.",
+      "The goal is less menu-diving and more direct coaching flow.",
+      "You can start with voice, text, or manual turns."
+    ],
     icon: FiAward,
-    action: null
+    accent: "#4285F4",
+    soft: "rgba(66,133,244,0.14)"
   },
   {
     id: "cube-structure",
-    title: "Understanding the Cube",
-    content:
-      "A 3x3 Rubik's Cube has 6 faces: Up (U), Down (D), Left (L), Right (R), Front (F), and Back (B). Each face has 9 stickers and a center piece that never moves.",
+    title: "Understand the cube",
+    summary: "Six faces, fixed centers, and repeatable notation still anchor the entire tutor flow.",
+    bullets: [
+      "Each center defines its face color permanently.",
+      "Cubey reasons about the current state from those face positions.",
+      "The stage highlights the active move while the transcript explains it."
+    ],
     icon: FiLayers,
-    action: "highlight-centers"
+    accent: "#34A853",
+    soft: "rgba(52,168,83,0.14)"
   },
   {
-    id: "move-notation",
-    title: "Move Notation",
-    content:
-      "We use letters to represent moves:\n• R = Right face clockwise\n• R' = Right face counter-clockwise (prime)\n• R2 = Right face 180 degrees\n\nTry clicking the on-screen buttons or use your keyboard!",
+    id: "notation",
+    title: "Read the move language",
+    summary: "The interface accepts standard cube notation directly.",
+    bullets: [
+      "R means rotate the right face clockwise.",
+      "R' means counter-clockwise and R2 means a 180-degree turn.",
+      "Manual buttons, keyboard input, voice, and tutor prompts all use the same language."
+    ],
     icon: FiZap,
-    action: "show-notation"
+    accent: "#FBBC05",
+    soft: "rgba(251,188,5,0.18)"
   },
   {
-    id: "keyboard-shortcuts",
-    title: "Keyboard Shortcuts",
-    content:
-      "Speed up your solving with keyboard shortcuts:\n• U, D, L, R, F, B = Basic moves\n• Shift + Letter = Prime moves (counter-clockwise)\n• Space = Start/End session\n• Ctrl+Z = Undo, Ctrl+Y = Redo",
+    id: "shortcuts",
+    title: "Drive it fast",
+    summary: "Shortcuts keep the session moving once you know the basics.",
+    bullets: [
+      "Use U D L R F B for direct turns.",
+      "Use Space to start or end the live session quickly.",
+      "Undo, redo, theme, and challenge mode all have keyboard access."
+    ],
+    icon: FiCommand,
+    accent: "#EA4335",
+    soft: "rgba(234,67,53,0.14)"
+  },
+  {
+    id: "coaching",
+    title: "How the coach responds",
+    summary: "Cubey mixes voice, vision, move previews, and hints inside one conversation loop.",
+    bullets: [
+      "Show the cube to seed the current state.",
+      "Ask for the next move, a simpler explanation, or a faster algorithm.",
+      "Use solve preview or auto-solve when you want a demonstration instead of a hint."
+    ],
     icon: FiTarget,
-    action: "highlight-keyboard"
+    accent: "#4285F4",
+    soft: "rgba(66,133,244,0.14)"
   },
   {
-    id: "solving-method",
-    title: "The CFOP Method",
-    content:
-      "We'll use the CFOP method to solve the cube:\n1. Cross - Make a cross on one face\n2. F2L - Solve first two layers\n3. OLL - Orient last layer\n4. PLL - Permute last layer\n\nDon't worry, Cubey will guide you through each step!",
-    icon: FiLayers,
-    action: null
+    id: "voice",
+    title: "Use voice naturally",
+    summary: "The redesigned command bar and transcript assume speech is a first-class input.",
+    bullets: [
+      "Speak move commands or coaching questions out loud.",
+      "The tutor transcript stays visible next to the current instruction.",
+      "If you prefer typing, the search-style composer does the same job."
+    ],
+    icon: FiMic,
+    accent: "#34A853",
+    soft: "rgba(52,168,83,0.14)"
   },
   {
-    id: "voice-commands",
-    title: "Voice Commands",
-    content:
-      "You can also control the cube with your voice!\n• Say 'turn right' for R\n• Say 'up prime' for U'\n• Say 'front twice' for F2\n\nEnable voice commands in the settings.",
+    id: "challenge",
+    title: "Turn practice into a challenge",
+    summary: "Challenge mode and multiplayer now feel like extensions of the main stage, not separate tools.",
+    bullets: [
+      "Enable challenge mode to race the tutor.",
+      "Open multiplayer to create or join a WebRTC room.",
+      "Keep the same cube workflow while adding competitive pressure."
+    ],
     icon: FiZap,
-    action: "show-voice"
-  },
-  {
-    id: "challenge-mode",
-    title: "Challenge Mode",
-    content:
-      "Ready for a challenge? Race against Cubey to solve a scrambled cube! Enable Challenge Mode to test your skills and track your improvement over time.",
-    icon: FiAward,
-    action: "highlight-challenge"
+    accent: "#FBBC05",
+    soft: "rgba(251,188,5,0.18)"
   },
   {
     id: "ready",
-    title: "You're Ready!",
-    content:
-      "Great job completing the tutorial! Start a session with Cubey and begin your Rubik's Cube journey. Remember, practice makes perfect!",
+    title: "Start the session",
+    summary: "You have the full path: inspect, ask, move, review, and repeat.",
+    bullets: [
+      "Launch live coaching from the landing page.",
+      "Use the workspace layout to keep the cube, tutor, and controls in view.",
+      "Come back here anytime if you want the flow explained again."
+    ],
     icon: FiPlay,
-    action: "enable-session"
+    accent: "#EA4335",
+    soft: "rgba(234,67,53,0.14)"
   }
 ];
 
 export default function Tutorial({ onClose, onComplete }) {
+  const settings = useSettings();
+  const updateSettings = useCubeStore((state) => state.updateSettings);
+  const skipTutorial = useCubeStore((state) => state.skipTutorial);
+
   const [currentStep, setCurrentStep] = useState(0);
-  const [showHints, setShowHints] = useState(true);
-  const store = useCubeStore();
 
   const step = TUTORIAL_STEPS[currentStep];
   const Icon = step.icon;
@@ -97,23 +137,26 @@ export default function Tutorial({ onClose, onComplete }) {
 
   const handleNext = useCallback(() => {
     if (isLast) {
-      store.skipTutorial();
+      skipTutorial();
       onComplete?.();
-    } else {
-      setCurrentStep((prev) => prev + 1);
+      return;
     }
-  }, [isLast, onComplete, store]);
+
+    setCurrentStep((prev) => prev + 1);
+  }, [isLast, onComplete, skipTutorial]);
 
   const handlePrev = useCallback(() => {
-    if (!isFirst) {
-      setCurrentStep((prev) => prev - 1);
+    if (isFirst) {
+      return;
     }
+
+    setCurrentStep((prev) => prev - 1);
   }, [isFirst]);
 
   const handleSkip = useCallback(() => {
-    store.skipTutorial();
+    skipTutorial();
     onClose?.();
-  }, [onClose, store]);
+  }, [onClose, skipTutorial]);
 
   const handleRestart = useCallback(() => {
     setCurrentStep(0);
@@ -125,149 +168,160 @@ export default function Tutorial({ onClose, onComplete }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-        onClick={(e) => e.target === e.currentTarget && handleSkip()}
+        className="modal-backdrop"
+        onClick={(event) => event.target === event.currentTarget && handleSkip()}
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-lg overflow-hidden rounded-3xl glass-effect shadow-2xl dark:text-white"
+          initial={{ opacity: 0, scale: 0.96, y: 18 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 18 }}
+          transition={{ type: "spring", stiffness: 250, damping: 24 }}
+          className="modal-shell max-w-6xl"
         >
-          {/* Header Title Layer */}
-          <div className="flex items-center justify-between border-b border-gray-200/50 p-6 dark:border-white/10">
-            <div className="flex flex-col">
-              <h2 className="text-xl font-bold tracking-tight">Tutorial</h2>
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                Step {currentStep + 1} of {TUTORIAL_STEPS.length}
+          <header className="modal-header">
+            <div>
+              <p className="modal-eyebrow">Tutorial</p>
+              <h2 className="modal-title">A cleaner onboarding flow for the new stage.</h2>
+              <p className="modal-subtitle">
+                I replaced the old slideshow with a guided control-room walkthrough so the interface reads
+                like one product from the first screen onward.
               </p>
             </div>
-            <button
-              onClick={handleSkip}
-              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
-              aria-label="Skip tutorial"
-            >
-              <FiX className="w-6 h-6 text-gray-400" />
+
+            <button type="button" onClick={handleSkip} className="modal-close" aria-label="Close tutorial">
+              <FiX className="h-5 w-5" />
             </button>
-          </div>
+          </header>
 
-          {/* Progress Bar */}
-          <div className="relative h-1 bg-gray-100 dark:bg-white/10">
-            <motion.div
-              className="h-full bg-gradient-to-r from-[#4285f4] via-[#9b72cb] to-[#d96570]"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-
-          {/* Content */}
-          <div className="p-8 sm:p-10">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step.id}
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -20, opacity: 0 }}
-                transition={{ duration: 0.3, type: "spring", damping: 20, stiffness: 100 }}
-                className="text-center"
-              >
-                {/* Icon */}
-                <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4285f4] to-[#9b72cb] text-white shadow-xl shadow-blue-500/20">
-                  <Icon className="h-10 w-10" />
-                </div>
-
-                {/* Title */}
-                <h2 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-tight">
-                  {step.title}
-                </h2>
-
-                {/* Content */}
-                <p className="mb-8 whitespace-pre-line text-lg text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
-                  {step.content}
-                </p>
-
-                {/* Step indicator dots */}
-                <div className="flex justify-center items-center gap-2 mb-8">
-                  {TUTORIAL_STEPS.map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${i === currentStep
-                        ? "w-8 bg-[#4285f4]"
-                        : "w-1.5 bg-gray-200 dark:bg-gray-700"
-                        }`}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Navigation */}
-            <div className="flex items-center justify-between gap-4">
-              <button
-                onClick={handlePrev}
-                disabled={isFirst}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                <FiChevronLeft className="w-5 h-5" />
-                <span className="hidden sm:inline">Back</span>
-              </button>
-
-              <div className="flex gap-2">
-                {!isFirst && (
-                  <button
-                    onClick={handleRestart}
-                    className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
-                    title="Restart"
-                  >
-                    <FiRotateCcw className="w-4 h-4" />
-                  </button>
-                )}
-
-                <button
-                  onClick={handleNext}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-[#4285f4] to-[#9b72cb] hover:shadow-xl hover:shadow-blue-500/25 transition-all active:scale-95"
-                >
-                  {isLast ? (
-                    <>
-                      Get Started
-                      <FiAward className="w-5 h-5" />
-                    </>
-                  ) : (
-                    <>
-                      Next
-                      <FiChevronRight className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
-              </div>
+          <div className="px-5 pt-4">
+            <div className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+              <div
+                className="h-full rounded-full bg-[linear-gradient(90deg,#4285F4,#34A853,#FBBC05,#EA4335)] transition-[width] duration-300"
+                style={{ width: `${progress}%` }}
+              />
             </div>
           </div>
 
-          {/* Footer (Responsive padding fix) */}
-          <div className="bg-gray-50/50 dark:bg-black/20 px-6 sm:px-10 py-5 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 dark:border-white/5">
-            <label className="flex items-center gap-3 text-sm font-semibold text-gray-600 dark:text-gray-400 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors">
-              <div className="relative">
+          <div className="modal-body">
+            <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
+              <aside className="modal-card p-4">
+                <div className="surface-kicker">Steps</div>
+                <div className="mt-4 space-y-2">
+                  {TUTORIAL_STEPS.map((item, index) => {
+                    const active = index === currentStep;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setCurrentStep(index)}
+                        className={`flex w-full items-center gap-3 rounded-[22px] px-4 py-3 text-left transition ${
+                          active
+                            ? "bg-[rgba(66,133,244,0.12)] text-[#1a73e8]"
+                            : "bg-white/50 text-slate-500 hover:bg-white/70 hover:text-slate-900 dark:bg-white/5 dark:text-slate-400 dark:hover:text-white"
+                        }`}
+                      >
+                        <span className="font-['IBM_Plex_Mono'] text-xs font-semibold tracking-[0.2em]">
+                          {(index + 1).toString().padStart(2, "0")}
+                        </span>
+                        <span className="text-sm font-medium">{item.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </aside>
+
+              <section className="modal-card p-6 sm:p-7">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={step.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="flex h-full flex-col"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <div className="surface-kicker">
+                          Step {(currentStep + 1).toString().padStart(2, "0")} of {TUTORIAL_STEPS.length}
+                        </div>
+                        <h3 className="mt-3 text-3xl font-semibold tracking-[-0.07em] text-slate-950 dark:text-white">
+                          {step.title}
+                        </h3>
+                        <p className="mt-4 max-w-3xl text-base leading-8 text-slate-600 dark:text-slate-300">
+                          {step.summary}
+                        </p>
+                      </div>
+
+                      <div
+                        className="flex h-16 w-16 items-center justify-center rounded-[24px]"
+                        style={{ backgroundColor: step.soft, color: step.accent }}
+                      >
+                        <Icon className="h-7 w-7" />
+                      </div>
+                    </div>
+
+                    <div className="mt-8 grid gap-3">
+                      {step.bullets.map((bullet) => (
+                        <div
+                          key={bullet}
+                          className="flex items-start gap-3 rounded-[24px] bg-white/60 px-4 py-4 text-sm leading-7 text-slate-600 dark:bg-white/5 dark:text-slate-300"
+                        >
+                          <span
+                            className="mt-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: step.accent }}
+                          />
+                          <span>{bullet}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </section>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 border-t border-[rgba(15,23,42,0.08)] px-5 py-4 dark:border-white/10 lg:flex-row lg:items-center lg:justify-between">
+            <label className="flex items-center gap-3 rounded-full bg-white/60 px-4 py-3 text-sm text-slate-600 dark:bg-white/5 dark:text-slate-300">
+              <span>Show hints during solving</span>
+              <span className="toggle-shell" data-checked={settings.showHints ? "true" : "false"}>
                 <input
                   type="checkbox"
-                  checked={showHints}
-                  onChange={(e) => setShowHints(e.target.checked)}
                   className="sr-only"
+                  checked={settings.showHints}
+                  onChange={(event) => updateSettings({ showHints: event.target.checked })}
                 />
-                <div className={`w-11 h-6 rounded-full transition-colors ${showHints ? "bg-green-500" : "bg-gray-300 dark:bg-gray-700"}`}>
-                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${showHints ? "translate-x-5" : ""}`} />
-                </div>
-              </div>
-              Show hints during solving
+                <span className="toggle-thumb" />
+              </span>
             </label>
 
-            <button
-              onClick={handleSkip}
-              className="text-sm font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            >
-              Skip Walkthrough
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              {!isFirst ? (
+                <button type="button" onClick={handleRestart} className="surface-button-secondary sm:w-auto">
+                  <FiRotateCcw className="h-4 w-4" />
+                  Restart
+                </button>
+              ) : null}
+
+              <button type="button" onClick={handlePrev} disabled={isFirst} className="surface-button-secondary sm:w-auto">
+                <FiChevronLeft className="h-4 w-4" />
+                Back
+              </button>
+
+              <button type="button" onClick={handleNext} className="surface-button-primary sm:w-auto">
+                {isLast ? (
+                  <>
+                    Get started
+                    <FiPlay className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Next
+                    <FiChevronRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </motion.div>
       </motion.div>

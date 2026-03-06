@@ -1,3 +1,5 @@
+import { FiActivity, FiClock, FiCpu, FiMic, FiWifi } from "react-icons/fi";
+
 function formatDuration(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60)
     .toString()
@@ -8,10 +10,23 @@ function formatDuration(totalSeconds) {
   return `${minutes}:${seconds}`;
 }
 
-/**
- * Bottom status strip with connection, mic activity, timer, and move count.
- * @param {{connectionStatus:string,micLevel:number,timerSeconds:number,moveCount:number,isTutorSpeaking:boolean,isThinking?:boolean}} props
- */
+function Segment({ icon: Icon, label, value, children, className = "" }) {
+  return (
+    <div
+      className={`rounded-[24px] border border-[rgba(15,23,42,0.08)] bg-white/60 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-white/10 dark:bg-white/5 ${className}`}
+    >
+      <div className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+        <Icon className="h-4 w-4" />
+        {label}
+      </div>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <div className="text-sm font-semibold text-slate-900 dark:text-white">{value}</div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function StatusBar({
   connectionStatus,
   micLevel,
@@ -21,95 +36,66 @@ export default function StatusBar({
   isThinking = false
 }) {
   const levelPct = Math.min(100, Math.max(0, Math.round(micLevel * 250)));
-  const connectionColor =
+  const connectionTone =
     connectionStatus === "connected"
-      ? "bg-[#34a853]"
+      ? { label: "Connected", dot: "is-green" }
       : connectionStatus === "demo_mode"
-        ? "bg-[#4285f4]"
+        ? { label: "Demo mode", dot: "is-blue" }
         : connectionStatus === "connecting"
-          ? "bg-[#fbbc04]"
-          : "bg-[#ea4335]";
+          ? { label: "Connecting", dot: "is-yellow" }
+          : connectionStatus === "permission_denied"
+            ? { label: "Permissions blocked", dot: "is-red" }
+            : { label: "Offline", dot: "is-red" };
 
-  // Thinking indicator animation
-  const thinkingIndicator = isThinking ? (
-    <span className="flex gap-0.5">
-      <span
-        className="h-2 w-1 animate-bounce rounded-full bg-[#9c27b0]"
-        style={{ animationDelay: "0ms" }}
-      />
-      <span
-        className="h-2 w-1 animate-bounce rounded-full bg-[#9c27b0]"
-        style={{ animationDelay: "150ms" }}
-      />
-      <span
-        className="h-2 w-1 animate-bounce rounded-full bg-[#9c27b0]"
-        style={{ animationDelay: "300ms" }}
-      />
-    </span>
-  ) : null;
+  const tutorLabel = isTutorSpeaking ? "Speaking" : isThinking ? "Thinking" : "Listening";
 
   return (
-    <div className="flex h-14 items-center justify-between overflow-hidden rounded-[20px] border border-white/60 bg-white/70 px-6 text-sm text-[#202124] shadow-[0_8px_32px_rgba(32,33,36,0.06)] backdrop-blur-xl">
-      <div className="flex w-full items-center justify-between gap-4">
-        {/* Connection Status */}
-        <div className="flex items-center gap-2.5">
-          <span className={`relative flex h-2.5 w-2.5 items-center justify-center`}>
-            <span
-              className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${connectionColor}`}
-            ></span>
-            <span
-              className={`relative inline-flex h-2.5 w-2.5 rounded-full ${connectionColor}`}
-            ></span>
-          </span>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#5f6368]">
-            {connectionStatus}
-          </span>
-        </div>
+    <div className="surface-panel surface-panel--muted px-3 py-3 sm:px-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Segment icon={FiWifi} label="Connection" value={connectionTone.label} className="sm:col-span-2">
+          <span className={`status-dot ${connectionTone.dot}`} />
+        </Segment>
 
-        {/* Mic Level */}
-        <div className="hidden items-center gap-2.5 sm:flex">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#5f6368]">
-            Mic
-          </span>
-          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-[#e6ebf4] shadow-inner">
+        <Segment icon={FiMic} label="Mic level" value={`${levelPct}%`}>
+          <div className="h-2 w-20 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-[#4285f4] to-[#9b72cb] transition-all duration-100 ease-out"
+              className="h-full rounded-full bg-[linear-gradient(90deg,#4285F4,#34A853)] transition-[width] duration-150"
               style={{ width: `${levelPct}%` }}
             />
           </div>
-        </div>
+        </Segment>
 
-        {/* Timer */}
-        <div className="text-[12px] font-medium text-[#5f6368]">
-          <span className="text-[#a8aeb7]">Timer:</span> {formatDuration(timerSeconds)}
-        </div>
+        <Segment icon={FiClock} label="Timer" value={formatDuration(timerSeconds)}>
+          <span className="status-dot is-yellow" />
+        </Segment>
 
-        {/* Moves */}
-        <div className="text-[12px] font-medium text-[#5f6368]">
-          <span className="text-[#a8aeb7]">Moves:</span> {moveCount}
-        </div>
+        <Segment icon={FiActivity} label="Moves" value={`${moveCount}`}>
+          <span className="status-dot is-blue" />
+        </Segment>
 
-        {/* Tutor Status */}
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#5f6368]">
-            Tutor:
-          </span>
-          {isTutorSpeaking ? (
-            <span className="flex items-center gap-1.5 text-[12px] font-medium text-[#34a853]">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#34a853] opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#34a853]"></span>
+        <Segment icon={FiCpu} label="Tutor" value={tutorLabel} className="sm:col-span-2">
+          <span className="flex items-center gap-1">
+            <span
+              className={`status-dot ${isTutorSpeaking ? "is-green" : isThinking ? "is-yellow" : "is-blue"}`}
+            />
+            {isThinking ? (
+              <span className="flex items-center gap-1">
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-[#FBBC05] animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                />
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-[#FBBC05] animate-bounce"
+                  style={{ animationDelay: "120ms" }}
+                />
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-[#FBBC05] animate-bounce"
+                  style={{ animationDelay: "240ms" }}
+                />
               </span>
-              Speaking
-            </span>
-          ) : isThinking ? (
-            <span className="flex items-center gap-1.5 text-[12px] font-medium text-[#9b72cb]">
-              {thinkingIndicator} Thinking
-            </span>
-          ) : (
-            <span className="text-[12px] font-medium text-[#4285f4]">Listening</span>
-          )}
-        </div>
+            ) : null}
+          </span>
+        </Segment>
       </div>
     </div>
   );

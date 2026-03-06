@@ -3,6 +3,35 @@
  * 2026: WebSocket-based signaling for peer-to-peer connections
  */
 import { WebSocketServer } from "ws";
+import { z } from "zod";
+
+const MAX_SIGNALING_MESSAGE_BYTES = 64 * 1024;
+const RoomIdSchema = z.string().trim().min(4).max(16).regex(/^[A-Z0-9_-]+$/i);
+const ClientIdSchema = z.string().trim().min(8).max(64).regex(/^[A-Z0-9_-]+$/i);
+const JoinMessageSchema = z.object({
+  type: z.literal("join"),
+  roomId: RoomIdSchema,
+  clientId: ClientIdSchema
+});
+const OfferMessageSchema = z.object({
+  type: z.literal("offer"),
+  roomId: RoomIdSchema,
+  offer: z.unknown()
+});
+const AnswerMessageSchema = z.object({
+  type: z.literal("answer"),
+  roomId: RoomIdSchema,
+  answer: z.unknown()
+});
+const IceCandidateMessageSchema = z.object({
+  type: z.literal("ice-candidate"),
+  roomId: RoomIdSchema,
+  candidate: z.unknown()
+});
+const LeaveMessageSchema = z.object({
+  type: z.literal("leave"),
+  roomId: RoomIdSchema.optional()
+});
 
 class SignalingServer {
   constructor() {
@@ -18,17 +47,24 @@ class SignalingServer {
 
       ws.on("message", (data) => {
         try {
-          const message = JSON.parse(data);
-          this.handleMessage(ws, message);
+          const raw = Buffer.isBuffer(data) ? data.toString("utf8") : String(data || "");
+          if (Buffer.byteLength(raw, "utf8") > MAX_SIGNALING_MESSAGE_BYTES) {
+            this.sendError(ws, "Message too large");
+            ws.close(1009, "Message too large");
+            return;
+          }
+
+          const message = JSON.parse(raw);
+          const validated = this.validateMessage(ws, message);
+          if (!validated) {
+            this.sendError(ws, "Invalid signaling message");
+            return;
+          }
+
+          this.handleMessage(ws, validated);
         } catch (error) {
-        console.error("[Signaling] Invalid message:", error);
-        ws.send(
-          JSON.stringify({
-            type: "error",
-            message: "Invalid message format"
-          }),
-          { compress: false }
-        );
+          console.error("[Signaling] Invalid message:", error);
+          this.sendError(ws, "Invalid message format");
         }
       });
 
@@ -80,6 +116,62 @@ class SignalingServer {
       default:
         console.warn("[Signaling] Unknown message type:", type);
     }
+  }
+
+  validateMessage(ws, message) {
+    const type = typeof message?.type === "string" ? message.type : "";
+    let parsed;
+
+    switch (type) {
+      case "join":
+        parsed = JoinMessageSchema.safeParse(message);
+        if (!parsed.success) {
+          return null;
+        }
+        return {
+          ...parsed.data,
+          roomId: parsed.data.roomId.trim().toUpperCase(),
+          clientId: parsed.data.clientId.trim()
+        };
+
+      case "offer":
+        parsed = OfferMessageSchema.safeParse(message);
+        return parsed.success ? { ...parsed.data, roomId: parsed.data.roomId.trim().toUpperCase() } : null;
+
+      case "answer":
+        parsed = AnswerMessageSchema.safeParse(message);
+        return parsed.success ? { ...parsed.data, roomId: parsed.data.roomId.trim().toUpperCase() } : null;
+
+      case "ice-candidate":
+        parsed = IceCandidateMessageSchema.safeParse(message);
+        return parsed.success ? { ...parsed.data, roomId: parsed.data.roomId.trim().toUpperCase() } : null;
+
+      case "leave":
+        parsed = LeaveMessageSchema.safeParse(message);
+        return parsed.success
+          ? {
+              ...parsed.data,
+              roomId: parsed.data.roomId ? parsed.data.roomId.trim().toUpperCase() : ws.roomId
+            }
+          : null;
+
+      default:
+        return null;
+    }
+  }
+
+  sendError(ws, message) {
+    if (ws.readyState !== 1) {
+      return;
+    }
+
+    ws.send(
+      JSON.stringify({
+        type: "error",
+        message
+      }),
+      { compress: false }
+    );
   }
 
   /**

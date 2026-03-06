@@ -66,7 +66,7 @@ esac
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-RUNTIME_DIR="/tmp/.runtime"
+RUNTIME_DIR="$ROOT_DIR/.runtime"
 MEMORY_FILE="$RUNTIME_DIR/security-memory.log"
 mkdir -p "$RUNTIME_DIR"
 
@@ -80,6 +80,32 @@ add_failure() {
 
 add_warning() {
   WARNINGS+=("$1")
+}
+
+run_npm_audit_check() {
+  local dir="$1"
+  [[ -f "$dir/package.json" ]] || return 0
+
+  local audit_output=""
+  if ! audit_output="$(npm audit --omit=dev --audit-level=high --prefix "$dir" 2>&1)"; then
+    add_failure $'npm audit reported high or critical issues in '"$dir"$':\n'"$audit_output"
+  fi
+}
+
+check_backend_security_basics() {
+  [[ -f backend/src/server.js ]] || return 0
+
+  if ! rg -n 'helmet\(' backend/src/server.js >/dev/null 2>&1; then
+    add_warning "backend/src/server.js does not appear to enable helmet()."
+  fi
+
+  if ! rg -n 'compression\(' backend/src/server.js >/dev/null 2>&1; then
+    add_warning "backend/src/server.js does not appear to enable compression()."
+  fi
+
+  if ! rg -n 'rateLimit\(' backend/src/server.js >/dev/null 2>&1; then
+    add_warning "backend/src/server.js does not appear to use express-rate-limit for HTTP routes."
+  fi
 }
 
 collect_target_files() {
@@ -221,6 +247,9 @@ if [[ "$SCOPE" == "deploy" || "$SCOPE" == "prompt" ]]; then
 fi
 
 if [[ "$SCOPE" == "deploy" ]]; then
+  run_npm_audit_check "backend"
+  run_npm_audit_check "frontend"
+  check_backend_security_basics
   add_warning "Run manual checklist sections in SECURITY.md for auth/rate-limit/input before release."
 fi
 

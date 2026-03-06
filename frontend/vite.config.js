@@ -7,6 +7,7 @@ const backendHttpOrigin = process.env.VITE_BACKEND_ORIGIN || "http://localhost:8
 const backendWsOrigin = backendHttpOrigin.startsWith("https://")
   ? backendHttpOrigin.replace("https://", "wss://")
   : backendHttpOrigin.replace("http://", "ws://");
+const enableSourceMaps = process.env.VITE_SOURCEMAP === "true";
 
 export default defineConfig({
   plugins: [
@@ -15,6 +16,8 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       workbox: {
+        // Keep the runtime inlined to avoid the external-runtime Rollup warning path in workbox-build.
+        inlineWorkboxRuntime: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
@@ -112,16 +115,28 @@ export default defineConfig({
     target: "esnext",
     rollupOptions: {
       output: {
-        manualChunks: {
-          react: ["react", "react-dom"],
-          three: ["three"],
-          zustand: ["zustand", "immer"],
-          framer: ["framer-motion"]
+        manualChunks(id) {
+          if (id.includes("node_modules/react-dom") || id.includes("node_modules/react/")) {
+            return "react";
+          }
+          if (id.includes("node_modules/three")) {
+            return "three";
+          }
+          if (id.includes("node_modules/zustand") || id.includes("node_modules/immer")) {
+            return "zustand";
+          }
+          if (id.includes("node_modules/framer-motion")) {
+            return "framer";
+          }
+          if (id.includes("node_modules/react-icons") || id.includes("node_modules/react-hot-toast")) {
+            return "ui";
+          }
+          return undefined;
         }
       }
     },
     chunkSizeWarningLimit: 1000,
-    sourcemap: true,
+    sourcemap: enableSourceMaps,
     minify: "terser",
     terserOptions: {
       compress: {

@@ -7,6 +7,14 @@ import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { createSolvedCubeState } from "../utils/cubeColors";
 
+function getInitialDarkMode() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
 export const useCubeStore = create(
   immer(
     persist(
@@ -22,7 +30,7 @@ export const useCubeStore = create(
         challengeMode: false,
 
         // UI state
-        isDarkMode: false,
+        isDarkMode: getInitialDarkMode(),
         isAnimating: false,
         activeMove: "",
         hintText: "",

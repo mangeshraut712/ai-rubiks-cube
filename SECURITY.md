@@ -16,7 +16,8 @@ Run manually at any time:
 ./scripts/security-check.sh --scope deploy
 ```
 
-The script appends a short memory trail to `.runtime/security-memory.log`.
+The script appends a short memory trail to `.runtime/security-memory.log` inside the repo.
+For `deploy`, it also runs `npm audit --omit=dev --audit-level=high` in both `backend/` and `frontend/`.
 
 ## 01 - Secrets and Config
 
@@ -25,6 +26,7 @@ The script appends a short memory trail to `.runtime/security-memory.log`.
 - [ ] Real `.env` files are not tracked in git
 - [ ] API keys are not exposed client-side when they should stay server-only
 - [ ] CORS is restricted to trusted origins (not `*`) for production
+- [ ] Redirect targets are validated against an allow-list before 302 redirects
 - [ ] No dependency alerts ignored for production releases
 - [ ] No default credentials or placeholder config left enabled
 - [ ] Debug/dev-only behavior is disabled in production
@@ -36,6 +38,7 @@ The script appends a short memory trail to `.runtime/security-memory.log`.
 - [ ] Tokens are stored securely on the client
 - [ ] Login/reset flows do not reveal whether an account exists
 - [ ] Sensitive endpoints are rate-limited
+- [ ] WebSocket and signaling messages are schema-validated and size-limited
 - [ ] Error responses do not expose internal implementation details
 - [ ] Endpoints only return the minimum required data
 - [ ] Sensitive actions require explicit confirmation

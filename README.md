@@ -1,254 +1,192 @@
-# AI Rubik's Cube Suite 2026
+# AI Rubik's Tutor
 
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](frontend/src/test)
-[![Vite](https://img.shields.io/badge/vite-6-646CFF?logo=vite)](https://vitejs.dev)
-[![React](https://img.shields.io/badge/react-19-61DAFB?logo=react)](https://react.dev)
-[![Three.js](https://img.shields.io/badge/three.js-0.172-000000?logo=three.js)](https://threejs.org)
-[![Tailwind CSS](https://img.shields.io/badge/tailwind-4-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
-[![WebRTC](https://img.shields.io/badge/webrtc-ready-333333?logo=webrtc)](https://webrtc.org)
-[![WebAssembly](https://img.shields.io/badge/webassembly-ready-654FF0?logo=webassembly)](https://webassembly.org)
+Google Gemini Live Agent Challenge project for coaching a physical Rubik's Cube with voice, vision, transcript memory, and multiplayer experiments. The repo now contains two frontend experiences:
 
-> Gemini Live Agent Challenge 2026 entry: a single repository that contains the Gemini-powered live tutor and the original classic 2x2 solver.
+- A redesigned Google Labs-inspired live coaching workspace
+- A legacy 2x2 solver that now follows the shared light/dark theme
 
-## 🚀 Live Demo
+## Live URLs
 
-- **Frontend (Vercel)**: https://ai-rubiks-cube.vercel.app/
-- **Backend Health**: https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health
-- **Classic 2x2 Solver**: https://ai-rubiks-cube.vercel.app/legacy-2x2-solver/index.html
+- Frontend: https://ai-rubiks-cube.vercel.app/
+- Backend health: https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health
+- Legacy 2x2 solver: https://ai-rubiks-cube.vercel.app/legacy-2x2-solver/index.html
 
-## ✨ What's New in 2026
+## What This Project Includes
 
-### 🎮 Core Features
+- Live Gemini tutoring with webcam + microphone input
+- Search-style coaching workspace with transcript memory and quick actions
+- Theme-aware UI with shared light/dark preference across the main app and legacy solver
+- 3D cube stage with move playback and auto-solve previews
+- WebRTC multiplayer lobby for peer practice sessions
+- PWA support for the frontend
+- Backend hardening with `helmet`, compression, rate limiting, payload validation, and deploy-time audit checks
 
-- **AI Tutor with Gemini Live** - Real-time voice coaching with webcam vision
-- **Multiplayer Racing** - WebRTC-powered P2P cube solving races
-- **WebAssembly Solver** - High-performance solving with JS fallback
-- **Interactive Tutorial** - Step-by-step learning mode for beginners
-- **Statistics Dashboard** - Track progress, times, and improvement
+## Recent Cleanup And Performance Work
 
-### 🎨 UI/UX Enhancements
+- Extracted frontend shell content and theme logic out of the main app file
+- Lazy-loaded session-only and modal surfaces to reduce initial bundle pressure
+- Fixed the responsive status strip so it respects the actual column width instead of viewport size
+- Switched production sourcemaps to opt-in with `VITE_SOURCEMAP=true`
+- Added deploy-time `npm audit` checks and stronger backend message validation
 
-- **Dark Mode** - Full dark theme support with system preference detection
-- **Keyboard Shortcuts** - Complete keyboard control (moves, undo/redo, features)
-- **Voice Commands** - Hands-free cube control with speech recognition
-- **PWA Support** - Installable app with offline capabilities
-- **Responsive Design** - Mobile-first with glass morphism effects
+## Repository Layout
 
-### 🔧 Technical Improvements
-
-- **Zustand State Management** - Lightweight, persistent state with undo/redo
-- **Vitest Testing** - Comprehensive test coverage with React Testing Library
-- **WebRTC Signaling** - Custom matchmaking server for multiplayer
-- **Enhanced 3D Viewer** - Better lighting, shadows, and animations
-
-## 📁 Project Structure
-
-```
-ai-rubiks-cube/
-├── docs/                     # Documentation
-│   └── FEATURES.md           # Feature catalog / roadmap
-├── scripts/                  # Operational scripts
-│   ├── security-check.sh
-│   ├── start-gemini.sh
-│   └── start-core.sh
-├── frontend/                 # React + Vite frontend
-│   ├── src/
-│   │   ├── components/       # React components
-│   │   │   ├── CubeViewer.jsx      # 3D cube visualization
-│   │   │   ├── LiveSession.jsx     # Gemini Live integration
-│   │   │   ├── Tutorial.jsx        # Interactive tutorial
-│   │   │   ├── Statistics.jsx      # Stats dashboard
-│   │   │   ├── Settings.jsx        # User preferences
-│   │   │   └── MultiplayerLobby.jsx # WebRTC multiplayer
-│   │   ├── hooks/            # Custom React hooks
-│   │   │   ├── useKeyboardShortcuts.js  # Keyboard control
-│   │   │   ├── useVoiceCommands.js      # Voice recognition
-│   │   │   └── useMultiplayer.js        # WebRTC multiplayer
-│   │   ├── store/            # Zustand state management
-│   │   │   └── cubeStore.js         # Global cube state
-│   │   ├── wasm/             # WebAssembly solver
-│   │   │   └── solverWasm.js        # WASM interface
-│   │   └── test/             # Test suite
-│   └── public/
-│       └── legacy-2x2-solver/  # Classic 2x2 solver
-├── backend/                  # Node.js + Express backend
+```text
+.
+├── .github/workflows/        # CI and Vercel deployment workflows
+├── backend/
+│   ├── package.json
 │   └── src/
-│       ├── server.js         # Main server + Gemini Live
-│       ├── signalingServer.js # WebRTC signaling
-│       └── cubeStateManager.js # State management
-├── terraform/                # Infrastructure as Code
-├── deploy.sh                 # Cloud deployment entrypoint
-├── cloudbuild.yaml           # Cloud Build pipeline
-└── vercel.json               # Vercel frontend config
+│       ├── cubeStateManager.js
+│       ├── geminiLiveClient.js
+│       ├── server.js
+│       ├── signalingServer.js
+│       └── tutorPrompt.js
+├── docs/
+│   └── FEATURES.md
+├── frontend/
+│   ├── package.json
+│   ├── public/
+│   │   └── legacy-2x2-solver/
+│   └── src/
+│       ├── components/
+│       │   ├── AppShellPrimitives.jsx
+│       │   ├── CubeViewer.jsx
+│       │   ├── LiveSession.jsx
+│       │   ├── MultiplayerLobby.jsx
+│       │   ├── Settings.jsx
+│       │   ├── Statistics.jsx
+│       │   ├── StatusBar.jsx
+│       │   ├── Tutorial.jsx
+│       │   └── TutorOverlay.jsx
+│       ├── content/
+│       │   └── appContent.js
+│       ├── hooks/
+│       ├── store/
+│       ├── test/
+│       ├── utils/
+│       │   └── theme.js
+│       └── wasm/
+├── scripts/
+│   ├── clean-workspace.sh
+│   ├── security-check.sh
+│   ├── start-core.sh
+│   └── start-gemini.sh
+├── SECURITY.md
+├── cloudbuild.yaml
+├── deploy.sh
+└── vercel.json
 ```
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 
-| Technology      | Version | Purpose          |
-| --------------- | ------- | ---------------- |
-| React           | 19.x    | UI framework     |
-| Vite            | 6.x     | Build tool       |
-| Three.js        | 0.172.x | 3D graphics      |
-| Tailwind CSS    | 4.x     | Styling          |
-| Zustand         | 5.0.3   | State management |
-| Framer Motion   | 11.x    | Animations       |
-| React Hot Toast | 2.5.x   | Notifications    |
-| Vitest          | 3.x     | Testing          |
+- React 19
+- Vite 6
+- Tailwind CSS 4
+- Three.js
+- Zustand
+- Framer Motion
+- Vitest + Testing Library
 
 ### Backend
 
-| Technology     | Version | Purpose         |
-| -------------- | ------- | --------------- |
-| Node.js        | ≥20     | Runtime         |
-| Express        | 5.x     | Web framework   |
-| WebSocket (ws) | 8.18.x  | Real-time comms |
-| Google GenAI   | 1.x     | Gemini Live API |
-| Kociemba       | 1.0.1   | 3x3 solving     |
+- Node.js 22+
+- Express 5
+- `ws`
+- Google GenAI / Gemini Live
+- Zod
 
-### Infrastructure
+### Deployment
 
-- **Cloud Run** - Serverless container hosting
-- **Cloud Build** - CI/CD pipeline
-- **Secret Manager** - API key management
-- **Terraform** - Infrastructure as Code
+- Vercel for the frontend
+- Google Cloud Run for the backend
+- GitHub Actions for CI and optional Vercel production deployment
 
-## 🚀 Quick Start
+## Local Development
 
 ### Prerequisites
 
-- Node.js ≥22
-- npm ≥10
-- Google Cloud account (for deployment)
+- Node.js 22+
+- npm 10+
+- A Gemini API key for live tutoring
 
-### Local Development
-
-1. **Clone and setup**:
-
-```bash
-git clone https://github.com/mangeshraut712/ai-rubiks-cube.git
-cd ai-rubiks-cube
-```
-
-2. **Environment variables**:
-
-```bash
-cp .env.example .env
-# Edit .env with your Gemini API key
-```
-
-Minimum local `.env` values:
-
-```bash
-PORT=8080
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
-VITE_BACKEND_ORIGIN=http://localhost:8080
-DEMO_MODE=false
-```
-
-3. **Install dependencies**:
+### Install
 
 ```bash
 npm ci --prefix backend
 npm ci --prefix frontend
 ```
 
-4. **Start backend** (Terminal 1):
+### Environment
+
+Start from the checked-in template:
 
 ```bash
-cd backend
-npm run start
+cp .env.example .env
 ```
 
-5. **Start frontend** (Terminal 2):
+Minimum local values:
 
 ```bash
-cd frontend
-npm run dev -- --host 127.0.0.1 --port 5173
+PORT=8080
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+DEMO_MODE=false
+VITE_BACKEND_ORIGIN=http://localhost:8080
 ```
 
-6. **Open** http://localhost:5173
-
-7. **Verify local services**:
+Useful optional values:
 
 ```bash
-curl http://127.0.0.1:8080/health
-curl http://127.0.0.1:5173
+CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
+FRONTEND_REDIRECT_URL=
+GEMINI_LIVE_MODEL=gemini-2.5-flash-native-audio-preview-09-2025
+GEMINI_FALLBACK_MODEL=gemini-2.5-flash
 ```
 
-Notes:
-
-- If you want a judge/demo-friendly local session without a live API key, set `DEMO_MODE=true`.
-- Localhost now clears stale PWA/service-worker artifacts on boot so the dev build matches the current source more reliably.
-
-Or use the one-command launcher:
+### Run Both Apps
 
 ```bash
 ./scripts/start-gemini.sh
 ```
 
-## 🎮 Features Guide
-
-### Keyboard Shortcuts
-
-| Key                          | Action                     |
-| ---------------------------- | -------------------------- |
-| `U`, `R`, `F`, `D`, `L`, `B` | Basic moves                |
-| `Shift` + Move               | Prime moves (U', R', etc.) |
-| `Ctrl` + `Z`                 | Undo                       |
-| `Ctrl` + `Shift` + `Z`       | Redo                       |
-| `Ctrl` + `Y`                 | Redo (alternative)         |
-| `H`                          | Request hint               |
-| `Shift` + `C`                | Toggle challenge mode      |
-| `Shift` + `D`                | Toggle dark mode           |
-| `Ctrl` + `,`                 | Open settings              |
-| `Space`                      | Start/End session          |
-| `Esc`                        | Reset cube                 |
-
-### Voice Commands
-
-Say commands like:
-
-- "Move U" / "U prime" / "U double"
-- "Scramble the cube"
-- "Reset cube"
-- "Give me a hint"
-- "Undo last move"
-
-### Multiplayer Mode
-
-1. Click "Multiplayer" on the landing page
-2. Choose "Create Room" or "Join Room"
-3. Share the room code with a friend
-4. Race to solve the same scrambled cube!
-
-## 🧪 Testing
-
-Run the test suite:
+Or run them separately:
 
 ```bash
-npm run test --prefix backend -- --run
-npm run test --prefix frontend -- --run
+cd backend && npm run dev
+cd frontend && npm run dev
 ```
 
-Run lint checks:
+Open:
+
+- `http://localhost:5173`
+- `http://localhost:5173/legacy-2x2-solver/index.html`
+
+### Legacy 2x2 Only
 
 ```bash
-npm run lint --prefix backend
-npm run lint --prefix frontend
+./scripts/start-core.sh
 ```
 
-## 📦 Building for Production
+### Clean Local Artifacts
+
+```bash
+./scripts/clean-workspace.sh
+```
+
+## Quality And Security Checks
 
 ### Frontend
 
 ```bash
 cd frontend
+npm run lint
+npm run test -- --run
 npm run build
 ```
 
-### Backend (runtime check)
+### Backend
 
 ```bash
 cd backend
@@ -256,35 +194,56 @@ npm run lint
 npm run test -- --run
 ```
 
-## 🚀 Deployment
+Note: backend tests currently exit cleanly but there are no backend test files yet.
 
-### Vercel (Frontend)
+### Security Gate
+
+```bash
+./scripts/security-check.sh --scope deploy
+```
+
+That script checks for:
+
+- required backend protections
+- `npm audit` in `backend/` and `frontend/`
+- deployment-related environment requirements
+- project security documentation coverage
+
+## Deployment
+
+### Vercel Frontend
+
+`vercel.json` is already configured for the repo root:
+
+- Install command: `cd frontend && npm ci --cache /tmp/.npm --prefer-online`
+- Build command: `cd frontend && npm run build`
+- Output directory: `frontend/dist`
+
+Required frontend environment variables:
+
+- `VITE_BACKEND_ORIGIN`
+- `VITE_WS_URL` recommended
+- `VITE_SIGNALING_SERVER` optional for multiplayer signaling
+
+Manual deploy:
 
 ```bash
 vercel --prod
 ```
 
-Use these Vercel project settings:
+If you want production source maps for a debugging build:
 
-- Framework Preset: `Vite`
-- Root Directory: repository root (same folder as `vercel.json`)
-- Install Command: `cd frontend && npm ci --cache /tmp/.npm --prefer-online`
-- Build Command: `cd frontend && npm run build`
-- Output Directory: `frontend/dist`
+```bash
+VITE_SOURCEMAP=true npm run build --prefix frontend
+```
 
-Vercel environment variables:
-
-- `VITE_BACKEND_ORIGIN=https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app` (required)
-- `VITE_WS_URL=wss://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/ws` (recommended)
-- `VITE_SIGNALING_SERVER=wss://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/multiplayer` (optional, for multiplayer signaling)
-
-### Google Cloud Run (Backend)
+### Cloud Run Backend
 
 ```bash
 gcloud builds submit --config cloudbuild.yaml
 ```
 
-Or use the deploy script:
+Or:
 
 ```bash
 ./deploy.sh
@@ -292,92 +251,24 @@ Or use the deploy script:
 
 ### GitHub Actions
 
-This repo now contains:
+This repo includes:
 
-- `.github/workflows/ci.yml` for lint/test/build checks
-- `.github/workflows/vercel-deploy.yml` for production Vercel deploy on `main`
+- `.github/workflows/ci.yml`
+- `.github/workflows/vercel-deploy.yml`
 
-Set these GitHub repository secrets for Vercel deploy:
+For automatic Vercel deploys from GitHub Actions, configure these repository secrets:
 
 - `VERCEL_TOKEN`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 
-## 🏗️ Architecture
+## Product Notes
 
-### Gemini Live Tutor Flow
+- The main workspace is optimized for live coaching first, not just puzzle solving
+- The legacy solver is kept for comparison, demos, and classic control workflows
+- Theme preference is shared between the new UI and the legacy page
+- In development, localhost clears stale PWA artifacts on boot to reduce service worker mismatch issues
 
-```
-User Webcam/Mic → WebSocket → Gemini Live API
-                      ↓
-                Cube State Manager
-                      ↓
-              3D Cube Visualization
-                      ↓
-              Voice/Text Responses
-```
+## License
 
-### Multiplayer WebRTC Flow
-
-```
-Player A ←──WebRTC──→ Signaling Server ←──WebRTC──→ Player B
-   ↓                      ↓                        ↓
-Cube State           Matchmaking              Cube State
-Sync                   Logic                    Sync
-```
-
-## 📝 API Documentation
-
-### WebSocket Events
-
-**Client → Server**:
-
-- `end_session` - Terminate session
-- `video_frame` - Send webcam frame (base64 JPEG)
-- `audio_chunk` - Send audio data
-- `hint_request` - Ask for solving hint
-- `challenge_mode` - Toggle challenge mode
-- `interrupt` - Barge in during tutor playback
-- `auto_solve` - Start auto-solve playback
-
-**Server → Client**:
-
-- `status` - Connection status updates
-- `instruction` - Move instructions
-- `cube_state_update` - Current cube state
-- `audio_response` - Audio data from tutor
-- `hint_response` - Short corrective hint
-- `thinking` - Tutor thinking state
-- `interruption` - Tutor/user interruption event
-- `error` - Error messages
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file
-
-## 🙏 Acknowledgments
-
-- **Google** - Gemini Live API
-- **Three.js Community** - 3D graphics library
-- **Kociemba Algorithm** - 3x3 solving algorithm
-- **DevPost** - Gemini Live Agent Challenge 2026
-
-## 📧 Contact
-
-- **Author**: Mangesh Raut
-- **DevPost**: https://devpost.com/mbr63drexel
-- **Challenge**: https://geminiliveagentchallenge.devpost.com/
-
----
-
-<p align="center">
-  Made with ❤️ for the Gemini Live Agent Challenge 2026
-</p>
+MIT

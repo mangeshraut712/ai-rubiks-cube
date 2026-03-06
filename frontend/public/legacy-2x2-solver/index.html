@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta name="color-scheme" content="light dark" />
     <title>2×2 Rubik's Cube Solver | AI-Powered Solution Engine</title>
     <meta
       name="description"
@@ -21,6 +23,7 @@
     <style>
       /* ===== 2025 DESIGN SYSTEM - Apple/shadcn/ui Inspired ===== */
       :root {
+        color-scheme: light;
         --background: 0 0% 100%;
         --foreground: 240 10% 3.9%;
         --card: 0 0% 100%;
@@ -47,6 +50,31 @@
         --font-mono: "JetBrains Mono", "SF Mono", monospace;
       }
 
+      .dark {
+        color-scheme: dark;
+        --background: 222 47% 7%;
+        --foreground: 210 40% 96%;
+        --card: 222 47% 10%;
+        --card-foreground: 210 40% 96%;
+        --primary: 214 100% 66%;
+        --primary-foreground: 222 47% 10%;
+        --secondary: 217 33% 17%;
+        --secondary-foreground: 210 40% 96%;
+        --muted: 217 33% 14%;
+        --muted-foreground: 215 20% 70%;
+        --accent: 217 33% 19%;
+        --accent-foreground: 210 40% 96%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 217 33% 22%;
+        --input: 217 33% 22%;
+        --ring: 214 100% 70%;
+        --success: 142 72% 42%;
+        --success-foreground: 0 0% 98%;
+        --info: 213 94% 68%;
+        --warning: 43 96% 56%;
+      }
+
       *,
       *::before,
       *::after {
@@ -62,11 +90,17 @@
 
       body {
         font-family: var(--font-sans);
-        background-color: hsl(var(--background));
+        background:
+          radial-gradient(circle at top left, hsl(var(--info) / 0.08), transparent 24%),
+          radial-gradient(circle at bottom right, hsl(var(--success) / 0.08), transparent 24%),
+          hsl(var(--background));
         color: hsl(var(--foreground));
         line-height: 1.6;
         min-height: 100vh;
         overflow-x: hidden;
+        transition:
+          background-color 0.25s ease,
+          color 0.25s ease;
       }
 
       /* ===== Animations ===== */
@@ -248,6 +282,17 @@
         color: hsl(var(--muted-foreground));
       }
 
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+      }
+
+      .theme-toggle-label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+
       /* ===== Buttons ===== */
       .btn {
         display: inline-flex;
@@ -314,6 +359,10 @@
         width: 2.25rem;
         height: 2.25rem;
         padding: 0;
+      }
+
+      .btn-theme {
+        min-width: 6rem;
       }
 
       .btn-lg {
@@ -967,6 +1016,52 @@
         display: none;
       }
     </style>
+
+    <script>
+      (function () {
+        const themeKey = "cubey-theme";
+        const storeKey = "cube-store";
+
+        function getStoredTheme() {
+          try {
+            const explicitTheme = window.localStorage.getItem(themeKey);
+            if (explicitTheme === "dark" || explicitTheme === "light") {
+              return explicitTheme;
+            }
+
+            const persistedStore = window.localStorage.getItem(storeKey);
+            if (persistedStore) {
+              const parsedStore = JSON.parse(persistedStore);
+              const isDarkMode = parsedStore && parsedStore.state && parsedStore.state.isDarkMode;
+              if (typeof isDarkMode === "boolean") {
+                return isDarkMode ? "dark" : "light";
+              }
+            }
+          } catch (_error) {
+            return null;
+          }
+
+          if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            return "dark";
+          }
+
+          return "light";
+        }
+
+        const theme = getStoredTheme();
+        const root = document.documentElement;
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        const themeColor = theme === "dark" ? "#020817" : "#f8fafc";
+
+        root.classList.toggle("dark", theme === "dark");
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+
+        if (themeMeta) {
+          themeMeta.setAttribute("content", themeColor);
+        }
+      })();
+    </script>
   </head>
 
   <body>
@@ -982,6 +1077,10 @@
             </div>
           </div>
           <div class="header-actions">
+            <button class="btn btn-secondary btn-theme" id="themeToggleBtn" title="Toggle theme">
+              <span id="themeToggleIcon">🌙</span>
+              <span class="theme-toggle-label" id="themeToggleLabel">Dark</span>
+            </button>
             <button class="btn btn-ghost btn-icon" id="helpBtn" title="Help & Shortcuts">
               <svg
                 width="20"

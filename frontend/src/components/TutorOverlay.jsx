@@ -1,29 +1,81 @@
 import { useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { FiAlertCircle, FiCpu, FiMessageSquare, FiMic, FiVideo } from "react-icons/fi";
 
-/**
- * Parses basic markdown like **bold** into span elements.
- */
 function formatMarkdown(text) {
   if (!text) return null;
-  const parts = String(text).split(/(\*\*.*?\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={i} className="font-bold text-[#1a73e8]">
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
-    return <span key={i}>{part}</span>;
-  });
+
+  return String(text)
+    .split(/(\*\*.*?\*\*)/g)
+    .map((part, index) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return (
+          <strong key={index} className="font-semibold text-[#1a73e8]">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+
+      return <span key={index}>{part}</span>;
+    });
 }
 
-/**
- * Right-side tutor pane with latest instruction + transcript stream.
- * Auto-scrolls to show newest messages.
- * @param {{latestInstruction:string,hintText:string,transcript:Array<{speaker:string,text:string,ts:string}>,connectionStatus?:string,errorText?:string,isLocalEnvironment?:boolean}} props
- */
+function resolveStatus(connectionStatus, errorText, isLocalEnvironment) {
+  if (errorText) {
+    return {
+      label: "Backend issue",
+      tone:
+        "border-[color:rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] text-[#b42318] dark:text-red-200",
+      empty: isLocalEnvironment
+        ? "Backend is not reachable yet. Start the local backend, then retry the live session."
+        : "Tutor backend is not reachable right now. Retry in a moment."
+    };
+  }
+
+  if (connectionStatus === "connecting") {
+    return {
+      label: "Connecting",
+      tone:
+        "border-[color:rgba(251,188,5,0.24)] bg-[rgba(251,188,5,0.14)] text-[#8a6100] dark:text-yellow-200",
+      empty: "Connecting to the live tutor. Camera memory and transcript will appear here shortly."
+    };
+  }
+
+  if (connectionStatus === "permission_denied") {
+    return {
+      label: "Permissions blocked",
+      tone:
+        "border-[color:rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] text-[#b42318] dark:text-red-200",
+      empty: "Camera or microphone access is blocked. Allow permissions and restart the session."
+    };
+  }
+
+  if (connectionStatus === "demo_mode") {
+    return {
+      label: "Demo mode",
+      tone:
+        "border-[color:rgba(66,133,244,0.22)] bg-[rgba(66,133,244,0.12)] text-[#1a73e8] dark:text-blue-200",
+      empty: "Demo mode is ready. Ask for guidance without needing a live camera feed."
+    };
+  }
+
+  if (connectionStatus === "connected") {
+    return {
+      label: "Connected",
+      tone:
+        "border-[color:rgba(52,168,83,0.22)] bg-[rgba(52,168,83,0.12)] text-[#166534] dark:text-green-200",
+      empty: "Connection established. Speak or type to start the coaching loop."
+    };
+  }
+
+  return {
+    label: "Offline",
+    tone:
+      "border-[color:rgba(148,163,184,0.22)] bg-[rgba(148,163,184,0.14)] text-slate-600 dark:text-slate-300",
+    empty: "Start a live session to populate the tutor memory and transcript timeline."
+  };
+}
+
 export default function TutorOverlay({
   latestInstruction,
   hintText,
@@ -33,122 +85,132 @@ export default function TutorOverlay({
   isLocalEnvironment = false
 }) {
   const scrollRef = useRef(null);
+  const status = resolveStatus(connectionStatus, errorText, isLocalEnvironment);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (!scrollRef.current) {
+      return;
     }
+
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [transcript]);
 
-  let emptyStateMessage = (
-    <>
-      Connection established.
-      <br />
-      Speak to start the session.
-    </>
-  );
-
-  if (connectionStatus === "connecting") {
-    emptyStateMessage = (
-      <>
-        Connecting to the tutor backend.
-        <br />
-        Camera preview and transcript will appear shortly.
-      </>
-    );
-  } else if (connectionStatus === "permission_denied") {
-    emptyStateMessage = (
-      <>
-        Camera or microphone access is blocked.
-        <br />
-        Allow permissions and restart the session.
-      </>
-    );
-  } else if (errorText) {
-    emptyStateMessage = (
-      <>
-        {isLocalEnvironment
-          ? "Backend is not reachable yet. Start the local backend and retry the session."
-          : "Tutor backend is not reachable right now. Retry the connection in a moment."}
-      </>
-    );
-  }
-
   return (
-    <div className="flex h-full flex-col rounded-3xl border border-white/60 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 p-5 text-[#202124] dark:text-white shadow-[0_8px_32px_rgba(32,33,36,0.08)] backdrop-blur-xl">
-      {/* CUBEY SAYS HEADER */}
-      <div className="relative mb-6 overflow-hidden rounded-2xl bg-white dark:bg-gray-900 p-[2px] shadow-sm">
-        {/* Animated Gradient Border Layer */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#4285f4] via-[#9b72cb] to-[#d96570] opacity-80" />
-
-        {/* Inner Content Layer */}
-        <div className="relative z-10 flex h-full flex-col rounded-[14px] bg-white dark:bg-gray-900 p-4">
-          <div className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#5f6368] dark:text-gray-400">
-            <span className="gemini-text-gradient font-bold text-lg leading-none">✦</span>
-            Cubey Says
-          </div>
-          <motion.p
-            key={latestInstruction}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-[1.1rem] font-medium leading-relaxed text-[#202124] dark:text-white"
-          >
-            {formatMarkdown(latestInstruction) ||
-              "Show me your cube and I will guide your next move."}
-          </motion.p>
+    <aside className="surface-panel flex h-full min-h-[720px] flex-col p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="surface-kicker">Tutor memory</div>
+          <h2 className="mt-2 text-[1.85rem] font-semibold tracking-[-0.07em] text-slate-950 dark:text-white">
+            Search-style answers, live transcript, zero context switching.
+          </h2>
         </div>
+
+        <span className={`surface-chip ${status.tone}`}>{status.label}</span>
       </div>
 
-      <AnimatePresence>
-        {hintText && (
+      <div className="surface-panel surface-panel--muted mt-5 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            <FiCpu className="h-4 w-4 text-[#4285F4]" />
+            Cubey says
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <span className="surface-chip text-xs">
+              <FiMic className="h-4 w-4 text-[#34A853]" />
+              Voice loop
+            </span>
+            <span className="surface-chip text-xs">
+              <FiVideo className="h-4 w-4 text-[#4285F4]" />
+              Vision memory
+            </span>
+          </div>
+        </div>
+
+        <motion.p
+          key={latestInstruction || "empty"}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="mt-4 text-lg font-medium leading-8 text-slate-900 dark:text-white"
+        >
+          {formatMarkdown(latestInstruction) || "Show me your cube and I will guide the next move."}
+        </motion.p>
+      </div>
+
+      <AnimatePresence initial={false}>
+        {hintText ? (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mb-5 rounded-2xl border border-[#fbbc04]/30 bg-[#fbbc04]/10 p-3.5 text-sm text-[#8f6a00] dark:text-[#fbbc04] shadow-sm overflow-hidden"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="mt-4 rounded-[26px] border border-[rgba(251,188,5,0.24)] bg-[rgba(251,188,5,0.14)] px-4 py-3 text-sm text-[#8a6100] shadow-[0_12px_28px_rgba(251,188,5,0.08)] dark:text-yellow-200"
           >
-            <span className="mr-2 font-bold uppercase tracking-widest">💡 Hint:</span>
-            {formatMarkdown(hintText)}
+            <div className="surface-kicker text-[#8a6100] dark:text-yellow-200">Hint surfaced</div>
+            <div className="mt-2 leading-7">{formatMarkdown(hintText)}</div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
 
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-[11px] font-bold uppercase tracking-widest text-[#5f6368] dark:text-gray-400">
-          Transcript
+      <div className="mt-5 flex items-center justify-between gap-3">
+        <div>
+          <div className="surface-kicker">Transcript timeline</div>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Every spoken exchange stays on the same panel as the current instruction.
+          </p>
         </div>
+        <span className="surface-chip text-xs">
+          <FiMessageSquare className="h-4 w-4 text-[#EA4335]" />
+          {transcript.length} entries
+        </span>
       </div>
-      <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto pr-1 scroll-smooth">
+
+      <div ref={scrollRef} className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
         {transcript.length === 0 ? (
-          <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-[#d2d8e3] dark:border-gray-700 bg-white/50 dark:bg-gray-900/50 p-4 text-center text-sm text-[#5f6368] dark:text-gray-400">
-            {emptyStateMessage}
+          <div className="modal-card flex h-40 items-center justify-center px-5 text-center text-sm leading-7 text-slate-500 dark:text-slate-300">
+            {status.empty}
           </div>
         ) : null}
 
         <AnimatePresence initial={false}>
-          {transcript.map((entry, index) => (
-            <motion.div
-              key={`${entry.ts}-${index}`}
-              initial={{ opacity: 0, x: entry.speaker === "cubey" ? -10 : 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className={`rounded-2xl p-3.5 text-sm transition-all duration-300 ${entry.speaker === "cubey"
-                  ? "border border-[#e8eaed] dark:border-gray-700 bg-white dark:bg-gray-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
-                  : "border border-transparent bg-[#f1f3f4] dark:bg-gray-800 text-right"
+          {transcript.map((entry, index) => {
+            const isTutor = entry.speaker === "cubey";
+
+            return (
+              <motion.article
+                key={`${entry.ts}-${index}`}
+                initial={{ opacity: 0, x: isTutor ? -10 : 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: isTutor ? -10 : 10 }}
+                transition={{ duration: 0.18 }}
+                className={`rounded-[26px] border px-4 py-3 ${
+                  isTutor
+                    ? "border-[rgba(66,133,244,0.12)] bg-white/76 text-left shadow-[0_18px_38px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[rgba(8,18,32,0.82)]"
+                    : "border-[rgba(52,168,83,0.14)] bg-[rgba(52,168,83,0.08)] text-right dark:bg-[rgba(52,168,83,0.12)]"
                 }`}
-            >
-              <div
-                className={`mb-1.5 text-[10px] font-bold uppercase tracking-widest ${entry.speaker === "cubey" ? "gemini-text-gradient" : "text-[#5f6368] dark:text-gray-400"}`}
               >
-                {entry.speaker === "cubey" ? "✦ Cubey" : "You"}
-              </div>
-              <p className="text-[13px] leading-relaxed text-[#202124] dark:text-gray-200">
-                {formatMarkdown(entry.text)}
-              </p>
-            </motion.div>
-          ))}
+                <div
+                  className={`text-[0.68rem] font-semibold uppercase tracking-[0.22em] ${
+                    isTutor ? "text-[#1a73e8]" : "text-[#166534] dark:text-green-200"
+                  }`}
+                >
+                  {isTutor ? "Cubey" : "You"}
+                </div>
+                <p className="mt-2 text-sm leading-7 text-slate-700 dark:text-slate-200">
+                  {formatMarkdown(entry.text)}
+                </p>
+              </motion.article>
+            );
+          })}
         </AnimatePresence>
       </div>
-    </div>
+
+      {errorText ? (
+        <div className="mt-4 flex items-start gap-3 rounded-[24px] border border-[rgba(234,67,53,0.24)] bg-[rgba(234,67,53,0.12)] px-4 py-3 text-sm text-[#8a2c21] dark:text-red-200">
+          <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{errorText}</span>
+        </div>
+      ) : null}
+    </aside>
   );
 }

@@ -40,16 +40,64 @@
 
     <title>Gemini Rubik's Tutor</title>
 
-    <!-- Critical CSS for dark mode to prevent flash -->
+    <script>
+      (function () {
+        const themeKey = "cubey-theme";
+        const storeKey = "cube-store";
+
+        function getStoredTheme() {
+          try {
+            const explicitTheme = window.localStorage.getItem(themeKey);
+            if (explicitTheme === "dark" || explicitTheme === "light") {
+              return explicitTheme;
+            }
+
+            const persistedStore = window.localStorage.getItem(storeKey);
+            if (persistedStore) {
+              const parsedStore = JSON.parse(persistedStore);
+              const isDarkMode = parsedStore && parsedStore.state && parsedStore.state.isDarkMode;
+              if (typeof isDarkMode === "boolean") {
+                return isDarkMode ? "dark" : "light";
+              }
+            }
+          } catch (_error) {
+            return null;
+          }
+
+          if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            return "dark";
+          }
+
+          return "light";
+        }
+
+        const theme = getStoredTheme();
+        const root = document.documentElement;
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        const themeColor = theme === "dark" ? "#07111f" : "#f6f9fe";
+
+        root.classList.toggle("dark", theme === "dark");
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+
+        if (themeMeta) {
+          themeMeta.setAttribute("content", themeColor);
+        }
+      })();
+    </script>
+
+    <!-- Critical CSS for first paint -->
     <style>
       :root {
-        color-scheme: light dark;
+        color-scheme: light;
       }
 
-      @media (prefers-color-scheme: dark) {
-        html {
-          background-color: #0f172a;
-        }
+      html[data-theme="light"] {
+        background-color: #f6f9fe;
+      }
+
+      html[data-theme="dark"] {
+        background-color: #07111f;
       }
 
       /* Prevent FOUC (Flash of Unstyled Content) */

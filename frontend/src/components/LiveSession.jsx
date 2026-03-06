@@ -675,18 +675,41 @@ const LiveSession = forwardRef(function LiveSession(
   }, [active]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
+  const previewMeta =
+    previewStatus === "connected"
+      ? { label: "Lens live", dot: "is-green" }
+      : previewStatus === "demo_mode"
+        ? { label: "Demo lens", dot: "is-blue" }
+        : previewStatus === "connecting"
+          ? { label: "Opening devices", dot: "is-yellow" }
+          : previewStatus === "permission_denied"
+            ? { label: "Permissions blocked", dot: "is-red" }
+            : { label: "Lens offline", dot: "is-red" };
+
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-[20px] bg-white/40 shadow-inner">
+    <div className="relative h-full w-full overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_top,rgba(66,133,244,0.18),transparent_45%),linear-gradient(180deg,rgba(255,255,255,0.45),rgba(255,255,255,0.12))] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:bg-[radial-gradient(circle_at_top,rgba(66,133,244,0.18),transparent_45%),linear-gradient(180deg,rgba(8,18,32,0.68),rgba(8,18,32,0.36))]">
       <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
       <canvas ref={canvasRef} className="hidden" />
 
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between gap-3 p-3">
+        <div className="flex items-center gap-2 rounded-full border border-white/70 bg-white/72 px-3 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-600 backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(8,18,32,0.72)] dark:text-slate-300">
+          <span className={`status-dot ${previewMeta.dot}`} />
+          {previewMeta.label}
+        </div>
+        <div className="rounded-full border border-white/70 bg-white/72 px-3 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-600 backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(8,18,32,0.72)] dark:text-slate-300">
+          Live camera tile
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent,rgba(15,23,42,0.26))]" />
+
       {!permissionError && !hasVideoPreview ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/70 px-4 text-center text-sm font-medium text-slate-600 backdrop-blur-sm">
-          <div>
-            <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-              Camera Preview
+        <div className="absolute inset-0 flex items-center justify-center bg-white/68 px-4 backdrop-blur-sm dark:bg-[rgba(8,18,32,0.74)]">
+          <div className="rounded-[24px] border border-white/80 bg-white/82 px-5 py-4 text-center text-sm font-medium text-slate-600 shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-[rgba(8,18,32,0.88)] dark:text-slate-300">
+            <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              Camera preview
             </div>
-            <div className="mt-2">
+            <div className="mt-2 leading-7">
               {previewStatus === "connecting"
                 ? "Opening media devices and backend session..."
                 : "Preview will appear here once the camera is available."}
@@ -696,8 +719,10 @@ const LiveSession = forwardRef(function LiveSession(
       ) : null}
 
       {permissionError ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/95 p-4 text-center text-sm text-[#7a2d24]">
-          {permissionError}
+        <div className="absolute inset-0 flex items-center justify-center bg-white/92 p-4 dark:bg-[rgba(8,18,32,0.94)]">
+          <div className="rounded-[24px] border border-[rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] px-5 py-4 text-center text-sm leading-7 text-[#7a2d24] dark:text-red-200">
+            {permissionError}
+          </div>
         </div>
       ) : null}
     </div>

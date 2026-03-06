@@ -7,6 +7,11 @@ let state = "WWWWRRRRGGGGOOOOBBBB";
 let speed = 300;
 let scrambleHistory = [];
 let currentSolution = [];
+const THEME_STORAGE_KEY = "cubey-theme";
+const THEME_COLORS = {
+  light: "#f8fafc",
+  dark: "#020817"
+};
 
 // Move descriptions for hints
 const MOVE_DESCRIPTIONS = {
@@ -24,13 +29,81 @@ const MOVE_DESCRIPTIONS = {
   "B'": "Back face counter-clockwise"
 };
 
+function getPreferredTheme() {
+  try {
+    const explicitTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (explicitTheme === "dark" || explicitTheme === "light") {
+      return explicitTheme;
+    }
+  } catch (_error) {
+    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  }
+
+  if (document.documentElement.classList.contains("dark")) {
+    return "dark";
+  }
+
+  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    return "dark";
+  }
+
+  return "light";
+}
+
+function applyTheme(theme, persist = false) {
+  const normalizedTheme = theme === "dark" ? "dark" : "light";
+  const root = document.documentElement;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  const toggleLabel = document.getElementById("themeToggleLabel");
+  const toggleIcon = document.getElementById("themeToggleIcon");
+  const toggleButton = document.getElementById("themeToggleBtn");
+
+  root.classList.toggle("dark", normalizedTheme === "dark");
+  root.dataset.theme = normalizedTheme;
+  root.style.colorScheme = normalizedTheme;
+
+  if (meta) {
+    meta.setAttribute("content", THEME_COLORS[normalizedTheme]);
+  }
+
+  if (toggleLabel) {
+    toggleLabel.textContent = normalizedTheme === "dark" ? "Light" : "Dark";
+  }
+
+  if (toggleIcon) {
+    toggleIcon.textContent = normalizedTheme === "dark" ? "☀️" : "🌙";
+  }
+
+  if (toggleButton) {
+    toggleButton.title = normalizedTheme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+    toggleButton.setAttribute("aria-label", toggleButton.title);
+  }
+
+  if (!persist) {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, normalizedTheme);
+  } catch (_error) {
+    // Ignore storage write failures.
+  }
+}
+
+function toggleTheme() {
+  const nextTheme = getPreferredTheme() === "dark" ? "light" : "dark";
+  applyTheme(nextTheme, true);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  applyTheme(getPreferredTheme());
   cubeEngine = new CubeEngine("cubeCanvas");
 
   // Button listeners
   document.getElementById("scrambleBtn").addEventListener("click", doScramble);
   document.getElementById("solveBtn").addEventListener("click", doSolve);
   document.getElementById("resetBtn").addEventListener("click", doReset);
+  document.getElementById("themeToggleBtn").addEventListener("click", toggleTheme);
 
   // Slider listeners
   document.getElementById("scrambleLength").addEventListener("input", (e) => {
@@ -59,6 +132,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("helpModal").addEventListener("click", (e) => {
     if (e.target.id === "helpModal") {
       document.getElementById("helpModal").classList.remove("visible");
+    }
+  });
+
+  window.addEventListener("storage", (event) => {
+    if (event.key === THEME_STORAGE_KEY || event.key === "cube-store") {
+      applyTheme(getPreferredTheme());
     }
   });
 

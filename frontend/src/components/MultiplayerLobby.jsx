@@ -1,315 +1,352 @@
-/**
- * Multiplayer Lobby Component
- * 2026: WebRTC peer-to-peer matchmaking interface
- */
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import {
-    FiUsers,
-    FiPlay,
-    FiCopy,
-    FiCheck,
-    FiX,
-    FiWifi,
-    FiWifiOff,
-    FiLoader,
-    FiAward,
-    FiClock
+  FiAlertCircle,
+  FiCheck,
+  FiClock,
+  FiCopy,
+  FiLoader,
+  FiPlay,
+  FiUsers,
+  FiWifi,
+  FiWifiOff,
+  FiX,
+  FiZap
 } from "react-icons/fi";
-import { useMultiplayer } from "../hooks/useMultiplayer";
 import { v4 as uuidv4 } from "uuid";
+import { useMultiplayer } from "../hooks/useMultiplayer";
+
+const GAME_MODES = [
+  {
+    id: "race",
+    label: "Race",
+    description: "First solver wins.",
+    accent: "#4285F4",
+    soft: "rgba(66,133,244,0.14)",
+    icon: FiZap
+  },
+  {
+    id: "countdown",
+    label: "Countdown",
+    description: "Solve before the timer runs out.",
+    accent: "#FBBC05",
+    soft: "rgba(251,188,5,0.18)",
+    icon: FiClock
+  },
+  {
+    id: "sync",
+    label: "Sync",
+    description: "Mirror moves together.",
+    accent: "#34A853",
+    soft: "rgba(52,168,83,0.14)",
+    icon: FiUsers
+  }
+];
+
+function generateScramble() {
+  const moves = ["U", "U'", "D", "D'", "L", "L'", "R", "R'", "F", "F'", "B", "B'"];
+  return Array.from({ length: 20 }, () => moves[Math.floor(Math.random() * moves.length)]);
+}
+
+function resolveStatus(connectionState, error) {
+  switch (connectionState) {
+    case "connected":
+      return {
+        label: "Peer connected",
+        tone:
+          "border-[color:rgba(52,168,83,0.22)] bg-[rgba(52,168,83,0.12)] text-[#166534] dark:text-green-200",
+        icon: FiWifi
+      };
+    case "connecting":
+      return {
+        label: "Connecting",
+        tone:
+          "border-[color:rgba(251,188,5,0.24)] bg-[rgba(251,188,5,0.14)] text-[#8a6100] dark:text-yellow-200",
+        icon: FiLoader
+      };
+    case "error":
+      return {
+        label: error || "Connection error",
+        tone:
+          "border-[color:rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] text-[#b42318] dark:text-red-200",
+        icon: FiAlertCircle
+      };
+    case "disconnected":
+      return {
+        label: "Disconnected",
+        tone:
+          "border-[color:rgba(148,163,184,0.2)] bg-[rgba(148,163,184,0.14)] text-slate-600 dark:text-slate-300",
+        icon: FiWifiOff
+      };
+    default:
+      return {
+        label: "Create a room or join one to start.",
+        tone:
+          "border-[color:rgba(66,133,244,0.18)] bg-[rgba(66,133,244,0.12)] text-[#1a73e8] dark:text-blue-200",
+        icon: FiUsers
+      };
+  }
+}
 
 export default function MultiplayerLobby({ onClose, onStartGame }) {
-    const [roomId, setRoomId] = useState("");
-    const [isHost, setIsHost] = useState(false);
-    const [copied, setCopied] = useState(false);
-    const [gameMode, setGameMode] = useState("race"); // race, countdown, sync
+  const [roomId, setRoomId] = useState("");
+  const [isHost, setIsHost] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [gameMode, setGameMode] = useState("race");
 
-    const {
-        connectionState,
-        error,
-        latency,
-        connect,
-        disconnect,
-        sendGameState,
-        isConnected,
-        localId
-    } = useMultiplayer();
+  const { connectionState, error, latency, connect, disconnect, sendGameState, isConnected, localId } =
+    useMultiplayer();
 
-    // Generate room ID
-    const createRoom = useCallback(() => {
-        const newRoomId = uuidv4().slice(0, 8).toUpperCase();
-        setRoomId(newRoomId);
-        setIsHost(true);
-    }, []);
+  const status = resolveStatus(connectionState, error);
+  const StatusIcon = status.icon;
 
-    // Join room
-    const joinRoom = useCallback(async () => {
-        if (!roomId.trim()) return;
+  const createRoom = useCallback(async () => {
+    const newRoomId = uuidv4().slice(0, 8).toUpperCase();
+    setRoomId(newRoomId);
+    setIsHost(true);
 
-        try {
-            await connect(roomId.trim().toUpperCase());
-        } catch (err) {
-            console.error("Failed to join room:", err);
-        }
-    }, [roomId, connect]);
+    try {
+      await connect(newRoomId);
+    } catch (connectError) {
+      console.error("Failed to create room:", connectError);
+    }
+  }, [connect]);
 
-    // Copy room ID
-    const copyRoomId = useCallback(() => {
-        navigator.clipboard.writeText(roomId);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    }, [roomId]);
+  const joinRoom = useCallback(async () => {
+    const normalizedRoomId = roomId.trim().toUpperCase();
+    if (!normalizedRoomId) {
+      return;
+    }
 
-    // Start game
-    const startGame = useCallback(() => {
-        if (!isConnected) return;
+    setIsHost(false);
 
-        const gameConfig = {
-            mode: gameMode,
-            scramble: generateScramble(),
-            startTime: null
-        };
+    try {
+      await connect(normalizedRoomId);
+    } catch (connectError) {
+      console.error("Failed to join room:", connectError);
+    }
+  }, [connect, roomId]);
 
-        sendGameState({ type: "game-start", config: gameConfig });
-        onStartGame?.(gameConfig, true);
-    }, [isConnected, gameMode, sendGameState, onStartGame]);
+  const copyRoomId = useCallback(async () => {
+    if (!roomId || !navigator.clipboard?.writeText) {
+      return;
+    }
 
-    // Generate random scramble
-    const generateScramble = () => {
-        const moves = ["U", "U'", "D", "D'", "L", "L'", "R", "R'", "F", "F'", "B", "B'"];
-        const scramble = [];
-        for (let i = 0; i < 20; i++) {
-            scramble.push(moves[Math.floor(Math.random() * moves.length)]);
-        }
-        return scramble;
+    await navigator.clipboard.writeText(roomId);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  }, [roomId]);
+
+  const startGame = useCallback(() => {
+    if (!isConnected) {
+      return;
+    }
+
+    const gameConfig = {
+      mode: gameMode,
+      scramble: generateScramble(),
+      startTime: null
     };
 
-    // Status message
-    const getStatusMessage = () => {
-        switch (connectionState) {
-            case "idle":
-                return "Create or join a room to start";
-            case "connecting":
-                return "Connecting...";
-            case "connected":
-                return "Connected! Ready to play";
-            case "disconnected":
-                return "Disconnected";
-            case "error":
-                return error || "Connection error";
-            default:
-                return connectionState;
-        }
-    };
+    sendGameState({ type: "game-start", config: gameConfig });
+    onStartGame?.(gameConfig, true);
+  }, [gameMode, isConnected, onStartGame, sendGameState]);
 
-    return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={(e) => e.target === e.currentTarget && onClose()}
-        >
-            <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="relative w-full max-w-lg overflow-hidden rounded-3xl glass-effect shadow-2xl dark:text-white"
-            >
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-gray-200/50 p-6 dark:border-white/10">
-                    <div className="flex items-center gap-3">
-                        <div className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 p-2.5 text-white shadow-lg shadow-purple-500/20">
-                            <FiUsers className="h-6 w-6" />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold tracking-tight">Multiplayer</h2>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Race against a friend in real-time
-                            </p>
-                        </div>
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="modal-backdrop"
+      onClick={(event) => event.target === event.currentTarget && onClose()}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 18 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 18 }}
+        transition={{ type: "spring", stiffness: 250, damping: 24 }}
+        className="modal-shell max-w-5xl"
+      >
+        <header className="modal-header">
+          <div>
+            <p className="modal-eyebrow">Multiplayer lab</p>
+            <h2 className="modal-title">Bring a second cube into the same stage.</h2>
+            <p className="modal-subtitle">
+              This rewrite turns multiplayer into a Labs-style control room and fixes the host flow so
+              creating a room now also connects the host to signaling.
+            </p>
+          </div>
+
+          <button type="button" onClick={onClose} className="modal-close" aria-label="Close multiplayer">
+            <FiX className="h-5 w-5" />
+          </button>
+        </header>
+
+        <div className="modal-body space-y-5">
+          <div className={`flex items-center gap-3 rounded-[24px] border px-4 py-3 text-sm ${status.tone}`}>
+            <StatusIcon className={`h-4 w-4 ${connectionState === "connecting" ? "animate-spin" : ""}`} />
+            <span>{status.label}</span>
+            {latency > 0 ? (
+              <span className="ml-auto rounded-full bg-black/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] dark:bg-white/5">
+                {latency} ms
+              </span>
+            ) : null}
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+            <section className="modal-card p-5">
+              <div className="surface-kicker">Host a room</div>
+              <h3 className="mt-2 text-xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+                Spin up a code and invite another solver.
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-slate-400">
+                The host is now connected as soon as the room is created. No extra join step is required.
+              </p>
+
+              <button type="button" onClick={createRoom} className="surface-button-primary mt-5 sm:w-auto">
+                <FiUsers className="h-4 w-4" />
+                Create room
+              </button>
+
+              {roomId && isHost ? (
+                <div className="mt-5 rounded-[26px] border border-[rgba(66,133,244,0.16)] bg-[rgba(66,133,244,0.08)] p-4 dark:bg-[rgba(66,133,244,0.12)]">
+                  <div className="surface-kicker text-[#1a73e8] dark:text-blue-200">Room code</div>
+                  <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                    <div className="flex-1 rounded-[22px] bg-white px-4 py-4 text-center font-['IBM_Plex_Mono'] text-2xl font-semibold tracking-[0.28em] text-[#1a73e8] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:bg-[rgba(8,18,32,0.82)] dark:text-blue-200">
+                      {roomId}
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 transition-colors"
-                    >
-                        <FiX className="h-6 w-6" />
+                    <button type="button" onClick={copyRoomId} className="surface-button-secondary sm:w-auto">
+                      {copied ? <FiCheck className="h-4 w-4" /> : <FiCopy className="h-4 w-4" />}
+                      {copied ? "Copied" : "Copy"}
                     </button>
+                  </div>
+                  <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                    Share this code with your opponent while the host waits for the peer connection.
+                  </p>
                 </div>
+              ) : null}
+            </section>
 
-                {/* Connection Status */}
-                <div
-                    className={`flex items-center justify-center gap-2 p-3 text-sm ${connectionState === "connected"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                            : connectionState === "error"
-                                ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                                : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                        }`}
+            <section className="modal-card p-5">
+              <div className="surface-kicker">Join a room</div>
+              <h3 className="mt-2 text-xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+                Connect to an existing match.
+              </h3>
+
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="text"
+                  value={roomId}
+                  onChange={(event) => setRoomId(event.target.value.toUpperCase())}
+                  placeholder="Enter room code"
+                  maxLength={8}
+                  className="min-h-[3.2rem] flex-1 rounded-full border border-[rgba(15,23,42,0.08)] bg-white/80 px-5 text-center font-['IBM_Plex_Mono'] text-lg tracking-[0.25em] text-slate-900 outline-none placeholder:tracking-[0.18em] placeholder:text-slate-400 dark:border-white/10 dark:bg-[rgba(8,18,32,0.84)] dark:text-white dark:placeholder:text-slate-500"
+                />
+                <button
+                  type="button"
+                  onClick={joinRoom}
+                  disabled={roomId.trim().length < 4 || connectionState === "connecting"}
+                  className="surface-button-secondary sm:w-auto"
                 >
-                    {connectionState === "connecting" ? (
-                        <FiLoader className="h-4 w-4 animate-spin" />
-                    ) : connectionState === "connected" ? (
-                        <FiWifi className="h-4 w-4" />
-                    ) : (
-                        <FiWifiOff className="h-4 w-4" />
-                    )}
-                    {getStatusMessage()}
-                    {latency > 0 && <span className="ml-2 text-xs">({latency}ms)</span>}
+                  {connectionState === "connecting" ? <FiLoader className="h-4 w-4 animate-spin" /> : null}
+                  Join room
+                </button>
+              </div>
+
+              {error ? (
+                <div className="mt-4 flex items-start gap-3 rounded-[22px] border border-[rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] px-4 py-3 text-sm text-[#8a2c21] dark:text-red-200">
+                  <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{error}</span>
                 </div>
+              ) : null}
 
-                {/* Content */}
-                <div className="p-6">
-                    {!isConnected ? (
-                        <div className="space-y-4">
-                            {/* Create Room */}
-                            {!roomId && (
-                                <div className="rounded-xl border-2 border-dashed border-gray-300 p-6 text-center dark:border-slate-600">
-                                    <FiUsers className="mx-auto mb-3 h-12 w-12 text-gray-400" />
-                                    <h3 className="mb-2 text-lg font-semibold">Create a Room</h3>
-                                    <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                                        Host a new multiplayer session
-                                    </p>
-                                    <button
-                                        onClick={createRoom}
-                                        className="rounded-lg bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-2 font-medium text-white shadow-md hover:shadow-lg transition-shadow"
-                                    >
-                                        Create Room
-                                    </button>
-                                </div>
-                            )}
+              <div className="mt-5 rounded-[24px] bg-white/60 px-4 py-4 text-sm leading-7 text-slate-500 dark:bg-white/5 dark:text-slate-300">
+                Room codes stay short for live demos and pair tests. The UI is optimized for quick host/join flows,
+                not account-based lobbies.
+              </div>
+            </section>
+          </div>
 
-                            {/* Room Created */}
-                            {roomId && isHost && (
-                                <div className="rounded-xl bg-purple-50 p-4 dark:bg-purple-900/20">
-                                    <h3 className="mb-3 font-semibold text-purple-900 dark:text-purple-400">
-                                        Share this code with a friend:
-                                    </h3>
-                                    <div className="flex gap-2">
-                                        <div className="flex-1 rounded-lg bg-white p-3 text-center text-2xl font-mono font-bold tracking-wider text-purple-600 shadow-sm dark:bg-slate-700 dark:text-purple-400">
-                                            {roomId}
-                                        </div>
-                                        <button
-                                            onClick={copyRoomId}
-                                            className="rounded-lg bg-purple-100 p-3 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/50 dark:text-purple-400 dark:hover:bg-purple-900"
-                                        >
-                                            {copied ? <FiCheck className="h-6 w-6" /> : <FiCopy className="h-6 w-6" />}
-                                        </button>
-                                    </div>
-                                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                        Waiting for opponent to join...
-                                    </p>
-                                </div>
-                            )}
+          <section className="modal-card p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="surface-kicker">Game mode</div>
+                <h3 className="mt-2 text-xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+                  Choose the multiplayer behavior before the match starts.
+                </h3>
+              </div>
 
-                            {/* Join Room */}
-                            <div className="rounded-xl border border-gray-200 p-4 dark:border-slate-700">
-                                <h3 className="mb-3 font-semibold">Join a Room</h3>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={roomId}
-                                        onChange={(e) => {
-                                            setRoomId(e.target.value.toUpperCase());
-                                            setIsHost(false);
-                                        }}
-                                        placeholder="Enter room code"
-                                        maxLength={8}
-                                        className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-center font-mono text-lg uppercase focus:border-purple-500 focus:outline-none dark:border-slate-600 dark:bg-slate-700 dark:text-white"
-                                    />
-                                    <button
-                                        onClick={joinRoom}
-                                        disabled={roomId.length < 4 || connectionState === "connecting"}
-                                        className="rounded-lg bg-gray-900 px-6 py-2 font-medium text-white disabled:opacity-50 dark:bg-white dark:text-gray-900"
-                                    >
-                                        {connectionState === "connecting" ? (
-                                            <FiLoader className="h-5 w-5 animate-spin" />
-                                        ) : (
-                                            "Join"
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        /* Connected - Game Setup */
-                        <div className="space-y-4">
-                            <div className="rounded-xl bg-green-50 p-4 text-center dark:bg-green-900/20">
-                                <FiUsers className="mx-auto mb-2 h-8 w-8 text-green-600 dark:text-green-400" />
-                                <h3 className="font-semibold text-green-900 dark:text-green-400">
-                                    Opponent Connected!
-                                </h3>
-                                <p className="text-sm text-green-700 dark:text-green-300">Latency: {latency}ms</p>
-                            </div>
+              <span className="surface-chip text-xs">
+                <FiUsers className="h-4 w-4 text-[#34A853]" />
+                Local ID {localId.slice(0, 8)}
+              </span>
+            </div>
 
-                            {/* Game Mode Selection */}
-                            <div>
-                                <h3 className="mb-3 font-semibold">Game Mode</h3>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { id: "race", label: "Race", icon: FiAward, desc: "First to solve wins" },
-                                        {
-                                            id: "countdown",
-                                            label: "Countdown",
-                                            icon: FiClock,
-                                            desc: "Solve in time limit"
-                                        },
-                                        { id: "sync", label: "Sync", icon: FiUsers, desc: "Mirror each other" }
-                                    ].map((mode) => (
-                                        <button
-                                            key={mode.id}
-                                            onClick={() => setGameMode(mode.id)}
-                                            className={`rounded-lg border-2 p-3 text-center transition-colors ${gameMode === mode.id
-                                                    ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
-                                                    : "border-gray-200 hover:border-gray-300 dark:border-slate-700 dark:hover:border-slate-600"
-                                                }`}
-                                        >
-                                            <mode.icon
-                                                className={`mx-auto mb-1 h-5 w-5 ${gameMode === mode.id ? "text-purple-500" : "text-gray-400"
-                                                    }`}
-                                            />
-                                            <div className="text-sm font-medium">{mode.label}</div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">{mode.desc}</div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              {GAME_MODES.map((mode) => {
+                const Icon = mode.icon;
+                const active = gameMode === mode.id;
 
-                            {/* Start Button */}
-                            {isHost && (
-                                <button
-                                    onClick={startGame}
-                                    className="w-full rounded-lg bg-gradient-to-r from-purple-500 to-pink-600 py-3 font-bold text-white shadow-lg hover:shadow-xl transition-shadow"
-                                >
-                                    <FiPlay className="mr-2 inline h-5 w-5" />
-                                    Start Game
-                                </button>
-                            )}
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => setGameMode(mode.id)}
+                    className={`rounded-[26px] border p-4 text-left transition duration-200 ${
+                      active
+                        ? "border-[color:rgba(66,133,244,0.22)] bg-white shadow-[0_18px_38px_rgba(15,23,42,0.08)] dark:bg-[rgba(8,18,32,0.86)]"
+                        : "border-[color:rgba(15,23,42,0.08)] bg-white/60 hover:border-[color:rgba(66,133,244,0.16)] dark:border-white/10 dark:bg-white/5"
+                    }`}
+                  >
+                    <div
+                      className="flex h-11 w-11 items-center justify-center rounded-[18px]"
+                      style={{ backgroundColor: mode.soft, color: mode.accent }}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="mt-4 text-lg font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
+                      {mode.label}
+                    </div>
+                    <div className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                      {mode.description}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
 
-                            {!isHost && (
-                                <p className="text-center text-gray-500 dark:text-gray-400">
-                                    Waiting for host to start...
-                                </p>
-                            )}
-                        </div>
-                    )}
-                </div>
+            <div className="mt-5 flex flex-col gap-3 border-t border-[rgba(15,23,42,0.08)] pt-5 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Start becomes available once the peer data channel is fully connected.
+              </p>
 
-                {/* Footer */}
-                <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-900">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">ID: {localId.slice(0, 8)}</div>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                {connectionState !== "idle" && connectionState !== "disconnected" ? (
+                  <button type="button" onClick={disconnect} className="surface-button-danger sm:w-auto">
+                    Disconnect
+                  </button>
+                ) : null}
 
-                    {isConnected && (
-                        <button
-                            onClick={disconnect}
-                            className="rounded-lg px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                        >
-                            Disconnect
-                        </button>
-                    )}
-                </div>
-            </motion.div>
-        </motion.div>
-    );
+                {isHost ? (
+                  <button
+                    type="button"
+                    onClick={startGame}
+                    disabled={!isConnected}
+                    className="surface-button-primary sm:w-auto"
+                  >
+                    <FiPlay className="h-4 w-4" />
+                    Start game
+                  </button>
+                ) : (
+                  <span className="surface-chip text-xs">
+                    {isConnected ? "Waiting for host to start" : "Join a host to continue"}
+                  </span>
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
 }

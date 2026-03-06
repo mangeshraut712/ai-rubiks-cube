@@ -2,11 +2,15 @@ import http from "http";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+import compression from "compression";
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import WebSocket, { WebSocketServer } from "ws";
 import { URL, fileURLToPath } from "url";
+import { z } from "zod";
 
 import { GeminiLiveClient } from "./geminiLiveClient.js";
 import { CubeState, generateScramble, solveCube } from "./cubeStateManager.js";
@@ -21,6 +25,9 @@ const PORT = Number(process.env.PORT || 8080);
 const API_KEY = String(process.env.GEMINI_API_KEY || "").trim();
 const LIVE_MODEL = process.env.GEMINI_LIVE_MODEL || "gemini-live";
 const DEMO_MODE = process.env.DEMO_MODE === "true";
+const NODE_ENV = process.env.NODE_ENV || "development";
+const IS_PRODUCTION = NODE_ENV === "production";
+const ALLOW_INSECURE_CORS = process.env.ALLOW_INSECURE_CORS === "true";
 const FRONTEND_REDIRECT_URL = String(process.env.FRONTEND_REDIRECT_URL || "")
   .trim()
   .replace(/\/+$/, "");
@@ -41,8 +48,47 @@ const VIDEO_FRAMES_PER_WINDOW = 360;
 const AUDIO_CHUNKS_PER_WINDOW = 3000;
 const DEMO_AUTOPLAY_TARGET_MOVES = 8;
 const DEMO_AUTOPLAY_INTERVAL_MS = 3500;
+const MAX_WS_TEXT_MESSAGE_BYTES = 3 * 1024 * 1024;
+const MAX_WS_BINARY_MESSAGE_BYTES = 512 * 1024;
+const MAX_AUDIO_CHUNK_BYTES = 256 * 1024;
+const MAX_VIDEO_FRAME_CHARS = 2_000_000;
+const MAX_USER_TEXT_CHARS = 1200;
+const MOVE_PATTERN = /^[UDLRFB](?:2|')?$/;
 
 const rateLimitData = new Map();
+
+const VideoFrameMessageSchema = z.object({
+  type: z.literal("video_frame"),
+  data: z.string().min(1).max(MAX_VIDEO_FRAME_CHARS)
+});
+const UserTextMessageSchema = z.object({
+  type: z.literal("user_text"),
+  text: z.string().max(MAX_USER_TEXT_CHARS)
+});
+const InterruptMessageSchema = z.object({
+  type: z.literal("interrupt")
+});
+const MoveAppliedMessageSchema = z.object({
+  type: z.literal("move_applied"),
+  move: z.string().max(4)
+});
+const HintRequestMessageSchema = z.object({
+  type: z.literal("hint_request"),
+  frame: z.string().min(1).max(MAX_VIDEO_FRAME_CHARS).optional()
+});
+const ChallengeModeMessageSchema = z.object({
+  type: z.literal("challenge_mode"),
+  enabled: z.boolean()
+});
+const SolveRequestMessageSchema = z.object({
+  type: z.literal("solve_request")
+});
+const AutoSolveMessageSchema = z.object({
+  type: z.literal("auto_solve")
+});
+const EndSessionMessageSchema = z.object({
+  type: z.literal("end_session")
+});
 
 const LOCAL_DEMO_MOVES = [
   { move: "R", explanation: "turn the right face clockwise" },
@@ -196,7 +242,28 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.json({ limit: "15mb" }));
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  })
+);
+app.use(compression());
+app.use(
+  "/health",
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      error: "rate_limited",
+      message: "Too many health requests. Please slow down."
+    }
+  })
+);
+app.use(express.json({ limit: "1mb" }));
 
 const DEFAULT_CORS_ORIGINS = "https://*.run.app,http://localhost:5173,http://127.0.0.1:5173";
 
@@ -206,10 +273,16 @@ function normalizeOrigin(value) {
     .replace(/\/+$/, "");
 }
 
-const allowedOrigins = (process.env.CORS_ORIGIN || DEFAULT_CORS_ORIGINS)
+const configuredOrigins = (process.env.CORS_ORIGIN || DEFAULT_CORS_ORIGINS)
   .split(",")
   .map((origin) => normalizeOrigin(origin))
   .filter(Boolean);
+const allowWildcardCors = configuredOrigins.includes("*") && ALLOW_INSECURE_CORS && !IS_PRODUCTION;
+const allowedOrigins = configuredOrigins.filter((origin) => origin !== "*");
+
+if (configuredOrigins.includes("*") && !allowWildcardCors) {
+  console.warn("[security] Ignoring insecure wildcard CORS origin. Set explicit origins instead.");
+}
 
 function isOriginAllowed(origin, host) {
   if (!origin) {
@@ -226,8 +299,12 @@ function isOriginAllowed(origin, host) {
     return true;
   }
 
+  if (allowWildcardCors) {
+    return true;
+  }
+
   return allowedOrigins.some((allowed) => {
-    if (allowed === "*" || allowed === normalizedOrigin) {
+    if (allowed === normalizedOrigin) {
       return true;
     }
 
@@ -244,13 +321,34 @@ function isOriginAllowed(origin, host) {
   });
 }
 
+function getSafeRedirectUrl(urlValue) {
+  if (!urlValue) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(urlValue);
+    if (!["https:", "http:"].includes(parsed.protocol)) {
+      return "";
+    }
+
+    return isOriginAllowed(parsed.origin) ? parsed.toString() : "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+const SAFE_FRONTEND_REDIRECT_URL = getSafeRedirectUrl(FRONTEND_REDIRECT_URL);
+
+if (FRONTEND_REDIRECT_URL && !SAFE_FRONTEND_REDIRECT_URL) {
+  console.warn(
+    "[security] FRONTEND_REDIRECT_URL was configured but rejected because it is not in the allowed origin list."
+  );
+}
+
 app.use(
   cors({
     origin(origin, callback) {
-      // In Express, req is available if we wrap this or use app.use((req, res, next) => cors(...)(req, res, next))
-      // But we can also check the Origin vs Host header if provided.
-      // For now, let's keep it simple and just rely on the expanded allowedOrigins list
-      // which will now include *.run.app.
       if (isOriginAllowed(origin)) {
         callback(null, true);
         return;
@@ -265,7 +363,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.get("/", (req, res, next) => {
-  if (!FRONTEND_REDIRECT_URL) {
+  if (!SAFE_FRONTEND_REDIRECT_URL) {
     next();
     return;
   }
@@ -276,7 +374,7 @@ app.get("/", (req, res, next) => {
     return;
   }
 
-  res.redirect(302, FRONTEND_REDIRECT_URL);
+  res.redirect(302, SAFE_FRONTEND_REDIRECT_URL);
 });
 
 const frontendDistPath = path.resolve(__dirname, "../../frontend/dist");
@@ -441,6 +539,18 @@ function scheduleTutorTurn(client, text) {
       console.warn("[ws] scheduled tutor turn failed", error?.message ?? error);
     }
   }, 0);
+}
+
+function sendClientError(ws, code, message) {
+  sendJson(ws, { type: "error", code, message });
+}
+
+function getMessageByteLength(rawMessage) {
+  if (Buffer.isBuffer(rawMessage)) {
+    return rawMessage.length;
+  }
+
+  return Buffer.byteLength(String(rawMessage || ""), "utf8");
 }
 
 wss.on("connection", async (ws, req) => {
@@ -703,12 +813,30 @@ wss.on("connection", async (ws, req) => {
 
   ws.on("message", async (rawMessage, isBinary) => {
     try {
+      const messageSize = getMessageByteLength(rawMessage);
+
+      if (isBinary && messageSize > MAX_WS_BINARY_MESSAGE_BYTES) {
+        sendClientError(ws, "binary_message_too_large", "Binary message too large.");
+        ws.close(1009, "Binary message too large");
+        return;
+      }
+
+      if (!isBinary && messageSize > MAX_WS_TEXT_MESSAGE_BYTES) {
+        sendClientError(ws, "message_too_large", "Message too large.");
+        ws.close(1009, "Message too large");
+        return;
+      }
+
       if (isBinary) {
         const dataBuffer = Buffer.isBuffer(rawMessage) ? rawMessage : Buffer.from(rawMessage);
 
         const { header, payload } = decodeBinaryEnvelope(dataBuffer);
 
         if (header.type === "audio_chunk") {
+          if (payload.length > MAX_AUDIO_CHUNK_BYTES) {
+            sendClientError(ws, "audio_chunk_too_large", "Audio chunk too large.");
+            return;
+          }
           if (!checkRateLimit(clientIp, "audio", AUDIO_CHUNKS_PER_WINDOW)) {
             return;
           }
@@ -742,56 +870,87 @@ wss.on("connection", async (ws, req) => {
 
       switch (messageType) {
         case "video_frame": {
-          if (typeof message.data === "string" && message.data.length > 0) {
-            lastVideoFrame = message.data;
-            gemini.sendVideoFrame(message.data);
+          const parsed = VideoFrameMessageSchema.safeParse(message);
+          if (!parsed.success) {
+            sendClientError(ws, "invalid_message", "Invalid video frame payload.");
+            break;
           }
+
+          lastVideoFrame = parsed.data.data;
+          gemini.sendVideoFrame(parsed.data.data);
           break;
         }
 
         case "user_text": {
-          const text = String(message.text || "").trim();
-          if (text) {
-            pushTranscript(sessionRecord, "user", text);
-            gemini.sendTextTurn(text, true);
+          const parsed = UserTextMessageSchema.safeParse(message);
+          if (!parsed.success) {
+            sendClientError(ws, "invalid_message", "Invalid text turn payload.");
+            break;
           }
+
+          const text = parsed.data.text.trim();
+          if (!text) {
+            sendClientError(ws, "invalid_message", "Text turns cannot be empty.");
+            break;
+          }
+
+          pushTranscript(sessionRecord, "user", text);
+          gemini.sendTextTurn(text, true);
           break;
         }
 
         case "interrupt": {
+          if (!InterruptMessageSchema.safeParse(message).success) {
+            sendClientError(ws, "invalid_message", "Invalid interrupt payload.");
+            break;
+          }
+
           gemini.interrupt();
           break;
         }
 
         case "move_applied": {
-          const move = String(message.move || "")
-            .trim()
-            .toUpperCase();
-          if (move) {
-            cubeState.applyMove(move);
-            sessionRecord.moveHistory.push({ move, ts: new Date().toISOString(), source: "user" });
-
-            sendJson(ws, {
-              type: "move_instruction",
-              move,
-              face: move[0]
-            });
-
-            sendJson(ws, {
-              type: "cube_state_update",
-              cubeState: cubeState.getSnapshot()
-            });
-
-            sendJson(ws, {
-              type: "move_history_update",
-              moveHistory: sessionRecord.moveHistory
-            });
+          const parsed = MoveAppliedMessageSchema.safeParse(message);
+          if (!parsed.success) {
+            sendClientError(ws, "invalid_message", "Invalid move payload.");
+            break;
           }
+
+          const move = parsed.data.move.trim().toUpperCase();
+          if (!MOVE_PATTERN.test(move)) {
+            sendClientError(ws, "invalid_move", "Unsupported move notation.");
+            break;
+          }
+
+          cubeState.applyMove(move);
+          sessionRecord.moveHistory.push({ move, ts: new Date().toISOString(), source: "user" });
+
+          sendJson(ws, {
+            type: "move_instruction",
+            move,
+            face: move[0]
+          });
+
+          sendJson(ws, {
+            type: "cube_state_update",
+            cubeState: cubeState.getSnapshot()
+          });
+
+          sendJson(ws, {
+            type: "move_history_update",
+            moveHistory: sessionRecord.moveHistory
+          });
           break;
         }
 
         case "hint_request": {
-          const frame = message.frame || lastVideoFrame;
+          const parsed = HintRequestMessageSchema.safeParse(message);
+          if (!parsed.success) {
+            sendClientError(ws, "invalid_message", "Invalid hint request payload.");
+            break;
+          }
+
+          const frame = parsed.data.frame || lastVideoFrame;
           const hint =
             DEMO_MODE && !frame
               ? "Demo hint: keep white on top, form a clean cross first, then pair corner-edge pieces one slot at a time."
@@ -807,7 +966,13 @@ wss.on("connection", async (ws, req) => {
         }
 
         case "challenge_mode": {
-          challengeMode = Boolean(message.enabled);
+          const parsed = ChallengeModeMessageSchema.safeParse(message);
+          if (!parsed.success) {
+            sendClientError(ws, "invalid_message", "Invalid challenge mode payload.");
+            break;
+          }
+
+          challengeMode = parsed.data.enabled;
           sessionRecord.challengeMode = challengeMode;
 
           if (challengeMode) {
@@ -848,6 +1013,11 @@ wss.on("connection", async (ws, req) => {
         }
 
         case "solve_request": {
+          if (!SolveRequestMessageSchema.safeParse(message).success) {
+            sendClientError(ws, "invalid_message", "Invalid solve request payload.");
+            break;
+          }
+
           const faceString = cubeState.toFaceString();
           const solution = solveCube(faceString);
           sendJson(ws, {
@@ -870,6 +1040,11 @@ wss.on("connection", async (ws, req) => {
         }
 
         case "auto_solve": {
+          if (!AutoSolveMessageSchema.safeParse(message).success) {
+            sendClientError(ws, "invalid_message", "Invalid auto-solve payload.");
+            break;
+          }
+
           const solveFaceString = cubeState.toFaceString();
           const solutionMoves = solveCube(solveFaceString);
 
@@ -962,6 +1137,11 @@ wss.on("connection", async (ws, req) => {
         }
 
         case "end_session": {
+          if (!EndSessionMessageSchema.safeParse(message).success) {
+            sendClientError(ws, "invalid_message", "Invalid end session payload.");
+            break;
+          }
+
           sendJson(ws, { type: "status", status: "closing" });
           ws.close(1000, "Client ended session");
           break;
