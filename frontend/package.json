@@ -60,6 +60,9 @@
     ]
   },
   "overrides": {
-    "serialize-javascript": "^7.0.4"
+    "serialize-javascript": "^7.0.4",
+    "ajv": "^8.18.0",
+    "rollup": "^4.59.0",
+    "json-schema-traverse": "^1.0.0"
   }
 }
