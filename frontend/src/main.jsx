@@ -1,7 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.jsx";
+import { RouterProvider } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import { router } from "./router.jsx";
 import "./index.css";
 
 const isLocalhost =
@@ -42,7 +43,7 @@ void cleanupLocalPwaArtifacts();
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <App />
+      <RouterProvider router={router} />
     </ErrorBoundary>
   </React.StrictMode>
 );

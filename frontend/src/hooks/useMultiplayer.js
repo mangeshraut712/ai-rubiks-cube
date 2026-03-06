@@ -4,20 +4,42 @@
  */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useCallback, useRef, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
+
+function createClientId() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `client-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function parseIceServers() {
+  const fallback = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" }
+  ];
+  const raw = String(import.meta.env.VITE_ICE_SERVERS_JSON || "").trim();
+
+  if (!raw) {
+    return fallback;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return fallback;
+    }
+
+    return parsed;
+  } catch (_error) {
+    return fallback;
+  }
+}
 
 // WebRTC configuration
 const RTC_CONFIG = {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" }
-    // Add TURN servers for production
-    // {
-    //   urls: "turn:turn.yourserver.com:3478",
-    //   username: "user",
-    //   credential: "pass"
-    // }
-  ]
+  iceServers: parseIceServers(),
+  iceCandidatePoolSize: 4
 };
 
 function toWsOrigin(origin) {
@@ -30,6 +52,7 @@ function toWsOrigin(origin) {
 const SIGNALING_SERVER =
   import.meta.env.VITE_SIGNALING_SERVER ||
   toWsOrigin(import.meta.env.VITE_BACKEND_ORIGIN) ||
+  (typeof window !== "undefined" ? toWsOrigin(window.location.origin) : "") ||
   "ws://localhost:8081";
 
 export function useMultiplayer() {
@@ -44,7 +67,7 @@ export function useMultiplayer() {
   const signalingSocketRef = useRef(null);
   const roomIdRef = useRef(null);
   const pingIntervalRef = useRef(null);
-  const localIdRef = useRef(uuidv4());
+  const localIdRef = useRef(createClientId());
 
   const updateConnectionState = useCallback((nextState) => {
     connectionStateRef.current = nextState;

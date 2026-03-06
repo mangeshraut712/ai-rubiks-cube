@@ -13,7 +13,7 @@ REPO_NAME="gemini-rubiks-tutor"
 IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${SERVICE_NAME}:latest"
 DEMO_MODE_VALUE="${DEMO_MODE_VALUE:-false}"
 CORS_ORIGIN_VALUE="${CORS_ORIGIN_VALUE:-https://gemini-rubiks-tutor.vercel.app}"
-GEMINI_LIVE_MODEL_VALUE="${GEMINI_LIVE_MODEL_VALUE:-gemini-2.5-flash-native-audio-preview-09-2025}"
+GEMINI_LIVE_MODEL_VALUE="${GEMINI_LIVE_MODEL_VALUE:-gemini-live-2.5-flash-preview}"
 GEMINI_FALLBACK_MODEL_VALUE="${GEMINI_FALLBACK_MODEL_VALUE:-gemini-2.5-flash}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

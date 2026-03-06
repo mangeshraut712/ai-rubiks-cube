@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import {
   FiActivity,
@@ -18,6 +18,7 @@ import {
   FiUsers,
   FiZap
 } from "react-icons/fi";
+import { NavLink, useLoaderData, useNavigate } from "react-router-dom";
 
 import {
   BrandWordmark,
@@ -39,6 +40,7 @@ import { useVoiceCommands } from "./hooks/useVoiceCommands";
 import { useCubeStore } from "./store/cubeStore";
 import { createSolvedCubeState } from "./utils/cubeColors";
 import { applyMoveToState } from "./utils/cubeLogic";
+import { FALLBACK_RUNTIME_INFO } from "./utils/runtimeApi.js";
 import { syncDocumentTheme } from "./utils/theme.js";
 
 const LiveSession = lazy(() => import("./components/LiveSession.jsx"));
@@ -97,8 +99,38 @@ function ModalFallback() {
   );
 }
 
-export default function App() {
+function AppNavigation() {
+  const items = [
+    { to: "/", label: "Home", end: true },
+    { to: "/live", label: "Live" },
+    { to: "/labs/multiplayer", label: "Multiplayer" }
+  ];
+
+  return (
+    <nav className="flex flex-wrap gap-2">
+      {items.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end={item.end}
+          className={({ isActive }) =>
+            `surface-chip ${isActive ? "border-[color:rgba(66,133,244,0.28)] text-slate-950 dark:text-white" : ""}`
+          }
+        >
+          {item.label}
+        </NavLink>
+      ))}
+      <a href="/legacy-2x2-solver/index.html" className="surface-chip">
+        Classic 2x2
+      </a>
+    </nav>
+  );
+}
+
+export default function App({ routeView = "home" }) {
   const sessionRef = useRef(null);
+  const navigate = useNavigate();
+  const runtimeInfo = useLoaderData() ?? FALLBACK_RUNTIME_INFO;
   const isLocalEnvironment =
     typeof window !== "undefined" &&
     (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
@@ -144,6 +176,10 @@ export default function App() {
 
   const moveQueueRef = useRef([]);
   const moveAnimTimerRef = useRef(null);
+
+  useEffect(() => {
+    setShowMultiplayer(routeView === "multiplayer");
+  }, [routeView]);
 
   useEffect(() => {
     syncDocumentTheme(isDarkMode ? "dark" : "light", settings.highContrast);
@@ -316,6 +352,7 @@ export default function App() {
   function startSession() {
     resetSessionUiState();
     setSessionActive(true);
+    navigate("/live");
     toast.success("Live coaching launched");
   }
 
@@ -332,6 +369,7 @@ export default function App() {
       recordSessionComplete(sessionDuration, moveHistory.length);
     }
 
+    navigate("/");
     toast.success("Session ended");
   }
 
@@ -346,23 +384,25 @@ export default function App() {
       return;
     }
 
-    setTranscript((prev) => {
-      const last = prev[prev.length - 1];
-      const isDuplicateCubeyLine =
-        entry.speaker === "cubey" &&
-        last?.speaker === "cubey" &&
-        normalizeTranscriptText(last.text) === normalizeTranscriptText(entry.text);
+    startTransition(() => {
+      setTranscript((prev) => {
+        const last = prev[prev.length - 1];
+        const isDuplicateCubeyLine =
+          entry.speaker === "cubey" &&
+          last?.speaker === "cubey" &&
+          normalizeTranscriptText(last.text) === normalizeTranscriptText(entry.text);
 
-      if (isDuplicateCubeyLine) {
-        return prev;
+        if (isDuplicateCubeyLine) {
+          return prev;
+        }
+        return [...prev, entry];
+      });
+
+      if (entry.speaker === "cubey") {
+        setLatestInstructionLocal(entry.text);
+        setLatestInstruction(entry.text);
       }
-      return [...prev, entry];
     });
-
-    if (entry.speaker === "cubey") {
-      setLatestInstructionLocal(entry.text);
-      setLatestInstruction(entry.text);
-    }
   }
 
   function enqueueMove(move) {
@@ -440,7 +480,15 @@ export default function App() {
     sendPrompt(promptInput);
   }
 
+  function handleCloseMultiplayer() {
+    setShowMultiplayer(false);
+    if (routeView === "multiplayer") {
+      navigate(storeSessionActive ? "/live" : "/");
+    }
+  }
+
   const moveCount = moveHistory.length;
+  const showLiveWorkspace = routeView === "live" || storeSessionActive;
   const sessionReady = connectionStatus === "connected" || connectionStatus === "demo_mode";
   const connectionLabel =
     connectionStatus === "demo_mode"
@@ -450,6 +498,21 @@ export default function App() {
         : connectionStatus === "connecting"
           ? "Connecting"
           : "Offline";
+  const runtimeStatusLabel =
+    runtimeInfo.connectionState === "online"
+      ? runtimeInfo.live.enabled
+        ? "API online"
+        : "API limited"
+      : "API offline";
+  const runtimeStatusTone =
+    runtimeInfo.connectionState === "online"
+      ? "border-[color:rgba(52,168,83,0.22)] bg-[rgba(52,168,83,0.12)] text-[#166534] dark:text-green-200"
+      : "border-[color:rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] text-[#b42318] dark:text-red-200";
+  const runtimeRouteCount = runtimeInfo.routes?.length || 0;
+  const liveModelLabel = runtimeInfo.live?.model || "Unavailable";
+  const websocketLabel = `${runtimeInfo.websocket?.tutorPath || "/ws"} + ${
+    runtimeInfo.websocket?.multiplayerPath || "/multiplayer"
+  }`;
 
   return (
     <>
@@ -473,23 +536,27 @@ export default function App() {
         ) : null}
         {showStatistics ? <Statistics onClose={() => setShowStatistics(false)} /> : null}
         {showSettings ? <Settings onClose={() => setShowSettings(false)} /> : null}
-        {showMultiplayer ? <MultiplayerLobby onClose={() => setShowMultiplayer(false)} /> : null}
+        {showMultiplayer ? <MultiplayerLobby onClose={handleCloseMultiplayer} /> : null}
       </Suspense>
 
-      {!storeSessionActive ? (
+      {!showLiveWorkspace ? (
         <main className="min-h-screen px-4 pb-12 pt-5 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl space-y-8">
             <header className="surface-panel flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-              <div className="flex items-center gap-4">
+              <div className="space-y-3">
                 <div className="rounded-[22px] border border-white/80 bg-white/90 px-4 py-2 shadow-sm dark:border-white/10 dark:bg-slate-950/40">
                   <div className="surface-kicker">Gemini Live Agent Challenge 2026</div>
                   <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
                     Google-inspired tutoring interface for a physical cube.
                   </div>
                 </div>
+                <AppNavigation />
               </div>
 
               <div className="flex flex-wrap gap-2">
+                <span className={`surface-chip ${runtimeStatusTone}`}>
+                  {runtimeStatusLabel}
+                </span>
                 <button type="button" onClick={() => setShowTutorial(true)} className="surface-chip">
                   <FiHelpCircle className="h-4 w-4" />
                   Tutorial
@@ -549,7 +616,7 @@ export default function App() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowMultiplayer(true)}
+                    onClick={() => navigate("/labs/multiplayer")}
                     className="surface-button-secondary"
                   >
                     <FiUsers className="h-4 w-4" />
@@ -620,13 +687,13 @@ export default function App() {
                     </div>
 
                     <div className="space-y-4">
-                      <DetailMetric eyebrow="What changed" label="Landing" value="Search-first product story" />
-                      <DetailMetric eyebrow="What changed" label="Session" value="Workspace-style control stage" />
-                      <DetailMetric eyebrow="What changed" label="Modals" value="Unified Google Labs visual system" />
+                      <DetailMetric eyebrow="Runtime" label="API status" value={runtimeStatusLabel} />
+                      <DetailMetric eyebrow="Runtime" label="Live model" value={liveModelLabel} />
+                      <DetailMetric eyebrow="Routing" label="Known routes" value={`${runtimeRouteCount}`} />
                       <DetailMetric
-                        eyebrow="Designed for demos"
-                        label="Core promise"
-                        value="See. Speak. Solve."
+                        eyebrow="Transport"
+                        label="Realtime paths"
+                        value={websocketLabel}
                       />
                     </div>
                   </div>
@@ -655,9 +722,19 @@ export default function App() {
                   The interface is organized like a search workspace: stage on the left, tutor memory on
                   the right, and a command composer anchored under the core experience.
                 </p>
+                <AppNavigation />
               </div>
 
               <div className="flex flex-wrap gap-2">
+                <span className={`surface-chip ${runtimeStatusTone}`}>
+                  {runtimeStatusLabel}
+                </span>
+                {!storeSessionActive ? (
+                  <button type="button" onClick={startSession} className="surface-button-primary">
+                    <FiPlay className="h-4 w-4" />
+                    Start session
+                  </button>
+                ) : null}
                 <button type="button" onClick={() => setShowTutorial(true)} className="surface-chip">
                   <FiHelpCircle className="h-4 w-4" />
                   Tutorial

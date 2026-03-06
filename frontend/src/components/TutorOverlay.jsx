@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useDeferredValue, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiAlertCircle, FiCpu, FiMessageSquare, FiMic, FiVideo } from "react-icons/fi";
 
@@ -85,6 +85,7 @@ export default function TutorOverlay({
   isLocalEnvironment = false
 }) {
   const scrollRef = useRef(null);
+  const deferredTranscript = useDeferredValue(transcript);
   const status = resolveStatus(connectionStatus, errorText, isLocalEnvironment);
 
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function TutorOverlay({
     }
 
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [transcript]);
+  }, [deferredTranscript]);
 
   return (
     <aside className="surface-panel flex h-full min-h-[720px] flex-col p-5">
@@ -161,19 +162,19 @@ export default function TutorOverlay({
         </div>
         <span className="surface-chip text-xs">
           <FiMessageSquare className="h-4 w-4 text-[#EA4335]" />
-          {transcript.length} entries
+          {deferredTranscript.length} entries
         </span>
       </div>
 
       <div ref={scrollRef} className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
-        {transcript.length === 0 ? (
+        {deferredTranscript.length === 0 ? (
           <div className="modal-card flex h-40 items-center justify-center px-5 text-center text-sm leading-7 text-slate-500 dark:text-slate-300">
             {status.empty}
           </div>
         ) : null}
 
         <AnimatePresence initial={false}>
-          {transcript.map((entry, index) => {
+          {deferredTranscript.map((entry, index) => {
             const isTutor = entry.speaker === "cubey";
 
             return (

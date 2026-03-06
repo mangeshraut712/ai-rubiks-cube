@@ -14,6 +14,8 @@ import { z } from "zod";
 
 import { GeminiLiveClient } from "./geminiLiveClient.js";
 import { CubeState, generateScramble, solveCube } from "./cubeStateManager.js";
+import { createSystemRouter } from "./routes/systemRoutes.js";
+import { buildHealthPayload, buildRuntimePayload } from "./runtimeInfo.js";
 import { TUTOR_SYSTEM_PROMPT } from "./tutorPrompt.js";
 import SignalingServer from "./signalingServer.js";
 
@@ -23,7 +25,8 @@ dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 const hasExplicitPort = Boolean(process.env.PORT);
 const PORT = Number(process.env.PORT || 8080);
 const API_KEY = String(process.env.GEMINI_API_KEY || "").trim();
-const LIVE_MODEL = process.env.GEMINI_LIVE_MODEL || "gemini-live";
+const LIVE_MODEL = process.env.GEMINI_LIVE_MODEL || "gemini-live-2.5-flash-preview";
+const FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash";
 const DEMO_MODE = process.env.DEMO_MODE === "true";
 const NODE_ENV = process.env.NODE_ENV || "development";
 const IS_PRODUCTION = NODE_ENV === "production";
@@ -231,7 +234,7 @@ function checkRateLimit(ip, bucket, maxRequests, windowMs = RATE_LIMIT_WINDOW) {
 }
 
 function getConnectionCount() {
-  return wss.clients.size;
+  return wss?.clients?.size ?? 0;
 }
 
 function isServerOverloaded() {
@@ -242,6 +245,36 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+let wss;
+let signalingServer;
+
+function getSignalingStats() {
+  return signalingServer?.getStats() ?? { totalRooms: 0, totalClients: 0 };
+}
+
+function getSystemHealthPayload() {
+  return buildHealthPayload({
+    demoMode: DEMO_MODE,
+    hasUsableApiKey: HAS_USABLE_API_KEY,
+    liveModel: LIVE_MODEL,
+    activeTutorSessions: getConnectionCount(),
+    signalingStats: getSignalingStats()
+  });
+}
+
+function getSystemRuntimePayload() {
+  return buildRuntimePayload({
+    demoMode: DEMO_MODE,
+    hasUsableApiKey: HAS_USABLE_API_KEY,
+    liveModel: LIVE_MODEL,
+    fallbackModel: FALLBACK_MODEL,
+    nodeEnv: NODE_ENV,
+    frontendRedirectUrl: FRONTEND_REDIRECT_URL,
+    activeTutorSessions: getConnectionCount(),
+    signalingStats: getSignalingStats()
+  });
+}
+
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(
@@ -251,7 +284,7 @@ app.use(
 );
 app.use(compression());
 app.use(
-  "/health",
+  ["/health", "/api/health"],
   rateLimit({
     windowMs: 60 * 1000,
     limit: 60,
@@ -264,6 +297,12 @@ app.use(
   })
 );
 app.use(express.json({ limit: "1mb" }));
+app.use(
+  createSystemRouter({
+    getHealthPayload: getSystemHealthPayload,
+    getRuntimePayload: getSystemRuntimePayload
+  })
+);
 
 const DEFAULT_CORS_ORIGINS = "https://*.run.app,http://localhost:5173,http://127.0.0.1:5173";
 
@@ -358,10 +397,6 @@ app.use(
   })
 );
 
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", model: "gemini-live" });
-});
-
 app.get("/", (req, res, next) => {
   if (!SAFE_FRONTEND_REDIRECT_URL) {
     next();
@@ -385,7 +420,7 @@ if (fs.existsSync(frontendDistPath)) {
 }
 
 app.get("/{*path}", (req, res, next) => {
-  if (req.path === "/health") {
+  if (req.path === "/health" || req.path.startsWith("/api/")) {
     next();
     return;
   }
@@ -402,11 +437,11 @@ app.get("/{*path}", (req, res, next) => {
 });
 
 const server = http.createServer(app);
-const wss = new WebSocketServer({
+wss = new WebSocketServer({
   noServer: true,
   perMessageDeflate: false
 });
-const signalingServer = new SignalingServer();
+signalingServer = new SignalingServer();
 
 server.on("upgrade", (request, socket, head) => {
   const host = request.headers.host || "localhost";
@@ -638,7 +673,7 @@ wss.on("connection", async (ws, req) => {
       gemini = new GeminiLiveClient({
         apiKey: API_KEY,
         systemPrompt: TUTOR_SYSTEM_PROMPT,
-        model: process.env.GEMINI_LIVE_MODEL
+        model: LIVE_MODEL
       });
     }
 

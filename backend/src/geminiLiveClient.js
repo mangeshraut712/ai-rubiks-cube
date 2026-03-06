@@ -1,9 +1,8 @@
 import { EventEmitter } from "events";
 import { GoogleGenAI, Modality } from "@google/genai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const DEFAULT_PRIMARY_MODEL =
-  process.env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-preview-09-2025";
+  process.env.GEMINI_LIVE_MODEL || "gemini-live-2.5-flash-preview";
 const DEFAULT_FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash";
 const DEFAULT_SILENCE_DURATION_MS = 1800;
 const DEFAULT_MAX_OUTPUT_TOKENS = 1536;
@@ -35,9 +34,7 @@ export class GeminiLiveClient {
     this.activeModel = model;
 
     this.ai = new GoogleGenAI({ apiKey });
-    this.fallbackModel = new GoogleGenerativeAI(apiKey).getGenerativeModel({
-      model: DEFAULT_FALLBACK_MODEL
-    });
+    this.fallbackModelName = DEFAULT_FALLBACK_MODEL;
 
     this.session = null;
     this.emitter = new EventEmitter();
@@ -86,8 +83,8 @@ export class GeminiLiveClient {
         [
           this.model,
           process.env.GEMINI_LIVE_MODEL,
-          "gemini-2.5-flash-native-audio-preview-09-2025",
           "gemini-live-2.5-flash-preview",
+          "gemini-2.5-flash-native-audio-preview-09-2025",
           "gemini-2.0-flash-live-preview"
         ].filter(Boolean)
       )
@@ -326,22 +323,27 @@ export class GeminiLiveClient {
     }
 
     try {
-      const response = await this.fallbackModel.generateContent([
-        {
-          text: "You are Cubey. From this Rubik's Cube frame, identify the most likely recent move mistake and provide one corrective move instruction. Keep it short."
-        },
-        {
-          inlineData: {
-            mimeType: "image/jpeg",
-            data: base64jpeg
+      const response = await this.ai.models.generateContent({
+        model: this.fallbackModelName,
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: "You are Cubey. From this Rubik's Cube frame, identify the most likely recent move mistake and provide one corrective move instruction. Keep it short."
+              },
+              {
+                inlineData: {
+                  mimeType: "image/jpeg",
+                  data: base64jpeg
+                }
+              }
+            ]
           }
-        }
-      ]);
+        ]
+      });
 
-      return (
-        response?.response?.text?.() ||
-        "I could not detect the mistake clearly. Please rotate the cube and ask again."
-      );
+      return response?.text || "I could not detect the mistake clearly. Please rotate the cube and ask again.";
     } catch (error) {
       console.error("[gemini-live] requestHint failed", error);
       return "I couldn't generate a visual hint right now. Please try again in a moment.";

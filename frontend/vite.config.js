@@ -116,7 +116,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes("node_modules/react-dom") || id.includes("node_modules/react/")) {
+          if (
+            id.includes("node_modules/react-dom") ||
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-router") ||
+            id.includes("node_modules/react-router-dom")
+          ) {
             return "react";
           }
           if (id.includes("node_modules/three")) {
@@ -159,6 +164,10 @@ export default defineConfig({
         secure: false
       },
       "/health": {
+        target: backendHttpOrigin,
+        changeOrigin: true
+      },
+      "/api": {
         target: backendHttpOrigin,
         changeOrigin: true
       }

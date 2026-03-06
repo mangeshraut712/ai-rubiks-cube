@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useEffectEvent, useImperativeHandle, useRef, useState } from "react";
 
 import {
   captureVideoFrame,
@@ -102,6 +102,18 @@ const LiveSession = forwardRef(function LiveSession(
   const wsTargetRef = useRef("");
   const wsCandidatesRef = useRef([]);
 
+  const emitTranscriptEntry = useEffectEvent((entry) => onTranscriptEntry?.(entry));
+  const emitInstruction = useEffectEvent((move) => onInstruction?.(move));
+  const emitCubeState = useEffectEvent((cubeState) => onCubeState?.(cubeState));
+  const emitMoveHistory = useEffectEvent((moveHistory) => onMoveHistory?.(moveHistory));
+  const emitTutorSpeaking = useEffectEvent((flag) => onTutorSpeakingChange?.(flag));
+  const emitHint = useEffectEvent((hint) => onHint?.(hint));
+  const emitChallengeUpdate = useEffectEvent((payload) => onChallengeUpdate?.(payload));
+  const emitError = useEffectEvent((message) => onError?.(message));
+  const emitThinking = useEffectEvent((flag) => onThinkingChange?.(flag));
+  const emitSolveComplete = useEffectEvent(() => onSolveComplete?.());
+  const emitMicLevel = useEffectEvent((level) => onMicLevel?.(level));
+
   function emitStatus(nextStatus) {
     statusRef.current = nextStatus;
     setPreviewStatus(nextStatus);
@@ -166,7 +178,7 @@ const LiveSession = forwardRef(function LiveSession(
   }
 
   function updateTutorSpeakingState(flag) {
-    onTutorSpeakingChange?.(flag);
+    emitTutorSpeaking(flag);
   }
 
   function stopAudioPlayback() {
@@ -283,7 +295,7 @@ const LiveSession = forwardRef(function LiveSession(
       }
     } catch (error) {
       console.error("[LiveSession] enqueueAudio failed", error);
-      onError?.("Audio playback decode failed.");
+      emitError("Audio playback decode failed.");
     }
   }
 
@@ -310,7 +322,7 @@ const LiveSession = forwardRef(function LiveSession(
     socket.onopen = () => {
       reconnectAttemptRef.current = 0;
       emitStatus("connected");
-      onError?.("");
+      emitError("");
     };
 
     socket.onmessage = async (event) => {
@@ -328,8 +340,8 @@ const LiveSession = forwardRef(function LiveSession(
             }
             if (message.status === "demo_mode") {
               setPermissionError("");
-              onError?.("");
-              onTranscriptEntry?.({
+              emitError("");
+              emitTranscriptEntry({
                 speaker: "cubey",
                 text: "Demo mode enabled. You can test the tutor without a physical cube or camera feed.",
                 ts: new Date().toISOString()
@@ -338,11 +350,11 @@ const LiveSession = forwardRef(function LiveSession(
             break;
 
           case "error":
-            onError?.(message.message || "Server error");
+            emitError(message.message || "Server error");
             break;
 
           case "text_response":
-            onTranscriptEntry?.({
+            emitTranscriptEntry({
               speaker: "cubey",
               text: message.text || "",
               ts: message.ts || new Date().toISOString()
@@ -356,20 +368,20 @@ const LiveSession = forwardRef(function LiveSession(
             break;
 
           case "move_instruction":
-            onInstruction?.(message.move || "");
+            emitInstruction(message.move || "");
             break;
 
           case "cube_state_update":
-            onCubeState?.(message.cubeState);
+            emitCubeState(message.cubeState);
             break;
 
           case "move_history_update":
-            onMoveHistory?.(message.moveHistory || []);
+            emitMoveHistory(message.moveHistory || []);
             break;
 
           case "hint_response":
-            onHint?.(message.text || "");
-            onTranscriptEntry?.({
+            emitHint(message.text || "");
+            emitTranscriptEntry({
               speaker: "cubey",
               text: `[Hint] ${message.text || ""}`,
               ts: new Date().toISOString()
@@ -377,7 +389,7 @@ const LiveSession = forwardRef(function LiveSession(
             break;
 
           case "challenge_update":
-            onChallengeUpdate?.(message);
+            emitChallengeUpdate(message);
             break;
 
           case "interruption":
@@ -386,12 +398,12 @@ const LiveSession = forwardRef(function LiveSession(
 
           case "thinking":
             // AI is thinking/processing
-            onThinkingChange?.(message.thinking === true);
+            emitThinking(message.thinking === true);
             break;
 
           case "solution_response":
             if (Array.isArray(message.solution) && message.solution.length) {
-              onTranscriptEntry?.({
+              emitTranscriptEntry({
                 speaker: "cubey",
                 text: `Solution preview: ${message.solution.join(" ")} (${message.solution.length} moves)`,
                 ts: new Date().toISOString()
@@ -400,12 +412,12 @@ const LiveSession = forwardRef(function LiveSession(
             break;
 
           case "solve_complete":
-            onTranscriptEntry?.({
+            emitTranscriptEntry({
               speaker: "cubey",
               text: `🎉 Cube solved in ${message.totalMoves} moves!`,
               ts: new Date().toISOString()
             });
-            onSolveComplete?.();
+            emitSolveComplete();
             break;
 
           default:
@@ -413,13 +425,13 @@ const LiveSession = forwardRef(function LiveSession(
         }
       } catch (error) {
         console.error("[LiveSession] message parse failed", error);
-        onError?.("Failed to parse backend message.");
+        emitError("Failed to parse backend message.");
       }
     };
 
     socket.onerror = (event) => {
       console.error("[LiveSession] websocket error", event);
-      onError?.(
+      emitError(
         `WebSocket connection error. Ensure backend is running and reachable at ${wsTargetRef.current}.`
       );
     };
@@ -435,7 +447,7 @@ const LiveSession = forwardRef(function LiveSession(
       reconnectAttemptRef.current += 1;
       const candidateCount = Math.max(1, wsCandidatesRef.current.length);
       if (reconnectAttemptRef.current >= candidateCount) {
-        onError?.(
+        emitError(
           `Connection lost. Retrying across backend endpoints. Last endpoint: ${wsTargetRef.current}`
         );
       }
@@ -484,7 +496,7 @@ const LiveSession = forwardRef(function LiveSession(
           wsRef.current.send(packet);
         },
         (level) => {
-          onMicLevel?.(level);
+          emitMicLevel(level);
 
           const speaking = isPlayingRef.current || currentSourcesRef.current.length > 0;
           if (!speaking) {
@@ -537,7 +549,7 @@ const LiveSession = forwardRef(function LiveSession(
         "Camera/Microphone permission denied. Please allow access and restart session.";
       setHasVideoPreview(false);
       setPermissionError(message);
-      onError?.(message);
+      emitError(message);
       emitStatus("permission_denied");
     }
   }
@@ -593,14 +605,14 @@ const LiveSession = forwardRef(function LiveSession(
     }
 
     setHasVideoPreview(false);
-    onMicLevel?.(0);
+    emitMicLevel(0);
     updateTutorSpeakingState(false);
   }
 
   useImperativeHandle(ref, () => ({
     requestHint() {
       if (!lastFrameRef.current) {
-        onError?.("No video frame available yet for hint.");
+        emitError("No video frame available yet for hint.");
         return;
       }
 
@@ -616,7 +628,7 @@ const LiveSession = forwardRef(function LiveSession(
       if (!trimmed) {
         return;
       }
-      onTranscriptEntry?.({
+      emitTranscriptEntry({
         speaker: "user",
         text: trimmed,
         ts: new Date().toISOString()

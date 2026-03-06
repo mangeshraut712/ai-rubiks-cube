@@ -39,11 +39,17 @@ class SignalingServer {
       noServer: true,
       perMessageDeflate: false
     });
+    this.heartbeatInterval = null;
 
     this.rooms = new Map(); // roomId -> { clients: [], host: null }
 
     this.wss.on("connection", (ws, req) => {
       console.log(`[Signaling] New connection from ${req.socket.remoteAddress}`);
+      ws.isAlive = true;
+
+      ws.on("pong", () => {
+        ws.isAlive = true;
+      });
 
       ws.on("message", (data) => {
         try {
@@ -75,6 +81,25 @@ class SignalingServer {
       ws.on("error", (error) => {
         console.error("[Signaling] WebSocket error:", error);
       });
+    });
+
+    this.heartbeatInterval = setInterval(() => {
+      this.wss.clients.forEach((client) => {
+        if (client.isAlive === false) {
+          client.terminate();
+          return;
+        }
+
+        client.isAlive = false;
+        client.ping();
+      });
+    }, 30_000);
+
+    this.wss.on("close", () => {
+      if (this.heartbeatInterval) {
+        clearInterval(this.heartbeatInterval);
+        this.heartbeatInterval = null;
+      }
     });
 
     console.log("[Signaling] Server initialized");

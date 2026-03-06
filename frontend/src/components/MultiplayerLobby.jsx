@@ -13,7 +13,6 @@ import {
   FiX,
   FiZap
 } from "react-icons/fi";
-import { v4 as uuidv4 } from "uuid";
 import { useMultiplayer } from "../hooks/useMultiplayer";
 
 const GAME_MODES = [
@@ -101,7 +100,10 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
   const StatusIcon = status.icon;
 
   const createRoom = useCallback(async () => {
-    const newRoomId = uuidv4().slice(0, 8).toUpperCase();
+    const newRoomId = (globalThis.crypto?.randomUUID?.() || `${Date.now()}ROOM`)
+      .replace(/-/g, "")
+      .slice(0, 8)
+      .toUpperCase();
     setRoomId(newRoomId);
     setIsHost(true);
 

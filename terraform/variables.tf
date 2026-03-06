@@ -35,7 +35,7 @@ variable "cors_origin" {
 variable "gemini_live_model" {
   description = "Primary Gemini live model."
   type        = string
-  default     = "gemini-2.5-flash-native-audio-preview-09-2025"
+  default     = "gemini-live-2.5-flash-preview"
 }
 
 variable "gemini_fallback_model" {
