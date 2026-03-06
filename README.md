@@ -196,7 +196,5 @@ The repository is built for **Cloud Run**, shipping the built frontend and backe
 ---
 
 <p align="center">
-  <b>Built with Gemini 2.x & React 19</b>
-  <br/>
   Designed by Mangesh Raut
 </p>
