@@ -140,13 +140,16 @@ VITE_BACKEND_ORIGIN=http://localhost:8080
 Optional values:
 
 ```bash
-CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
+CORS_ORIGIN=https://*.run.app,https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173
 VITE_WS_URL=ws://localhost:8080/ws
 VITE_SIGNALING_SERVER=ws://localhost:8080
 VITE_ICE_SERVERS_JSON=[{"urls":"stun:stun.l.google.com:19302"}]
+VITE_PUBLIC_BACKEND_ORIGIN=https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app
 ALLOW_INSECURE_CORS=false
 ENABLE_FRONTEND_REDIRECT=false
 ```
+
+`VITE_PUBLIC_BACKEND_ORIGIN` is useful when the frontend is hosted separately from the backend, for example a static Vercel deployment talking to Cloud Run.
 
 </details>
 

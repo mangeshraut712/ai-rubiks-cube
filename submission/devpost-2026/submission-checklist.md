@@ -25,6 +25,8 @@ Crosschecked on March 7, 2026.
   `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
 - [x] Cloud Run runtime works:
   `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime`
+- [x] Cloud Run runtime is readable from the public frontend origin:
+  `Origin: https://ai-rubiks-cube.vercel.app`
 - [x] Part 2 route works:
   `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/part-2`
 

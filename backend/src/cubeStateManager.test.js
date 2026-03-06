@@ -43,6 +43,17 @@ describe("cubeStateManager", () => {
     expect(cube.isSolved()).toBe(true);
   });
 
+  it("can replace the full cube snapshot and continue solving from that state", () => {
+    const source = new CubeState();
+    source.applyMove("R U F'");
+
+    const mirrored = new CubeState();
+    mirrored.replaceState(source.getSnapshot());
+
+    expect(mirrored.getSnapshot()).toEqual(source.getSnapshot());
+    expect(mirrored.toFaceString()).toBe(source.toFaceString());
+  });
+
   it("generates scrambles with the requested length and without repeated adjacent faces", () => {
     const scramble = generateScramble(20);
 

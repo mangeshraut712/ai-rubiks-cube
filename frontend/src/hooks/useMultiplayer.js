@@ -4,6 +4,7 @@
  */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useCallback, useRef, useEffect } from "react";
+import { getSignalingSocketBase } from "../utils/backendOrigin.js";
 
 function createClientId() {
   if (globalThis.crypto?.randomUUID) {
@@ -42,18 +43,7 @@ const RTC_CONFIG = {
   iceCandidatePoolSize: 4
 };
 
-function toWsOrigin(origin) {
-  if (!origin) return "";
-  if (origin.startsWith("https://")) return origin.replace("https://", "wss://");
-  if (origin.startsWith("http://")) return origin.replace("http://", "ws://");
-  return origin;
-}
-
-const SIGNALING_SERVER =
-  import.meta.env.VITE_SIGNALING_SERVER ||
-  toWsOrigin(import.meta.env.VITE_BACKEND_ORIGIN) ||
-  (typeof window !== "undefined" ? toWsOrigin(window.location.origin) : "") ||
-  "ws://localhost:8081";
+const SIGNALING_SERVER = getSignalingSocketBase();
 
 export function useMultiplayer() {
   const [connectionState, setConnectionState] = useState("idle"); // idle, connecting, connected, disconnected, error

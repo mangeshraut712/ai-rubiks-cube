@@ -3,7 +3,7 @@ substitutions:
   _SERVICE: gemini-rubiks-tutor
   _REPOSITORY: gemini-rubiks-tutor
   _DEMO_MODE: "false"
-  _CORS_ORIGIN: "https://*.run.app"
+  _CORS_ORIGIN: "https://*.run.app,https://*.vercel.app"
   _GEMINI_LIVE_MODEL: gemini-live-2.5-flash-preview
   _GEMINI_FALLBACK_MODEL: gemini-2.5-flash
   _ENABLE_FRONTEND_REDIRECT: "false"

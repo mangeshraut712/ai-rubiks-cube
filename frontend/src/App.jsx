@@ -120,9 +120,14 @@ function AppNavigation() {
           {item.label}
         </NavLink>
       ))}
-      <a href="/part-2" className="surface-chip">
+      <NavLink
+        to="/part-2"
+        className={({ isActive }) =>
+          `surface-chip ${isActive ? "border-[color:rgba(66,133,244,0.28)] text-slate-950 dark:text-white" : ""}`
+        }
+      >
         Part 2
-      </a>
+      </NavLink>
     </nav>
   );
 }
@@ -167,6 +172,7 @@ export default function App({ routeView = "home" }) {
   const [startTimestamp, setStartTimestamp] = useState(null);
   const [isThinking, setIsThinking] = useState(false);
   const [autoSolving, setAutoSolving] = useState(false);
+  const [sessionMoveHistory, setSessionMoveHistory] = useState([]);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -176,6 +182,17 @@ export default function App({ routeView = "home" }) {
 
   const moveQueueRef = useRef([]);
   const moveAnimTimerRef = useRef(null);
+
+  const syncSessionCubeState = useCallback(
+    (nextState, reason) => {
+      if (!storeSessionActive) {
+        return;
+      }
+
+      sessionRef.current?.syncCubeState?.(nextState, reason);
+    },
+    [storeSessionActive]
+  );
 
   useEffect(() => {
     setShowMultiplayer(routeView === "multiplayer");
@@ -227,10 +244,16 @@ export default function App({ routeView = "home" }) {
       }
 
       try {
+        const nextState = applyMoveToState(cubeState, move);
         setActiveMoveLocal(move);
         setActiveMove(move);
-        setCubeState(applyMoveToState(cubeState, move));
+        setCubeState(nextState);
         applyMove(move, "user");
+        setSessionMoveHistory((prev) => [
+          ...prev,
+          { move, source: "user", ts: new Date().toISOString() }
+        ]);
+        sessionRef.current?.reportMoveApplied?.(move);
 
         if (moveAnimTimerRef.current) {
           clearTimeout(moveAnimTimerRef.current);
@@ -260,17 +283,20 @@ export default function App({ routeView = "home" }) {
     const move = undoMove();
     if (move?.stateBefore) {
       setCubeState(move.stateBefore);
+      syncSessionCubeState(move.stateBefore, "undo");
       toast.success("Undo");
     }
-  }, [setCubeState, undoMove]);
+  }, [setCubeState, syncSessionCubeState, undoMove]);
 
   const handleRedo = useCallback(() => {
     const move = redoMove();
     if (move) {
-      setCubeState(applyMoveToState(cubeState, move.move));
+      const nextState = applyMoveToState(cubeState, move.move);
+      setCubeState(nextState);
+      syncSessionCubeState(nextState, "redo");
       toast.success("Redo");
     }
-  }, [cubeState, redoMove, setCubeState]);
+  }, [cubeState, redoMove, setCubeState, syncSessionCubeState]);
 
   const handleScramble = useCallback(() => {
     const scramble = Array.from(
@@ -282,13 +308,17 @@ export default function App({ routeView = "home" }) {
       currentState = applyMoveToState(currentState, move);
     });
     setCubeState(currentState);
+    setSessionMoveHistory([]);
+    syncSessionCubeState(currentState, "scramble");
     toast.success("Cube scrambled!");
-  }, [setCubeState]);
+  }, [setCubeState, syncSessionCubeState]);
 
   const handleReset = useCallback(() => {
     resetCube();
+    setSessionMoveHistory([]);
+    syncSessionCubeState(createSolvedCubeState(), "reset");
     toast.success("Cube reset");
-  }, [resetCube]);
+  }, [resetCube, syncSessionCubeState]);
 
   useKeyboardShortcuts({
     onMove: handleMove,
@@ -341,6 +371,7 @@ export default function App({ routeView = "home" }) {
     setPromptInput("");
     setStartTimestamp(Date.now());
     setAutoSolving(false);
+    setSessionMoveHistory([]);
     moveQueueRef.current = [];
 
     if (moveAnimTimerRef.current) {
@@ -358,6 +389,7 @@ export default function App({ routeView = "home" }) {
 
   async function endSession() {
     const sessionDuration = startTimestamp ? Math.floor((Date.now() - startTimestamp) / 1000) : 0;
+    const completedMoveCount = sessionMoveHistory.length || moveHistory.length;
 
     await sessionRef.current?.endSession?.();
     setSessionActive(false);
@@ -366,7 +398,7 @@ export default function App({ routeView = "home" }) {
     setPromptInput("");
 
     if (sessionDuration > 0) {
-      recordSessionComplete(sessionDuration, moveHistory.length);
+      recordSessionComplete(sessionDuration, completedMoveCount);
     }
 
     navigate("/");
@@ -438,11 +470,12 @@ export default function App({ routeView = "home" }) {
   }
 
   function downloadSessionRecord() {
+    const exportMoveHistory = sessionMoveHistory.length ? sessionMoveHistory : moveHistory;
     const payload = {
       name: "Gemini Rubik's Tutor Session",
       generatedAt: new Date().toISOString(),
       durationSeconds: timerSeconds,
-      moveHistory,
+      moveHistory: exportMoveHistory,
       challengeMode,
       transcript
     };
@@ -487,7 +520,7 @@ export default function App({ routeView = "home" }) {
     }
   }
 
-  const moveCount = moveHistory.length;
+  const moveCount = sessionMoveHistory.length || moveHistory.length;
   const showLiveWorkspace = routeView === "live" || storeSessionActive;
   const sessionReady = connectionStatus === "connected" || connectionStatus === "demo_mode";
   const connectionLabel =
@@ -863,7 +896,7 @@ export default function App({ routeView = "home" }) {
                                 onTranscriptEntry={handleTranscriptEntry}
                                 onInstruction={enqueueMove}
                                 onCubeState={setCubeState}
-                                onMoveHistory={(_history) => {}}
+                                onMoveHistory={setSessionMoveHistory}
                                 onHint={(hint) => {
                                   setHintTextLocal(hint);
                                   setHintText(hint);
@@ -873,6 +906,7 @@ export default function App({ routeView = "home" }) {
                                   setChallengeMessage(payload.message || "");
                                   if (payload.enabled) {
                                     setAutoSolving(false);
+                                    setSessionMoveHistory([]);
                                     moveQueueRef.current = [];
                                   }
                                 }}

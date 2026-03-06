@@ -58,9 +58,21 @@ const MAX_AUDIO_CHUNK_BYTES = 256 * 1024;
 const MAX_VIDEO_FRAME_CHARS = 2_000_000;
 const MAX_USER_TEXT_CHARS = 1200;
 const MOVE_PATTERN = /^[UDLRFB](?:2|')?$/;
+const CUBE_FACE_VALUES = ["U", "R", "F", "D", "L", "B"];
 
 const rateLimitData = new Map();
 
+const StickerSchema = z.enum(CUBE_FACE_VALUES);
+const FaceRowSchema = z.tuple([StickerSchema, StickerSchema, StickerSchema]);
+const FaceMatrixSchema = z.tuple([FaceRowSchema, FaceRowSchema, FaceRowSchema]);
+const CubeSnapshotSchema = z.object({
+  U: FaceMatrixSchema,
+  R: FaceMatrixSchema,
+  F: FaceMatrixSchema,
+  D: FaceMatrixSchema,
+  L: FaceMatrixSchema,
+  B: FaceMatrixSchema
+});
 const VideoFrameMessageSchema = z.object({
   type: z.literal("video_frame"),
   data: z.string().min(1).max(MAX_VIDEO_FRAME_CHARS)
@@ -75,6 +87,11 @@ const InterruptMessageSchema = z.object({
 const MoveAppliedMessageSchema = z.object({
   type: z.literal("move_applied"),
   move: z.string().max(4)
+});
+const CubeStateSyncMessageSchema = z.object({
+  type: z.literal("cube_state_sync"),
+  cubeState: CubeSnapshotSchema,
+  reason: z.string().max(40).optional()
 });
 const HintRequestMessageSchema = z.object({
   type: z.literal("hint_request"),
@@ -298,14 +315,9 @@ app.use(
   })
 );
 app.use(express.json({ limit: "1mb" }));
-app.use(
-  createSystemRouter({
-    getHealthPayload: getSystemHealthPayload,
-    getRuntimePayload: getSystemRuntimePayload
-  })
-);
 
-const DEFAULT_CORS_ORIGINS = "https://*.run.app,http://localhost:5173,http://127.0.0.1:5173";
+const DEFAULT_CORS_ORIGINS =
+  "https://*.run.app,https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173";
 
 function normalizeOrigin(value) {
   return String(value || "")
@@ -397,6 +409,12 @@ app.use(
       }
       callback(new Error(`CORS blocked for origin: ${origin}`));
     }
+  })
+);
+app.use(
+  createSystemRouter({
+    getHealthPayload: getSystemHealthPayload,
+    getRuntimePayload: getSystemRuntimePayload
   })
 );
 
@@ -977,6 +995,23 @@ wss.on("connection", async (ws, req) => {
           sendJson(ws, {
             type: "move_history_update",
             moveHistory: sessionRecord.moveHistory
+          });
+          break;
+        }
+
+        case "cube_state_sync": {
+          const parsed = CubeStateSyncMessageSchema.safeParse(message);
+          if (!parsed.success) {
+            sendClientError(ws, "invalid_message", "Invalid cube state payload.");
+            break;
+          }
+
+          cubeState.replaceState(parsed.data.cubeState);
+
+          sendJson(ws, {
+            type: "cube_state_update",
+            cubeState: cubeState.getSnapshot(),
+            reason: parsed.data.reason || "manual"
           });
           break;
         }

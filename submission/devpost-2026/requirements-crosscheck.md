@@ -56,6 +56,8 @@ Evidence:
 
 - public Cloud Run URL:
   `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/`
+- runtime endpoint is CORS-readable from the public frontend origin:
+  `https://ai-rubiks-cube.vercel.app` -> `/api/runtime`
 - Cloud deployment proof in `google-cloud-proof.md`
 
 ## Required submission items

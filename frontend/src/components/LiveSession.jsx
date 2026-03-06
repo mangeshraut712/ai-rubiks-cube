@@ -6,6 +6,7 @@ import {
   requestMediaStream,
   startPcmCapture
 } from "../utils/webrtcHelpers";
+import { getTutorSocketUrlCandidates } from "../utils/backendOrigin.js";
 
 const INTERRUPT_THRESHOLD = 0.82;
 const INTERRUPT_HOLD_MS = 1500;
@@ -119,50 +120,7 @@ const LiveSession = forwardRef(function LiveSession(
   }
 
   function wsUrls() {
-    const candidates = [];
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const hostname = window.location.hostname;
-    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-
-    const pushUnique = (url) => {
-      const normalized = String(url || "")
-        .trim()
-        .replace(/\/+$/, "");
-      if (!normalized || candidates.includes(normalized)) {
-        return;
-      }
-      candidates.push(normalized);
-    };
-
-    const fromBackendOrigin = (origin) => {
-      const normalized = String(origin || "")
-        .trim()
-        .replace(/\/+$/, "");
-      if (normalized.startsWith("https://")) {
-        return `${normalized.replace("https://", "wss://")}/ws`;
-      }
-      if (normalized.startsWith("http://")) {
-        return `${normalized.replace("http://", "ws://")}/ws`;
-      }
-      return "";
-    };
-
-    // 1. Explicit runtime config first.
-    pushUnique(import.meta.env.VITE_WS_URL);
-    pushUnique(fromBackendOrigin(import.meta.env.VITE_BACKEND_ORIGIN));
-    pushUnique(fromBackendOrigin(import.meta.env.VITE_PUBLIC_BACKEND_ORIGIN));
-
-    // 2. Same-origin fallback — ideal when frontend is served by backend origin
-    pushUnique(`${protocol}://${window.location.host}/ws`);
-
-    // 3. Localhost fallback ports for dev
-    if (isLocalhost) {
-      for (const port of [8080, 3005, 3000, 8081]) {
-        pushUnique(`${protocol}://${hostname}:${port}/ws`);
-      }
-    }
-
-    return candidates;
+    return getTutorSocketUrlCandidates();
   }
 
   function sendJson(payload) {
@@ -616,6 +574,27 @@ const LiveSession = forwardRef(function LiveSession(
 
     setChallengeMode(enabled) {
       sendJson({ type: "challenge_mode", enabled: Boolean(enabled) });
+    },
+
+    reportMoveApplied(move) {
+      const normalized = String(move || "").trim().toUpperCase();
+      if (!normalized) {
+        return;
+      }
+
+      sendJson({ type: "move_applied", move: normalized });
+    },
+
+    syncCubeState(cubeState, reason = "manual") {
+      if (!cubeState) {
+        return;
+      }
+
+      sendJson({
+        type: "cube_state_sync",
+        cubeState,
+        reason
+      });
     },
 
     sendUserText(text) {

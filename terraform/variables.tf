@@ -29,7 +29,7 @@ variable "demo_mode" {
 variable "cors_origin" {
   description = "Allowed CORS origins."
   type        = string
-  default     = "https://*.run.app,http://localhost:5173,http://127.0.0.1:5173"
+  default     = "https://*.run.app,https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173"
 }
 
 variable "gemini_live_model" {

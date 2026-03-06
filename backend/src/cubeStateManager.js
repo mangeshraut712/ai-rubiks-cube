@@ -331,6 +331,16 @@ export class CubeState {
   }
 
   /**
+   * Replaces the full cube snapshot with a validated cloned state.
+   * @param {{U:string[][],R:string[][],F:string[][],D:string[][],L:string[][],B:string[][]}} nextState
+   * @returns {CubeState}
+   */
+  replaceState(nextState) {
+    this.state = cloneState(nextState);
+    return this;
+  }
+
+  /**
    * Returns the cube in URFDLB face-string format required by kociemba.
    * @returns {string}
    */
