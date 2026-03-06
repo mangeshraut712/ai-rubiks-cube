@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .js,.jsx",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "vitest --passWithNoTests",
+    "test:ui": "vitest --ui --passWithNoTests"
   },
   "dependencies": {
     "date-fns": "^4.1.0",

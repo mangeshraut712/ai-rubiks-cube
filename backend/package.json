@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "lint": "eslint . --ext .js",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "vitest --passWithNoTests"
   },
   "dependencies": {
     "@google/genai": "^1.44.0",
