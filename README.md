@@ -17,6 +17,33 @@ The product now behaves like one routed application instead of one page plus sid
 - Runtime metadata: https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime
 - Legacy 2x2 solver: https://ai-rubiks-cube.vercel.app/legacy-2x2-solver/index.html
 
+## Devpost Submission Assets
+
+The repository now includes a judge-ready submission bundle in `submission/devpost-2026/`.
+
+- Submission package overview: `submission/devpost-2026/README.md`
+- Copy-ready project description: `submission/devpost-2026/project-description.md`
+- Requirement crosscheck: `submission/devpost-2026/requirements-crosscheck.md`
+- Google Cloud proof: `submission/devpost-2026/google-cloud-proof.md`
+- Demo script: `submission/devpost-2026/demo-video-script.md`
+- Architecture diagram: `submission/devpost-2026/architecture-diagram.svg`
+
+Generate a zipped package with:
+
+```bash
+./scripts/package-devpost.sh
+```
+
+That creates:
+
+```bash
+submission/ai-rubiks-tutor-devpost-2026.zip
+```
+
+## Architecture Diagram
+
+![AI Rubik's Tutor architecture](submission/devpost-2026/architecture-diagram.svg)
+
 ## What The Current Build Showcases
 
 - Gemini Live tutoring with voice, webcam frames, transcript memory, and move playback
@@ -133,6 +160,15 @@ The product now behaves like one routed application instead of one page plus sid
 - `/multiplayer` for WebRTC signaling
 
 ## Local Development
+
+### Judges quick start
+
+If you are evaluating the project quickly:
+
+1. Open the live app at `https://ai-rubiks-cube.vercel.app/`
+2. Check backend health at `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
+3. Check runtime metadata at `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime`
+4. For local reproduction, follow the install and environment steps below
 
 ### Prerequisites
 

@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="980" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06121F"/>
+      <stop offset="0.6" stop-color="#0A1D34"/>
+      <stop offset="1" stop-color="#11284A"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#0F2644"/>
+      <stop offset="1" stop-color="#091729"/>
+    </linearGradient>
+    <linearGradient id="accentBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#4B8DFF"/>
+      <stop offset="1" stop-color="#2463EB"/>
+    </linearGradient>
+    <linearGradient id="accentGreen" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#38C172"/>
+      <stop offset="1" stop-color="#1F8F4D"/>
+    </linearGradient>
+    <linearGradient id="accentYellow" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F6C44F"/>
+      <stop offset="1" stop-color="#C99514"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#020617" flood-opacity="0.35"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="11" refY="7" orient="auto">
+      <path d="M0 0L14 7L0 14V0Z" fill="#4B8DFF"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="11" refY="7" orient="auto">
+      <path d="M0 0L14 7L0 14V0Z" fill="#38C172"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="980" fill="url(#bg)"/>
+  <circle cx="180" cy="120" r="170" fill="#1A73E8" fill-opacity="0.14"/>
+  <circle cx="1450" cy="860" r="220" fill="#34A853" fill-opacity="0.12"/>
+  <circle cx="1260" cy="150" r="150" fill="#FBBC05" fill-opacity="0.12"/>
+
+  <text x="80" y="86" fill="white" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">
+    AI Rubik's Tutor Architecture
+  </text>
+  <text x="80" y="122" fill="#B7C9E4" font-family="Inter, Arial, sans-serif" font-size="20">
+    Devpost submission diagram for the Gemini Live Agent Challenge - Live Agents category
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="80" y="180" width="280" height="220" rx="32" fill="url(#panel)" stroke="#28517D" stroke-width="2"/>
+    <text x="112" y="232" fill="#8FB7FF" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="2">USER</text>
+    <text x="112" y="278" fill="white" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Voice + Camera</text>
+    <text x="112" y="322" fill="#CFE0F4" font-family="Inter, Arial, sans-serif" font-size="20">Physical cube in hand</text>
+    <text x="112" y="354" fill="#CFE0F4" font-family="Inter, Arial, sans-serif" font-size="20">Speech, interruptions, follow-ups</text>
+
+    <rect x="430" y="150" width="430" height="290" rx="36" fill="url(#panel)" stroke="#28517D" stroke-width="2"/>
+    <rect x="462" y="184" width="164" height="40" rx="20" fill="#1A73E8" fill-opacity="0.18"/>
+    <text x="494" y="210" fill="#8FB7FF" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700">Vercel Frontend</text>
+    <text x="462" y="274" fill="white" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="700">React 19.2 + Router 7</text>
+    <text x="462" y="316" fill="#D8E6F8" font-family="Inter, Arial, sans-serif" font-size="20">Routes: /, /live, /labs/multiplayer, /classic</text>
+    <text x="462" y="348" fill="#D8E6F8" font-family="Inter, Arial, sans-serif" font-size="20">Live workspace, transcript memory, 3D cube stage</text>
+    <text x="462" y="380" fill="#D8E6F8" font-family="Inter, Arial, sans-serif" font-size="20">Runtime loader consumes /api/runtime</text>
+
+    <rect x="430" y="490" width="430" height="210" rx="36" fill="url(#panel)" stroke="#28517D" stroke-width="2"/>
+    <rect x="462" y="524" width="190" height="40" rx="20" fill="#34A853" fill-opacity="0.18"/>
+    <text x="493" y="550" fill="#90E1AB" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700">Realtime Transport</text>
+    <text x="462" y="614" fill="white" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">WebSocket + WebRTC</text>
+    <text x="462" y="654" fill="#D8E6F8" font-family="Inter, Arial, sans-serif" font-size="20">/ws for tutor audio, text, vision frames</text>
+    <text x="462" y="686" fill="#D8E6F8" font-family="Inter, Arial, sans-serif" font-size="20">/multiplayer for signaling and peer setup</text>
+
+    <rect x="960" y="180" width="400" height="260" rx="36" fill="url(#panel)" stroke="#28517D" stroke-width="2"/>
+    <rect x="992" y="214" width="180" height="40" rx="20" fill="#F6C44F" fill-opacity="0.18"/>
+    <text x="1025" y="240" fill="#FFD779" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700">Google Cloud Run</text>
+    <text x="992" y="304" fill="white" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="700">Express 5 Backend</text>
+    <text x="992" y="346" fill="#D8E6F8" font-family="Inter, Arial, sans-serif" font-size="20">Gemini live session broker</text>
+    <text x="992" y="378" fill="#D8E6F8" font-family="Inter, Arial, sans-serif" font-size="20">Payload validation, rate limits, runtime APIs</text>
+
+    <rect x="960" y="500" width="400" height="200" rx="36" fill="url(#panel)" stroke="#28517D" stroke-width="2"/>
+    <rect x="992" y="534" width="220" height="40" rx="20" fill="#34A853" fill-opacity="0.18"/>
+    <text x="1018" y="560" fill="#90E1AB" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700">Google Gen AI SDK</text>
+    <text x="992" y="624" fill="white" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Gemini Live API</text>
+    <text x="992" y="664" fill="#D8E6F8" font-family="Inter, Arial, sans-serif" font-size="20">Voice + vision tutoring with interruption support</text>
+
+    <rect x="80" y="500" width="280" height="200" rx="32" fill="url(#panel)" stroke="#28517D" stroke-width="2"/>
+    <text x="112" y="552" fill="#8FB7FF" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="2">LEGACY LAB</text>
+    <text x="112" y="600" fill="white" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Classic 2x2 Solver</text>
+    <text x="112" y="642" fill="#CFE0F4" font-family="Inter, Arial, sans-serif" font-size="20">Fallback demo path</text>
+    <text x="112" y="674" fill="#CFE0F4" font-family="Inter, Arial, sans-serif" font-size="20">Theme-aware and linked into main app</text>
+
+    <rect x="80" y="770" width="1280" height="130" rx="30" fill="url(#panel)" stroke="#28517D" stroke-width="2"/>
+    <text x="120" y="818" fill="#8FB7FF" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="2">DEPLOYMENT + OPERATIONS</text>
+    <text x="120" y="860" fill="white" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="700">Cloud Build + Terraform + deploy.sh</text>
+    <text x="540" y="860" fill="#D8E6F8" font-family="Inter, Arial, sans-serif" font-size="20">Automated backend deployment, Cloud Run defaults, reproducible judge spin-up path</text>
+  </g>
+
+  <line x1="360" y1="290" x2="430" y2="290" stroke="url(#accentBlue)" stroke-width="6" marker-end="url(#arrowBlue)"/>
+  <text x="370" y="270" fill="#8FB7FF" font-family="Inter, Arial, sans-serif" font-size="16">UI + media</text>
+
+  <line x1="645" y1="440" x2="645" y2="490" stroke="url(#accentGreen)" stroke-width="6" marker-end="url(#arrowGreen)"/>
+  <text x="674" y="472" fill="#90E1AB" font-family="Inter, Arial, sans-serif" font-size="16">Tutor WS / signaling</text>
+
+  <line x1="860" y1="290" x2="960" y2="290" stroke="url(#accentBlue)" stroke-width="6" marker-end="url(#arrowBlue)"/>
+  <text x="873" y="268" fill="#8FB7FF" font-family="Inter, Arial, sans-serif" font-size="16">API + static routes</text>
+
+  <line x1="860" y1="595" x2="960" y2="595" stroke="url(#accentGreen)" stroke-width="6" marker-end="url(#arrowGreen)"/>
+  <text x="874" y="573" fill="#90E1AB" font-family="Inter, Arial, sans-serif" font-size="16">Multimodal inference</text>
+
+  <line x1="220" y1="400" x2="220" y2="500" stroke="#4B8DFF" stroke-width="5" marker-end="url(#arrowBlue)"/>
+  <text x="242" y="458" fill="#8FB7FF" font-family="Inter, Arial, sans-serif" font-size="16">Fallback path</text>
+</svg>

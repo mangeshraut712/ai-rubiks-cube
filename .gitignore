@@ -38,6 +38,7 @@ build/
 # Runtime process/log artifacts
 .runtime/
 .trash/
+submission/**/*.zip
 *.pid
 backend.log
 frontend.log
