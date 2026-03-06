@@ -182,10 +182,15 @@ function readWasmString(ptr, dataView) {
  * Fallback JS solver (used when WASM unavailable)
  */
 export function solve2x2JS(state) {
-  // Import the existing JS solver as fallback
-  return import("../public/legacy-2x2-solver/solver.js").then((module) => {
-    return module.solveBFS(state);
-  });
+  return import("/legacy-2x2-solver/cube-core.js")
+    .then(() => import("/legacy-2x2-solver/solver.js"))
+    .then(() => {
+      if (!globalThis.Legacy2x2Solver?.solveBFS) {
+        throw new Error("Classic 2x2 solver fallback failed to initialize");
+      }
+
+      return globalThis.Legacy2x2Solver.solveBFS(state);
+    });
 }
 
 /**

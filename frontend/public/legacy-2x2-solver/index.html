@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f8fafc" />
     <meta name="color-scheme" content="light dark" />
-    <title>2×2 Rubik's Cube Solver | AI-Powered Solution Engine</title>
+    <title>Cubey Core 2×2 Lab | Classic Solver Workspace</title>
     <meta
       name="description"
-      content="Advanced AI-powered 2x2 Rubik's Cube solver using BFS, A*, and IDS algorithms with step-by-step hints and beautiful animations."
+      content="Classic 2x2 Rubik's Cube solver refreshed with a shared cube core, modern visual workspace, and step-by-step solve playback."
     />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
 
@@ -16,12 +16,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
 
     <style>
-      /* ===== 2025 DESIGN SYSTEM - Apple/shadcn/ui Inspired ===== */
+      /* ===== Base layout preserved; modern visual shell overrides live below. ===== */
       :root {
         color-scheme: light;
         --background: 0 0% 100%;
@@ -46,8 +46,8 @@
         --info: 221 83% 53%;
         --warning: 38 92% 50%;
         --radius: 0.75rem;
-        --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        --font-mono: "JetBrains Mono", "SF Mono", monospace;
+        --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-mono: "IBM Plex Mono", "SF Mono", monospace;
       }
 
       .dark {
@@ -1017,6 +1017,442 @@
       }
     </style>
 
+    <style>
+      :root {
+        --page-bg: #f6f9fe;
+        --page-fg: #0f172a;
+        --surface: rgba(255, 255, 255, 0.8);
+        --surface-muted: rgba(248, 251, 255, 0.82);
+        --surface-strong: rgba(255, 255, 255, 0.94);
+        --surface-border: rgba(15, 23, 42, 0.08);
+        --surface-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+        --surface-shadow-soft: 0 14px 32px rgba(15, 23, 42, 0.06);
+        --text-main: #0f172a;
+        --text-soft: #475569;
+        --text-muted: #64748b;
+        --ring: rgba(26, 115, 232, 0.4);
+      }
+
+      .dark {
+        --page-bg: #07111f;
+        --page-fg: #f8fafc;
+        --surface: rgba(7, 17, 31, 0.78);
+        --surface-muted: rgba(11, 23, 40, 0.86);
+        --surface-strong: rgba(6, 18, 32, 0.94);
+        --surface-border: rgba(255, 255, 255, 0.09);
+        --surface-shadow: 0 28px 70px rgba(0, 0, 0, 0.3);
+        --surface-shadow-soft: 0 16px 36px rgba(0, 0, 0, 0.2);
+        --text-main: #f8fafc;
+        --text-soft: #cbd5e1;
+        --text-muted: #94a3b8;
+        --ring: rgba(138, 180, 248, 0.48);
+      }
+
+      body {
+        font-family: var(--font-sans);
+        color: var(--page-fg);
+        background:
+          radial-gradient(circle at top left, rgba(66, 133, 244, 0.16), transparent 28%),
+          radial-gradient(circle at top right, rgba(234, 67, 53, 0.11), transparent 24%),
+          radial-gradient(circle at bottom left, rgba(251, 188, 5, 0.1), transparent 24%),
+          radial-gradient(circle at bottom right, rgba(52, 168, 83, 0.12), transparent 26%),
+          linear-gradient(180deg, #fbfdff 0%, var(--page-bg) 52%, #eef4fd 100%);
+      }
+
+      .dark body {
+        background:
+          radial-gradient(circle at top left, rgba(66, 133, 244, 0.22), transparent 26%),
+          radial-gradient(circle at top right, rgba(234, 67, 53, 0.12), transparent 24%),
+          radial-gradient(circle at bottom left, rgba(251, 188, 5, 0.1), transparent 24%),
+          radial-gradient(circle at bottom right, rgba(52, 168, 83, 0.14), transparent 24%),
+          linear-gradient(180deg, #08111d 0%, var(--page-bg) 42%, #040b15 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+        background-size: 96px 96px;
+        mask-image: radial-gradient(circle at center, black 28%, transparent 82%);
+        opacity: 0.38;
+      }
+
+      .container {
+        max-width: 1460px;
+      }
+
+      header {
+        top: 0;
+        background: transparent;
+        border-bottom: none;
+        padding-top: 1rem;
+      }
+
+      .header-content,
+      .card,
+      .modal {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--surface-border);
+        border-radius: 32px;
+        background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+        box-shadow: var(--surface-shadow);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+      }
+
+      .header-content::before,
+      .card::before,
+      .modal::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent 20%);
+      }
+
+      .dark .header-content::before,
+      .dark .card::before,
+      .dark .modal::before {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%);
+      }
+
+      .header-content {
+        min-height: auto;
+        padding: 1rem 1.2rem;
+      }
+
+      .logo-icon {
+        background: linear-gradient(135deg, #4285f4, #34a853);
+        box-shadow: 0 12px 24px rgba(26, 115, 232, 0.22);
+      }
+
+      .logo-text h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.18rem;
+      }
+
+      .logo-text span,
+      .card-title,
+      .surface-kicker,
+      .result-label,
+      .solution-strip-title,
+      .stat-label {
+        font-family: var(--font-mono);
+        letter-spacing: 0.22em;
+      }
+
+      .logo-text span {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .surface-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      main {
+        padding: 1.2rem 0 2.75rem;
+      }
+
+      .hero-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .hero-panel,
+      .hero-sidecar {
+        padding: 1.6rem;
+      }
+
+      .hero-panel h2,
+      .hero-sidecar h3 {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.05em;
+        line-height: 1.02;
+        color: var(--text-main);
+      }
+
+      .hero-panel h2 {
+        font-size: clamp(2.2rem, 4vw, 4.4rem);
+        margin: 0.75rem 0 1rem;
+        max-width: 12ch;
+      }
+
+      .hero-panel p,
+      .hero-sidecar p,
+      .hero-stat-card p {
+        color: var(--text-soft);
+      }
+
+      .hero-wordmark {
+        display: inline-flex;
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.08em;
+      }
+
+      .hero-wordmark .g-blue {
+        color: #4285f4;
+      }
+
+      .hero-wordmark .g-red {
+        color: #ea4335;
+      }
+
+      .hero-wordmark .g-yellow {
+        color: #fbbc05;
+      }
+
+      .hero-wordmark .g-green {
+        color: #34a853;
+      }
+
+      .hero-actions,
+      .hero-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .hero-actions {
+        margin-top: 1.2rem;
+      }
+
+      .hero-pills {
+        margin-top: 1rem;
+      }
+
+      .hero-pill,
+      .hero-stat-card {
+        border: 1px solid var(--surface-border);
+        border-radius: 24px;
+        background: linear-gradient(180deg, var(--surface-muted), var(--surface));
+        box-shadow: var(--surface-shadow-soft);
+      }
+
+      .hero-pill {
+        padding: 0.7rem 0.95rem;
+        color: var(--text-soft);
+        font-size: 0.9rem;
+      }
+
+      .hero-stat-grid {
+        display: grid;
+        gap: 0.9rem;
+        margin-top: 1rem;
+      }
+
+      .hero-stat-card {
+        padding: 1rem 1.05rem;
+      }
+
+      .hero-stat-card span {
+        display: inline-block;
+        margin-bottom: 0.45rem;
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .hero-stat-card strong {
+        display: block;
+        font-size: 1rem;
+        color: var(--text-main);
+      }
+
+      .btn {
+        min-height: 2.9rem;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        font-weight: 600;
+        padding: 0.8rem 1.2rem;
+        transition:
+          transform 180ms ease,
+          box-shadow 180ms ease,
+          background-color 180ms ease,
+          border-color 180ms ease,
+          color 180ms ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .btn-success {
+        background: linear-gradient(180deg, #4d8ef8, #1a73e8);
+        color: #ffffff;
+        box-shadow: 0 16px 30px rgba(26, 115, 232, 0.24);
+      }
+
+      .btn-secondary,
+      .btn-ghost,
+      .move-btn,
+      select {
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid var(--surface-border);
+        color: var(--text-main);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      }
+
+      .dark .btn-secondary,
+      .dark .btn-ghost,
+      .dark .move-btn,
+      .dark select {
+        background: rgba(9, 20, 35, 0.76);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .btn-secondary:hover,
+      .btn-ghost:hover,
+      .move-btn:hover {
+        border-color: rgba(66, 133, 244, 0.22);
+      }
+
+      .main-grid {
+        grid-template-columns: minmax(300px, 340px) minmax(0, 1fr) minmax(320px, 360px);
+        gap: 1.25rem;
+      }
+
+      .card-header {
+        padding: 1.1rem 1.4rem;
+        border-bottom-color: var(--surface-border);
+      }
+
+      .card-content {
+        padding: 1.35rem;
+      }
+
+      .card-title {
+        font-size: 0.68rem;
+        color: var(--text-muted);
+      }
+
+      .form-label,
+      .result-value,
+      .stat-value,
+      .move-name {
+        color: var(--text-main);
+      }
+
+      .form-label .value,
+      .result-group,
+      .solution-strip,
+      .ascii-cube,
+      .algo-card,
+      .shortcut-item {
+        background: linear-gradient(180deg, var(--surface-muted), var(--surface));
+        border: 1px solid var(--surface-border);
+        color: var(--text-soft);
+      }
+
+      .cube-viewport {
+        min-height: 500px;
+        background:
+          radial-gradient(circle at top, rgba(66, 133, 244, 0.14), transparent 42%),
+          linear-gradient(180deg, rgba(219, 234, 254, 0.5), rgba(239, 246, 255, 0.18));
+      }
+
+      .dark .cube-viewport {
+        background:
+          radial-gradient(circle at top, rgba(66, 133, 244, 0.18), transparent 42%),
+          linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(2, 6, 23, 0.24));
+      }
+
+      .cube-status,
+      .current-move-badge,
+      .move-progress-text {
+        border-color: var(--surface-border);
+        background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+        box-shadow: var(--surface-shadow-soft);
+      }
+
+      .current-move-badge {
+        border-color: rgba(52, 168, 83, 0.32);
+      }
+
+      .solution-move {
+        background: rgba(255, 255, 255, 0.72);
+        border-color: var(--surface-border);
+      }
+
+      .dark .solution-move {
+        background: rgba(9, 20, 35, 0.82);
+      }
+
+      .result-value {
+        line-height: 1.7;
+        word-break: break-word;
+      }
+
+      .ascii-cube {
+        font-size: 0.78rem;
+      }
+
+      .modal-overlay {
+        background: rgba(15, 23, 42, 0.42);
+        backdrop-filter: blur(16px);
+      }
+
+      @media (max-width: 1080px) {
+        .hero-shell {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 1200px) {
+        .main-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 768px) {
+        header {
+          padding-top: 0.75rem;
+        }
+
+        .header-content {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .hero-panel,
+        .hero-sidecar,
+        .card-content {
+          padding: 1.1rem;
+        }
+
+        .hero-panel h2 {
+          max-width: none;
+        }
+
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .cube-viewport {
+          min-height: 380px;
+        }
+      }
+    </style>
+
     <script>
       (function () {
         const themeKey = "cubey-theme";
@@ -1072,8 +1508,8 @@
           <div class="logo">
             <div class="logo-icon">🧊</div>
             <div class="logo-text">
-              <h1>2×2 Cube Solver</h1>
-              <span>AI-Powered • BFS • A* • IDS</span>
+              <h1>Cubey Core 2×2 Lab</h1>
+              <span>Shared cube core • BFS • A* • IDA*</span>
             </div>
           </div>
           <div class="header-actions">
@@ -1106,6 +1542,54 @@
     <!-- Main Content -->
     <main>
       <div class="container">
+        <section class="hero-shell">
+          <div class="card hero-panel animate-fade-in-up">
+            <div class="surface-kicker">Classic solver workspace</div>
+            <h2>
+              <span class="hero-wordmark">
+                <span class="g-blue">C</span><span class="g-red">u</span><span class="g-yellow">b</span
+                ><span class="g-green">e</span><span>y</span>
+              </span>
+              keeps the 2×2 lab fast, exact, and aligned with the live tutor.
+            </h2>
+            <p>
+              The solver now runs on one valid 24-sticker state model shared across scramble
+              generation, search, rendering, and playback, while the shell follows the same visual
+              language as the main 2026 app.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-success btn-lg" href="/live">Open live coaching</a>
+              <a class="btn btn-secondary btn-lg" href="/">Return home</a>
+            </div>
+            <div class="hero-pills">
+              <span class="hero-pill">One shared 2×2 cube core</span>
+              <span class="hero-pill">Theme-aware stage + results</span>
+              <span class="hero-pill">Exact solve playback with progress</span>
+            </div>
+          </div>
+
+          <div class="card hero-sidecar animate-fade-in-up delay-100">
+            <div class="surface-kicker">What changed</div>
+            <div class="hero-stat-grid">
+              <div class="hero-stat-card">
+                <span>Core logic</span>
+                <strong>Valid 24-sticker state + derived turn tables</strong>
+                <p>Solver, worker, UI, and renderer all use the same cube model.</p>
+              </div>
+              <div class="hero-stat-card">
+                <span>Workspace</span>
+                <strong>Classic 2×2 now matches the main app shell</strong>
+                <p>Glass surfaces, Google-Labs color treatment, and shared light/dark behavior.</p>
+              </div>
+              <div class="hero-stat-card">
+                <span>Playback</span>
+                <strong>Manual moves, solve strip, and 3D stage stay in sync</strong>
+                <p>No more broken boot state or stale render mismatches.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div class="main-grid">
           <!-- Controls Panel -->
           <div class="card animate-slide-in-left delay-100">
@@ -1345,6 +1829,7 @@
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="cube-core.js"></script>
     <script src="solver.js"></script>
     <script src="a-star-solver.js"></script>
     <script src="cube-engine.js"></script>

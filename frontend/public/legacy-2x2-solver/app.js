@@ -1,9 +1,17 @@
-// ===== MAIN APPLICATION - 2025 Edition =====
-// Fixed layout: Current move shows INSIDE cube viewport, no scrolling
-// Fixed: Correct 2x2 cube state representation
+// ===== CLASSIC 2x2 APPLICATION - 2026 REFRESH =====
+// Shared cube-core powers scramble generation, validation, rendering, and solving.
 
 let cubeEngine;
-let state = "WWWWRRRRGGGGOOOOBBBB";
+const {
+  SOLVED_STATE,
+  applyMove: applyCubeMove,
+  generateScramble,
+  isSolved,
+  resetState,
+  validateState
+} = window.CubeCore2x2;
+
+let state = SOLVED_STATE;
 let speed = 300;
 let scrambleHistory = [];
 let currentSolution = [];
@@ -98,6 +106,8 @@ function toggleTheme() {
 document.addEventListener("DOMContentLoaded", () => {
   applyTheme(getPreferredTheme());
   cubeEngine = new CubeEngine("cubeCanvas");
+  state = validateState(state) ? state : resetState();
+  cubeEngine.renderState(state);
 
   // Button listeners
   document.getElementById("scrambleBtn").addEventListener("click", doScramble);
@@ -186,7 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function doScramble() {
   const len = parseInt(document.getElementById("scrambleLength").value);
 
-  state = reset();
+  state = resetState();
   scrambleHistory = generateScramble(len);
   currentSolution = [];
 
@@ -200,7 +210,7 @@ async function doScramble() {
   showProgress(true);
 
   for (let i = 0; i < scrambleHistory.length; i++) {
-    state = applyMove(scrambleHistory[i], state);
+    state = applyCubeMove(scrambleHistory[i], state);
     cubeEngine.renderState(state);
     updateUI();
     updateProgress(((i + 1) / scrambleHistory.length) * 100);
@@ -213,6 +223,14 @@ async function doScramble() {
 }
 
 async function doSolve() {
+  if (!validateState(state)) {
+    state = resetState();
+    cubeEngine.renderState(state);
+    updateUI();
+    setStatus("⚠️ Invalid cube state detected. Reset to a solved cube.", "error");
+    return;
+  }
+
   if (isSolved(state)) {
     setStatus("✅ Already solved!", "success");
     return;
@@ -265,7 +283,7 @@ async function doSolve() {
           highlightSolutionMove(i);
 
           // Apply move
-          state = applyMove(move, state);
+          state = applyCubeMove(move, state);
           cubeEngine.renderState(state);
           updateUI();
           updateProgress(((i + 1) / result.solution.length) * 100);
@@ -296,7 +314,7 @@ async function doSolve() {
 }
 
 function doReset() {
-  state = reset();
+  state = resetState();
   scrambleHistory = [];
   currentSolution = [];
   cubeEngine.renderState(state);
@@ -312,12 +330,17 @@ function doReset() {
 }
 
 async function doMove(move) {
-  state = applyMove(move, state);
+  state = applyCubeMove(move, state);
   cubeEngine.renderState(state);
   updateUI();
+  setStatus(`Manual move: ${move}`, "info");
 }
 
 function updateUI() {
+  if (!validateState(state)) {
+    state = resetState();
+  }
+
   document.getElementById("stateDisplay").textContent = state;
 
   const s = state;
