@@ -565,7 +565,10 @@ export default function App({ routeView = "home" }) {
 
       <Suspense fallback={<ModalFallback />}>
         {showTutorial ? (
-          <Tutorial onClose={() => setShowTutorial(false)} onComplete={() => setShowTutorial(false)} />
+          <Tutorial
+            onClose={() => setShowTutorial(false)}
+            onComplete={() => setShowTutorial(false)}
+          />
         ) : null}
         {showStatistics ? <Statistics onClose={() => setShowStatistics(false)} /> : null}
         {showSettings ? <Settings onClose={() => setShowSettings(false)} /> : null}
@@ -587,18 +590,28 @@ export default function App({ routeView = "home" }) {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <span className={`surface-chip ${runtimeStatusTone}`}>
-                  {runtimeStatusLabel}
-                </span>
-                <button type="button" onClick={() => setShowTutorial(true)} className="surface-chip">
+                <span className={`surface-chip ${runtimeStatusTone}`}>{runtimeStatusLabel}</span>
+                <button
+                  type="button"
+                  onClick={() => setShowTutorial(true)}
+                  className="surface-chip"
+                >
                   <FiHelpCircle className="h-4 w-4" />
                   Tutorial
                 </button>
-                <button type="button" onClick={() => setShowStatistics(true)} className="surface-chip">
+                <button
+                  type="button"
+                  onClick={() => setShowStatistics(true)}
+                  className="surface-chip"
+                >
                   <FiBarChart2 className="h-4 w-4" />
                   Statistics
                 </button>
-                <button type="button" onClick={() => setShowSettings(true)} className="surface-chip">
+                <button
+                  type="button"
+                  onClick={() => setShowSettings(true)}
+                  className="surface-chip"
+                >
                   <FiSettings className="h-4 w-4" />
                   Settings
                 </button>
@@ -619,13 +632,15 @@ export default function App({ routeView = "home" }) {
                 <div className="space-y-4">
                   <h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.08em] text-slate-950 dark:text-white sm:text-6xl lg:text-7xl">
                     <BrandWordmark className="mr-3" />
-                    now ships as two clear Rubik&apos;s Cube projects instead of one app plus a hidden legacy page.
+                    now ships as two clear Rubik&apos;s Cube projects instead of one app plus a
+                    hidden legacy page.
                   </h1>
 
                   <p className="max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-                    Part 1 is the realtime Gemini tutor for voice, camera vision, hints, and multiplayer.
-                    Part 2 is the exact 2x2 lab for shared cube-state logic, deterministic search, and
-                    playback. Both now live under the same design system and route structure.
+                    Part 1 is the realtime Gemini tutor for voice, camera vision, hints, and
+                    multiplayer. Part 2 is the exact 2x2 lab for shared cube-state logic,
+                    deterministic search, and playback. Both now live under the same design system
+                    and route structure.
                   </p>
                 </div>
 
@@ -636,8 +651,8 @@ export default function App({ routeView = "home" }) {
                       “Open Part 1 to coach. Open Part 2 to inspect the core.”
                     </div>
                     <div className="text-sm text-slate-500 dark:text-slate-400">
-                      The repo navigation now makes both projects explicit instead of hiding the second
-                      one behind a legacy path.
+                      The repo navigation now makes both projects explicit instead of hiding the
+                      second one behind a legacy path.
                     </div>
                   </div>
                 </div>
@@ -665,8 +680,8 @@ export default function App({ routeView = "home" }) {
                       Cubey Core 2x2 Lab
                     </div>
                     <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                      A deterministic 2x2 solver with one shared cube core, manual move controls, and
-                      exact BFS, A*, and IDA* playback.
+                      A deterministic 2x2 solver with one shared cube core, manual move controls,
+                      and exact BFS, A*, and IDA* playback.
                     </p>
                   </a>
                 </div>
@@ -719,8 +734,12 @@ export default function App({ routeView = "home" }) {
                     <div className="flex flex-wrap gap-2">
                       {HERO_FACTS.map((fact) => (
                         <div key={fact.label} className="surface-chip">
-                          <span className="font-medium text-slate-500 dark:text-slate-400">{fact.label}</span>
-                          <span className="font-semibold text-slate-900 dark:text-white">{fact.value}</span>
+                          <span className="font-medium text-slate-500 dark:text-slate-400">
+                            {fact.label}
+                          </span>
+                          <span className="font-semibold text-slate-900 dark:text-white">
+                            {fact.value}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -741,9 +760,17 @@ export default function App({ routeView = "home" }) {
                     </div>
 
                     <div className="space-y-4">
-                      <DetailMetric eyebrow="Runtime" label="API status" value={runtimeStatusLabel} />
+                      <DetailMetric
+                        eyebrow="Runtime"
+                        label="API status"
+                        value={runtimeStatusLabel}
+                      />
                       <DetailMetric eyebrow="Runtime" label="Live model" value={liveModelLabel} />
-                      <DetailMetric eyebrow="Routing" label="Known routes" value={`${runtimeRouteCount}`} />
+                      <DetailMetric
+                        eyebrow="Routing"
+                        label="Known routes"
+                        value={`${runtimeRouteCount}`}
+                      />
                       <DetailMetric
                         eyebrow="Transport"
                         label="Realtime paths"
@@ -773,31 +800,41 @@ export default function App({ routeView = "home" }) {
                   </div>
                 </div>
                 <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  The interface is organized like a search workspace: stage on the left, tutor memory on
-                  the right, and a command composer anchored under the core experience.
+                  The interface is organized like a search workspace: stage on the left, tutor
+                  memory on the right, and a command composer anchored under the core experience.
                 </p>
                 <AppNavigation />
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <span className={`surface-chip ${runtimeStatusTone}`}>
-                  {runtimeStatusLabel}
-                </span>
+                <span className={`surface-chip ${runtimeStatusTone}`}>{runtimeStatusLabel}</span>
                 {!storeSessionActive ? (
                   <button type="button" onClick={startSession} className="surface-button-primary">
                     <FiPlay className="h-4 w-4" />
                     Start session
                   </button>
                 ) : null}
-                <button type="button" onClick={() => setShowTutorial(true)} className="surface-chip">
+                <button
+                  type="button"
+                  onClick={() => setShowTutorial(true)}
+                  className="surface-chip"
+                >
                   <FiHelpCircle className="h-4 w-4" />
                   Tutorial
                 </button>
-                <button type="button" onClick={() => setShowStatistics(true)} className="surface-chip">
+                <button
+                  type="button"
+                  onClick={() => setShowStatistics(true)}
+                  className="surface-chip"
+                >
                   <FiBarChart2 className="h-4 w-4" />
                   Statistics
                 </button>
-                <button type="button" onClick={() => setShowSettings(true)} className="surface-chip">
+                <button
+                  type="button"
+                  onClick={() => setShowSettings(true)}
+                  className="surface-chip"
+                >
                   <FiSettings className="h-4 w-4" />
                   Settings
                 </button>
@@ -920,7 +957,11 @@ export default function App({ routeView = "home" }) {
                     </div>
 
                     <aside className="space-y-4">
-                      <DetailMetric eyebrow="Current instruction" label="Cubey says" value={latestInstruction || "Show the cube to begin."} />
+                      <DetailMetric
+                        eyebrow="Current instruction"
+                        label="Cubey says"
+                        value={latestInstruction || "Show the cube to begin."}
+                      />
                       <QuickActionButton
                         icon={FiHelpCircle}
                         label="Request a hint"
@@ -997,7 +1038,11 @@ export default function App({ routeView = "home" }) {
                           }
                           className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed dark:text-white dark:placeholder:text-slate-500"
                         />
-                        <button type="submit" className="surface-button-primary" disabled={!sessionReady}>
+                        <button
+                          type="submit"
+                          className="surface-button-primary"
+                          disabled={!sessionReady}
+                        >
                           Send
                           <FiArrowRight className="h-4 w-4" />
                         </button>
@@ -1062,7 +1107,11 @@ export default function App({ routeView = "home" }) {
 
             <footer className="surface-panel flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6">
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={downloadSessionRecord} className="surface-button-secondary">
+                <button
+                  type="button"
+                  onClick={downloadSessionRecord}
+                  className="surface-button-secondary"
+                >
                   <FiDownload className="h-4 w-4" />
                   Download session JSON
                 </button>

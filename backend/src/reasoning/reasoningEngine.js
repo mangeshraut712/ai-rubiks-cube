@@ -72,8 +72,8 @@ export class ReasoningEngine {
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         temperature: 0.2,
-        maxOutputTokens: 4096,
-      },
+        maxOutputTokens: 4096
+      }
     });
 
     const rawText = response?.text || "";
@@ -98,8 +98,8 @@ export class ReasoningEngine {
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         temperature: 0.3,
-        maxOutputTokens: 6144,
-      },
+        maxOutputTokens: 6144
+      }
     });
 
     const rawText = response?.text || "";
@@ -128,8 +128,8 @@ export class ReasoningEngine {
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         temperature: 0.1,
-        maxOutputTokens: 2048,
-      },
+        maxOutputTokens: 2048
+      }
     });
 
     const rawText = response?.text || "";
@@ -157,8 +157,8 @@ export class ReasoningEngine {
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         temperature: 0.2,
-        maxOutputTokens: 3072,
-      },
+        maxOutputTokens: 3072
+      }
     });
 
     const rawText = response?.text || "";
@@ -184,8 +184,8 @@ export class ReasoningEngine {
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         temperature: 0.15,
-        maxOutputTokens: 8192,
-      },
+        maxOutputTokens: 8192
+      }
     });
 
     const rawText = response?.text || "";
@@ -197,7 +197,10 @@ export class ReasoningEngine {
   // ---------------------------------------------------------------------------
 
   #parseReasoningResponse(rawText, reasoningType, method) {
-    const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
+    const lines = rawText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
 
     const steps = [];
     const moves = [];
@@ -230,7 +233,7 @@ export class ReasoningEngine {
           thought: stepMatch[2],
           action: "",
           verification: "",
-          verified: false,
+          verified: false
         };
       }
 
@@ -276,24 +279,25 @@ export class ReasoningEngine {
       verification: {
         totalSteps: steps.length,
         verifiedSteps: steps.filter((s) => s.verified).length,
-        confidence: steps.length > 0
-          ? steps.filter((s) => s.verified).length / steps.length
-          : 0,
+        confidence: steps.length > 0 ? steps.filter((s) => s.verified).length / steps.length : 0
       },
       rawText,
-      reasoningType,
+      reasoningType
     };
   }
 
   #parseVerificationResponse(rawText, proposedMoves) {
-    const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
+    const lines = rawText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
 
     const results = {
       overallValid: true,
       moveVerifications: [],
       suggestions: [],
       alternatives: [],
-      rawText,
+      rawText
     };
 
     for (const move of proposedMoves) {
@@ -307,7 +311,7 @@ export class ReasoningEngine {
         move,
         found,
         valid: found && !invalid,
-        reason: invalid ? "May not be legal in this position" : "Appears valid",
+        reason: invalid ? "May not be legal in this position" : "Appears valid"
       });
     }
 
@@ -332,7 +336,7 @@ export class ReasoningEngine {
       name: algorithmName,
       moves: algorithmMoves,
       explanation: rawText,
-      sections: this.#extractSections(rawText),
+      sections: this.#extractSections(rawText)
     };
   }
 
@@ -346,7 +350,7 @@ export class ReasoningEngine {
         id: parseInt(match[1], 10),
         description: match[2].trim(),
         score: 0,
-        selected: false,
+        selected: false
       });
     }
 

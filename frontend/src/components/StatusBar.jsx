@@ -52,7 +52,12 @@ export default function StatusBar({
   return (
     <div className="surface-panel surface-panel--muted px-3 py-3 sm:px-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Segment icon={FiWifi} label="Connection" value={connectionTone.label} className="sm:col-span-2">
+        <Segment
+          icon={FiWifi}
+          label="Connection"
+          value={connectionTone.label}
+          className="sm:col-span-2"
+        >
           <span className={`status-dot ${connectionTone.dot}`} />
         </Segment>
 

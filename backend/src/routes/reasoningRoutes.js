@@ -21,36 +21,36 @@ import { ReasoningEngine } from "../reasoning/reasoningEngine.js";
 
 const CubeStateInput = z.union([
   z.string().min(1, "cubeState must be a non-empty string"),
-  z.record(z.any()),
+  z.record(z.any())
 ]);
 
 const ChainOfThoughtSchema = z.object({
   cubeState: CubeStateInput,
-  method: z.enum(["CFOP", "Roux", "ZZ"]).default("CFOP"),
+  method: z.enum(["CFOP", "Roux", "ZZ"]).default("CFOP")
 });
 
 const TreeOfThoughtSchema = z.object({
-  cubeState: CubeStateInput,
+  cubeState: CubeStateInput
 });
 
 const SelfVerifySchema = z.object({
   cubeState: CubeStateInput,
   proposedMoves: z.union([
     z.array(z.string().min(1)).min(1, "At least one move is required"),
-    z.string().min(1),
+    z.string().min(1)
   ]),
-  subGoal: z.string().min(1, "subGoal is required"),
+  subGoal: z.string().min(1, "subGoal is required")
 });
 
 const ExplainAlgorithmSchema = z.object({
   name: z.string().min(1, "Algorithm name is required"),
-  moves: z.string().min(1, "Algorithm moves are required"),
+  moves: z.string().min(1, "Algorithm moves are required")
 });
 
 const GuidedSolveSchema = z.object({
   cubeState: CubeStateInput,
   method: z.enum(["CFOP", "Roux", "ZZ"]).default("CFOP"),
-  maxSteps: z.number().int().min(1).max(50).default(20),
+  maxSteps: z.number().int().min(1).max(50).default(20)
 });
 
 // ---------------------------------------------------------------------------
@@ -99,8 +99,7 @@ export function createReasoningRouter({ apiKey, model }) {
     if (!apiKey) {
       return res.status(503).json({
         error: "reasoning_not_configured",
-        message:
-          "Reasoning engine requires GEMINI_API_KEY. Set it in your environment.",
+        message: "Reasoning engine requires GEMINI_API_KEY. Set it in your environment."
       });
     }
     next();
@@ -113,7 +112,7 @@ export function createReasoningRouter({ apiKey, model }) {
       return res.status(429).json({
         error: "rate_limited",
         message: "Too many reasoning requests. Please slow down.",
-        retryAfter: Math.ceil(REASONING_RATE_LIMIT_WINDOW / 1000),
+        retryAfter: Math.ceil(REASONING_RATE_LIMIT_WINDOW / 1000)
       });
     }
     next();
@@ -129,7 +128,7 @@ export function createReasoningRouter({ apiKey, model }) {
         return res.status(400).json({
           error: "validation_error",
           message: "Invalid request body",
-          details: parsed.error.issues,
+          details: parsed.error.issues
         });
       }
 
@@ -141,13 +140,13 @@ export function createReasoningRouter({ apiKey, model }) {
 
       res.json({
         reasoning: "chain-of-thought",
-        ...result,
+        ...result
       });
     } catch (error) {
       console.error("[reasoning] chain-of-thought failed:", error);
       res.status(500).json({
         error: "reasoning_failed",
-        message: error?.message || "Chain-of-thought reasoning failed.",
+        message: error?.message || "Chain-of-thought reasoning failed."
       });
     }
   });
@@ -162,7 +161,7 @@ export function createReasoningRouter({ apiKey, model }) {
         return res.status(400).json({
           error: "validation_error",
           message: "Invalid request body",
-          details: parsed.error.issues,
+          details: parsed.error.issues
         });
       }
 
@@ -173,13 +172,13 @@ export function createReasoningRouter({ apiKey, model }) {
 
       res.json({
         reasoning: "tree-of-thought",
-        ...result,
+        ...result
       });
     } catch (error) {
       console.error("[reasoning] tree-of-thought failed:", error);
       res.status(500).json({
         error: "reasoning_failed",
-        message: error?.message || "Tree-of-thought reasoning failed.",
+        message: error?.message || "Tree-of-thought reasoning failed."
       });
     }
   });
@@ -194,7 +193,7 @@ export function createReasoningRouter({ apiKey, model }) {
         return res.status(400).json({
           error: "validation_error",
           message: "Invalid request body",
-          details: parsed.error.issues,
+          details: parsed.error.issues
         });
       }
 
@@ -211,13 +210,13 @@ export function createReasoningRouter({ apiKey, model }) {
 
       res.json({
         reasoning: "self-verification",
-        ...result,
+        ...result
       });
     } catch (error) {
       console.error("[reasoning] self-verify failed:", error);
       res.status(500).json({
         error: "verification_failed",
-        message: error?.message || "Self-verification failed.",
+        message: error?.message || "Self-verification failed."
       });
     }
   });
@@ -232,7 +231,7 @@ export function createReasoningRouter({ apiKey, model }) {
         return res.status(400).json({
           error: "validation_error",
           message: "Invalid request body",
-          details: parsed.error.issues,
+          details: parsed.error.issues
         });
       }
 
@@ -241,13 +240,13 @@ export function createReasoningRouter({ apiKey, model }) {
 
       res.json({
         reasoning: "algorithm-explanation",
-        ...result,
+        ...result
       });
     } catch (error) {
       console.error("[reasoning] explain-algorithm failed:", error);
       res.status(500).json({
         error: "explanation_failed",
-        message: error?.message || "Algorithm explanation failed.",
+        message: error?.message || "Algorithm explanation failed."
       });
     }
   });
@@ -262,7 +261,7 @@ export function createReasoningRouter({ apiKey, model }) {
         return res.status(400).json({
           error: "validation_error",
           message: "Invalid request body",
-          details: parsed.error.issues,
+          details: parsed.error.issues
         });
       }
 
@@ -275,13 +274,13 @@ export function createReasoningRouter({ apiKey, model }) {
 
       res.json({
         reasoning: "guided-solve",
-        ...result,
+        ...result
       });
     } catch (error) {
       console.error("[reasoning] guided-solve failed:", error);
       res.status(500).json({
         error: "solve_failed",
-        message: error?.message || "Guided solve failed.",
+        message: error?.message || "Guided solve failed."
       });
     }
   });

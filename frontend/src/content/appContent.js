@@ -46,7 +46,8 @@ export const HERO_CAPABILITIES = [
     icon: FiZap,
     eyebrow: "Solve",
     title: "See the next move before you make it.",
-    detail: "Move highlights, transcript memory, hinting, and auto-solve all live on the same stage.",
+    detail:
+      "Move highlights, transcript memory, hinting, and auto-solve all live on the same stage.",
     accent: "#FBBC05",
     soft: "rgba(251, 188, 5, 0.18)"
   },

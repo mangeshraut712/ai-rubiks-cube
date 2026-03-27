@@ -47,20 +47,22 @@ The repo is organized so both products share one deployment model, one visual la
 
 ## Products
 
-| Part | Product | Purpose | Main routes | Primary code |
-| --- | --- | --- | --- | --- |
-| 1 | Gemini Live Tutor | Realtime AI tutoring for a physical or virtual 3x3 cube using voice and vision | `/`, `/part-1`, `/part-1/live`, `/part-1/multiplayer` | `frontend/src/`, `backend/src/` |
-| 2 | Cubey Core 2x2 Lab | Deterministic 2x2 solving, playback, and algorithm inspection | `/part-2`, `/legacy-2x2-solver/index.html` | `frontend/public/legacy-2x2-solver/` |
+| Part | Product            | Purpose                                                                        | Main routes                                           | Primary code                         |
+| ---- | ------------------ | ------------------------------------------------------------------------------ | ----------------------------------------------------- | ------------------------------------ |
+| 1    | Gemini Live Tutor  | Realtime AI tutoring for a physical or virtual 3x3 cube using voice and vision | `/`, `/part-1`, `/part-1/live`, `/part-1/multiplayer` | `frontend/src/`, `backend/src/`      |
+| 2    | Cubey Core 2x2 Lab | Deterministic 2x2 solving, playback, and algorithm inspection                  | `/part-2`, `/legacy-2x2-solver/index.html`            | `frontend/public/legacy-2x2-solver/` |
 
 ### Part 1: Gemini Live Tutor
 
 What it does:
+
 - streams webcam frames and mic input to the live tutoring session
 - keeps tutor responses on the same stage as the cube
 - supports hints, auto-solve, challenge mode, and multiplayer
 - exposes runtime health and connection metadata to the frontend
 
 Main files:
+
 - [frontend/src/App.jsx](frontend/src/App.jsx)
 - [frontend/src/components/LiveSession.jsx](frontend/src/components/LiveSession.jsx)
 - [frontend/src/components/TutorOverlay.jsx](frontend/src/components/TutorOverlay.jsx)
@@ -71,12 +73,14 @@ Main files:
 ### Part 2: Cubey Core 2x2 Lab
 
 What it does:
+
 - exposes the 2x2 cube engine directly
 - allows manual moves, scramble/reset, and exact solution playback
 - keeps the solving logic inspectable outside the live tutor
 - ships as a static entry under the same frontend/public surface
 
 Main files:
+
 - [frontend/public/legacy-2x2-solver/index.html](frontend/public/legacy-2x2-solver/index.html)
 - [frontend/public/legacy-2x2-solver/app.js](frontend/public/legacy-2x2-solver/app.js)
 - [frontend/public/legacy-2x2-solver/cube-core.js](frontend/public/legacy-2x2-solver/cube-core.js)
@@ -86,32 +90,33 @@ Main files:
 
 ## Stack
 
-| Layer | Current stack |
-| --- | --- |
-| Frontend app shell | React 19, React Router 7, Vite 7 |
-| Styling and motion | Tailwind CSS 4, Framer Motion 12 |
-| 3D rendering | Three.js 0.183 |
-| State | Zustand 5 with persisted UI/session state |
-| Frontend tests | Vitest 4 |
-| Backend runtime | Node.js 22, Express 5 |
-| Realtime transport | `ws` websockets, WebRTC signaling |
-| Validation and hardening | Zod 4, Helmet, compression, express-rate-limit |
-| Gemini integration | `@google/genai` |
-| Hosting | Google Cloud Run, Cloud Build, Artifact Registry, Secret Manager |
+| Layer                    | Current stack                                                    |
+| ------------------------ | ---------------------------------------------------------------- |
+| Frontend app shell       | React 19, React Router 7, Vite 7                                 |
+| Styling and motion       | Tailwind CSS 4, Framer Motion 12                                 |
+| 3D rendering             | Three.js 0.183                                                   |
+| State                    | Zustand 5 with persisted UI/session state                        |
+| Frontend tests           | Vitest 4                                                         |
+| Backend runtime          | Node.js 22, Express 5                                            |
+| Realtime transport       | `ws` websockets, WebRTC signaling                                |
+| Validation and hardening | Zod 4, Helmet, compression, express-rate-limit                   |
+| Gemini integration       | `@google/genai`                                                  |
+| Hosting                  | Google Cloud Run, Cloud Build, Artifact Registry, Secret Manager |
 
 ### 🧠 Reasoning Engine (NEW)
 
 The backend now includes a **reasoning engine** that wraps the Gemini API with structured reasoning prompts. It demonstrates 2026 LLM reasoning patterns applied to Rubik's Cube solving:
 
-| Pattern | Endpoint | What It Does |
-| --- | --- | --- |
-| **Chain-of-Thought** | `POST /api/reasoning/chain-of-thought` | Step-by-step decomposition — observe, sub-goal, reason, move, verify |
-| **Tree-of-Thought** | `POST /api/reasoning/tree-of-thought` | Explores CFOP/Roux/ZZ strategies in parallel, selects optimal |
-| **Self-Verification** | `POST /api/reasoning/self-verify` | Validates proposed moves against cube state and sub-goals |
+| Pattern                   | Endpoint                                | What It Does                                                          |
+| ------------------------- | --------------------------------------- | --------------------------------------------------------------------- |
+| **Chain-of-Thought**      | `POST /api/reasoning/chain-of-thought`  | Step-by-step decomposition — observe, sub-goal, reason, move, verify  |
+| **Tree-of-Thought**       | `POST /api/reasoning/tree-of-thought`   | Explores CFOP/Roux/ZZ strategies in parallel, selects optimal         |
+| **Self-Verification**     | `POST /api/reasoning/self-verify`       | Validates proposed moves against cube state and sub-goals             |
 | **Algorithm Explanation** | `POST /api/reasoning/explain-algorithm` | Deep causal explanation — commutator analysis, recognition, mnemonics |
-| **Guided Solve** | `POST /api/reasoning/guided-solve` | Full explained solve with reasoning at every step |
+| **Guided Solve**          | `POST /api/reasoning/guided-solve`      | Full explained solve with reasoning at every step                     |
 
 **Example — Chain-of-Thought:**
+
 ```bash
 curl -X POST http://localhost:8080/api/reasoning/chain-of-thought \
   -H "Content-Type: application/json" \
@@ -122,17 +127,20 @@ curl -X POST http://localhost:8080/api/reasoning/chain-of-thought \
 ```
 
 **How it works:**
+
 1. The engine wraps user input in structured reasoning prompts
 2. The LLM must show work at each step (observe → reason → act → verify)
 3. Self-verification catches invalid moves before execution
 4. Tree-of-Thought explores multiple strategies before committing
 
 Files:
+
 - [backend/src/reasoning/reasoningEngine.js](backend/src/reasoning/reasoningEngine.js)
 - [backend/src/reasoning/prompts.js](backend/src/reasoning/prompts.js)
 - [backend/src/routes/reasoningRoutes.js](backend/src/routes/reasoningRoutes.js)
 
 Source of truth:
+
 - [frontend/package.json](frontend/package.json)
 - [backend/package.json](backend/package.json)
 
@@ -142,33 +150,33 @@ The backend publishes its runtime contract from [backend/src/runtimeInfo.js](bac
 
 ### HTTP
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/health` | basic service health |
-| `GET` | `/api/health` | structured health payload |
-| `GET` | `/api/runtime` | runtime metadata for frontend discovery |
+| Method | Path           | Purpose                                 |
+| ------ | -------------- | --------------------------------------- |
+| `GET`  | `/health`      | basic service health                    |
+| `GET`  | `/api/health`  | structured health payload               |
+| `GET`  | `/api/runtime` | runtime metadata for frontend discovery |
 
 ### WebSocket
 
-| Path | Purpose |
-| --- | --- |
-| `/ws` | Part 1 live tutor session transport |
-| `/multiplayer` | multiplayer signaling transport |
+| Path           | Purpose                             |
+| -------------- | ----------------------------------- |
+| `/ws`          | Part 1 live tutor session transport |
+| `/multiplayer` | multiplayer signaling transport     |
 
 ### App Routing
 
 Frontend routing is defined in [frontend/src/router.jsx](frontend/src/router.jsx).
 
-| Route | Behavior |
-| --- | --- |
-| `/` | overview / landing workspace |
-| `/part-1` | Part 1 entry |
-| `/part-1/live` | live tutor workspace |
-| `/part-1/multiplayer` | multiplayer workspace |
-| `/live` | redirect to `/part-1/live` |
-| `/labs/multiplayer` | redirect to `/part-1/multiplayer` |
-| `/part-2` | redirect to the static 2x2 app |
-| `/classic` | redirect shortcut |
+| Route                 | Behavior                          |
+| --------------------- | --------------------------------- |
+| `/`                   | overview / landing workspace      |
+| `/part-1`             | Part 1 entry                      |
+| `/part-1/live`        | live tutor workspace              |
+| `/part-1/multiplayer` | multiplayer workspace             |
+| `/live`               | redirect to `/part-1/live`        |
+| `/labs/multiplayer`   | redirect to `/part-1/multiplayer` |
+| `/part-2`             | redirect to the static 2x2 app    |
+| `/classic`            | redirect shortcut                 |
 
 ## Architecture
 
@@ -214,6 +222,7 @@ flowchart LR
 ```
 
 Key notes:
+
 - `frontend/public/legacy-2x2-solver/` is intentionally kept as a static app because Part 2 is shipped alongside the routed React shell
 - generated directories like `frontend/dist`, `frontend/dev-dist`, `backend/cache`, and `node_modules/` are local build artifacts, not source
 
@@ -256,6 +265,7 @@ ENABLE_FRONTEND_REDIRECT=false
 ```
 
 Environment template:
+
 - [.env.example](.env.example)
 
 ### Run Part 1
@@ -265,10 +275,12 @@ Environment template:
 ```
 
 This starts:
+
 - backend on `http://localhost:8080`
 - frontend on `http://localhost:5173`
 
 Useful URLs:
+
 - `http://localhost:5173/`
 - `http://localhost:5173/part-1/live`
 - `http://localhost:5173/part-1/multiplayer`
@@ -280,6 +292,7 @@ Useful URLs:
 ```
 
 Useful URL:
+
 - `http://localhost:5173/part-2`
 
 ## Validation
@@ -304,6 +317,7 @@ npm run test -- --run
 ### CI
 
 GitHub Actions runs:
+
 - backend lint
 - backend tests
 - frontend lint
@@ -311,6 +325,7 @@ GitHub Actions runs:
 - frontend build
 
 Workflow:
+
 - [.github/workflows/ci.yml](.github/workflows/ci.yml)
 
 ## Deployment
@@ -324,6 +339,7 @@ This repo is designed for a single Google Cloud Run deployment where the backend
 ```
 
 What `deploy.sh` does:
+
 1. configures the target GCP project
 2. enables required Google Cloud APIs
 3. ensures Artifact Registry and Secret Manager are ready
@@ -332,6 +348,7 @@ What `deploy.sh` does:
 6. smoke-tests health, runtime, and the Part 2 entry page
 
 Deployment sources:
+
 - [deploy.sh](deploy.sh)
 - [cloudbuild.yaml](cloudbuild.yaml)
 - [Dockerfile](Dockerfile)
@@ -345,9 +362,11 @@ gcloud builds submit --config cloudbuild.yaml .
 ## Public Deployment
 
 Current public service:
+
 - `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/`
 
 Useful URLs:
+
 - app root: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/`
 - health: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
 - runtime: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime`
@@ -355,6 +374,7 @@ Useful URLs:
 - Part 2: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/part-2`
 
 Latest verified ready revision:
+
 - `gemini-rubiks-tutor-00011-mn2`
 
 ## Notes

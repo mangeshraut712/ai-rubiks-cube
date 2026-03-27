@@ -25,9 +25,7 @@ export default function ReasoningPanel({ reasoning, loading, error }) {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <LoadingSpinner />
-        <span className="text-sm text-zinc-500 dark:text-zinc-400">
-          Reasoning in progress…
-        </span>
+        <span className="text-sm text-zinc-500 dark:text-zinc-400">Reasoning in progress…</span>
       </div>
     );
   }
@@ -40,7 +38,8 @@ export default function ReasoningPanel({ reasoning, loading, error }) {
     );
   }
 
-  const { strategy, steps, moves, explanation, treeOfThought, verification, reasoningType } = reasoning;
+  const { strategy, steps, moves, explanation, treeOfThought, verification, reasoningType } =
+    reasoning;
 
   return (
     <div className="space-y-4">
@@ -54,9 +53,7 @@ export default function ReasoningPanel({ reasoning, loading, error }) {
             </span>
           )}
         </div>
-        {verification && (
-          <ConfidenceBar confidence={verification.confidence} />
-        )}
+        {verification && <ConfidenceBar confidence={verification.confidence} />}
       </div>
 
       {/* Moves */}
@@ -123,7 +120,7 @@ export default function ReasoningPanel({ reasoning, loading, error }) {
                 step={step}
                 isExpanded={expandedStep === (step.step || i)}
                 onToggle={() =>
-                  setExpandedStep(expandedStep === (step.step || i) ? null : (step.step || i))
+                  setExpandedStep(expandedStep === (step.step || i) ? null : step.step || i)
                 }
               />
             ))}
@@ -147,8 +144,8 @@ export default function ReasoningPanel({ reasoning, loading, error }) {
             Verification
           </p>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            {verification.verifiedSteps}/{verification.totalSteps} steps verified
-            ({Math.round(verification.confidence * 100)}% confidence)
+            {verification.verifiedSteps}/{verification.totalSteps} steps verified (
+            {Math.round(verification.confidence * 100)}% confidence)
           </p>
         </div>
       )}
@@ -162,11 +159,26 @@ export default function ReasoningPanel({ reasoning, loading, error }) {
 
 function ReasoningTypeBadge({ type }) {
   const labels = {
-    "chain-of-thought": { label: "CoT", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-    "tree-of-thought": { label: "ToT", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
-    "guided-solve": { label: "Guided", color: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
-    "self-verification": { label: "Verify", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
-    "algorithm-explanation": { label: "Algo", color: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300" },
+    "chain-of-thought": {
+      label: "CoT",
+      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+    },
+    "tree-of-thought": {
+      label: "ToT",
+      color: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
+    },
+    "guided-solve": {
+      label: "Guided",
+      color: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+    },
+    "self-verification": {
+      label: "Verify",
+      color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+    },
+    "algorithm-explanation": {
+      label: "Algo",
+      color: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300"
+    }
   };
 
   const config = labels[type] || labels["chain-of-thought"];
@@ -180,8 +192,7 @@ function ReasoningTypeBadge({ type }) {
 
 function ConfidenceBar({ confidence }) {
   const percent = Math.round(confidence * 100);
-  const color =
-    percent >= 80 ? "bg-green-500" : percent >= 50 ? "bg-amber-500" : "bg-red-500";
+  const color = percent >= 80 ? "bg-green-500" : percent >= 50 ? "bg-amber-500" : "bg-red-500";
 
   return (
     <div className="flex items-center gap-2">
@@ -207,11 +218,7 @@ function StepNode({ step, isExpanded, onToggle }) {
         }`}
       />
 
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full text-left"
-      >
+      <button type="button" onClick={onToggle} className="w-full text-left">
         <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
           Step {step.step}: {step.thought}
         </p>

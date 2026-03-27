@@ -30,7 +30,9 @@ function SummaryCard({ icon: Icon, title, value, subtitle, accent, soft }) {
           <div className="mt-3 text-3xl font-semibold tracking-[-0.07em] text-slate-950 dark:text-white">
             {value}
           </div>
-          <div className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{subtitle}</div>
+          <div className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+            {subtitle}
+          </div>
         </div>
 
         <div
@@ -85,9 +87,7 @@ export default function Statistics({ onClose }) {
           : "Starter";
 
   function handleReset() {
-    if (
-      !window.confirm("Reset all local statistics? This cannot be undone.")
-    ) {
+    if (!window.confirm("Reset all local statistics? This cannot be undone.")) {
       return;
     }
 
@@ -127,7 +127,12 @@ export default function Statistics({ onClose }) {
             </p>
           </div>
 
-          <button type="button" onClick={onClose} className="modal-close" aria-label="Close statistics">
+          <button
+            type="button"
+            onClick={onClose}
+            className="modal-close"
+            aria-label="Close statistics"
+          >
             <FiX className="h-5 w-5" />
           </button>
         </header>
@@ -187,10 +192,30 @@ export default function Statistics({ onClose }) {
               </div>
 
               <div className="mt-6 space-y-5">
-                <ProgressLane label="Beginner" current={statistics.solvedCubes} target={10} accent="#4285F4" />
-                <ProgressLane label="Intermediate" current={statistics.solvedCubes} target={50} accent="#34A853" />
-                <ProgressLane label="Advanced" current={statistics.solvedCubes} target={100} accent="#FBBC05" />
-                <ProgressLane label="Expert" current={statistics.solvedCubes} target={500} accent="#EA4335" />
+                <ProgressLane
+                  label="Beginner"
+                  current={statistics.solvedCubes}
+                  target={10}
+                  accent="#4285F4"
+                />
+                <ProgressLane
+                  label="Intermediate"
+                  current={statistics.solvedCubes}
+                  target={50}
+                  accent="#34A853"
+                />
+                <ProgressLane
+                  label="Advanced"
+                  current={statistics.solvedCubes}
+                  target={100}
+                  accent="#FBBC05"
+                />
+                <ProgressLane
+                  label="Expert"
+                  current={statistics.solvedCubes}
+                  target={500}
+                  accent="#EA4335"
+                />
               </div>
             </section>
 
@@ -203,7 +228,9 @@ export default function Statistics({ onClose }) {
                 <div className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
                   <div className="flex items-center justify-between gap-3 rounded-[20px] bg-white/60 px-4 py-3 dark:bg-white/5">
                     <span>Total sessions</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">{totalSessions}</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      {totalSessions}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between gap-3 rounded-[20px] bg-white/60 px-4 py-3 dark:bg-white/5">
                     <span>Total practice time</span>
@@ -219,7 +246,9 @@ export default function Statistics({ onClose }) {
                   </div>
                   <div className="flex items-center justify-between gap-3 rounded-[20px] bg-white/60 px-4 py-3 dark:bg-white/5">
                     <span>Average moves</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">{avgMovesPerSession}</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      {avgMovesPerSession}
+                    </span>
                   </div>
                 </div>
               </section>
@@ -237,8 +266,8 @@ export default function Statistics({ onClose }) {
                   </div>
                 </div>
                 <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                  This panel now reads like a Google Labs experiment: fewer heavy cards, stronger hierarchy,
-                  and clearer separation between progress, efficiency, and totals.
+                  This panel now reads like a Google Labs experiment: fewer heavy cards, stronger
+                  hierarchy, and clearer separation between progress, efficiency, and totals.
                 </p>
               </section>
             </div>

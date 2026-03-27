@@ -201,93 +201,99 @@ export function useMultiplayer() {
   /**
    * Create WebRTC peer connection
    */
-  const createPeerConnection = useCallback(async (isHost) => {
-    try {
-      const pc = new RTCPeerConnection(RTC_CONFIG);
-      peerConnectionRef.current = pc;
+  const createPeerConnection = useCallback(
+    async (isHost) => {
+      try {
+        const pc = new RTCPeerConnection(RTC_CONFIG);
+        peerConnectionRef.current = pc;
 
-      // Handle ICE candidates
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
+        // Handle ICE candidates
+        pc.onicecandidate = (event) => {
+          if (event.candidate) {
+            signalingSocketRef.current.send(
+              JSON.stringify({
+                type: "ice-candidate",
+                candidate: event.candidate,
+                roomId: roomIdRef.current
+              })
+            );
+          }
+        };
+
+        // Handle connection state changes
+        pc.onconnectionstatechange = () => {
+          console.log("[Multiplayer] Connection state:", pc.connectionState);
+          updateConnectionState(pc.connectionState);
+        };
+
+        // Handle data channel (for host)
+        if (isHost) {
+          const dataChannel = pc.createDataChannel("gameData", {
+            ordered: true,
+            maxRetransmits: 3
+          });
+          setupDataChannel(dataChannel);
+        } else {
+          // Handle incoming data channel (for client)
+          pc.ondatachannel = (event) => {
+            setupDataChannel(event.channel);
+          };
+        }
+
+        // Create offer if host
+        if (isHost) {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+
           signalingSocketRef.current.send(
             JSON.stringify({
-              type: "ice-candidate",
-              candidate: event.candidate,
+              type: "offer",
+              offer,
               roomId: roomIdRef.current
             })
           );
         }
-      };
 
-      // Handle connection state changes
-      pc.onconnectionstatechange = () => {
-        console.log("[Multiplayer] Connection state:", pc.connectionState);
-        updateConnectionState(pc.connectionState);
-      };
-
-      // Handle data channel (for host)
-      if (isHost) {
-        const dataChannel = pc.createDataChannel("gameData", {
-          ordered: true,
-          maxRetransmits: 3
-        });
-        setupDataChannel(dataChannel);
-      } else {
-        // Handle incoming data channel (for client)
-        pc.ondatachannel = (event) => {
-          setupDataChannel(event.channel);
-        };
+        return pc;
+      } catch (error) {
+        console.error("[Multiplayer] Failed to create peer connection:", error);
+        setError("Failed to create peer connection");
+        updateConnectionState("error");
+        throw error;
       }
-
-      // Create offer if host
-      if (isHost) {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-
-        signalingSocketRef.current.send(
-          JSON.stringify({
-            type: "offer",
-            offer,
-            roomId: roomIdRef.current
-          })
-        );
-      }
-
-      return pc;
-    } catch (error) {
-      console.error("[Multiplayer] Failed to create peer connection:", error);
-      setError("Failed to create peer connection");
-      updateConnectionState("error");
-      throw error;
-    }
-  }, [updateConnectionState]);
+    },
+    [updateConnectionState]
+  );
 
   /**
    * Setup data channel
    */
-  const setupDataChannel = useCallback((dataChannel) => {
-    dataChannelRef.current = dataChannel;
+  const setupDataChannel = useCallback(
+    (dataChannel) => {
+      dataChannelRef.current = dataChannel;
 
-    dataChannel.onopen = () => {
-      console.log("[Multiplayer] Data channel opened");
-      updateConnectionState("connected");
-      startPingInterval();
-    };
+      dataChannel.onopen = () => {
+        console.log("[Multiplayer] Data channel opened");
+        updateConnectionState("connected");
+        startPingInterval();
+      };
 
-    dataChannel.onclose = () => {
-      console.log("[Multiplayer] Data channel closed");
-      stopPingInterval();
-    };
+      dataChannel.onclose = () => {
+        console.log("[Multiplayer] Data channel closed");
+        stopPingInterval();
+      };
 
-    dataChannel.onerror = (error) => {
-      console.error("[Multiplayer] Data channel error:", error);
-      setError("Data channel error");
-    };
+      dataChannel.onerror = (error) => {
+        console.error("[Multiplayer] Data channel error:", error);
+        setError("Data channel error");
+      };
 
-    dataChannel.onmessage = (event) => {
-      handleDataMessage(JSON.parse(event.data));
-    };
-  }, [updateConnectionState]);
+      dataChannel.onmessage = (event) => {
+        handleDataMessage(JSON.parse(event.data));
+      };
+    },
+    [updateConnectionState]
+  );
 
   /**
    * Handle incoming data messages

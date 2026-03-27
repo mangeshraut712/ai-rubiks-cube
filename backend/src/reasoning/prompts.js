@@ -36,21 +36,27 @@ For EACH step, you must follow this exact structure:
 **Verify:** [Check that this move advances toward the goal without undoing previous work]
 
 ## Solving Method: ${method}
-${method === "CFOP" ? `
+${
+  method === "CFOP"
+    ? `
 - Phase 1: Cross (build cross on D face)
 - Phase 2: F2L (First Two Layers — pair and insert corner-edge pairs)
 - Phase 3: OLL (Orient Last Layer — make top face uniform color)
 - Phase 4: PLL (Permute Last Layer — position pieces correctly)
-` : method === "Roux" ? `
+`
+    : method === "Roux"
+      ? `
 - Phase 1: First Block (1x2x3 on L)
 - Phase 2: Second Block (1x2x3 on R)
 - Phase 3: CMLL (Corners of Last Layer)
 - Phase 4: LSE (Last Six Edges)
-` : `
+`
+      : `
 - Phase 1: EOLine (Edge Orientation + Line)
 - Phase 2: F2L (First Two Layers with oriented edges)
 - Phase 3: LL (Last Layer)
-`}
+`
+}
 
 ## Rules
 1. Show your reasoning BEFORE each move
@@ -212,5 +218,5 @@ For each step:
 - Method used: [CFOP/Roux/ZZ]
 - Key decisions: [any interesting reasoning branches]
 - Confidence: [how confident I am this solves it]
-`,
+`
 };

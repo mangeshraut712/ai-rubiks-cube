@@ -1082,7 +1082,7 @@ wss.on("connection", async (ws, req) => {
 
             scheduleTutorTurn(
               gemini,
-              `Challenge mode is ON. Scramble sequence applied: ${scramble.join(" ")}. Start coaching quickly and keep one move at a time.`,
+              `Challenge mode is ON. Scramble sequence applied: ${scramble.join(" ")}. Start coaching quickly and keep one move at a time.`
             );
           } else {
             sendJson(ws, {
@@ -1155,7 +1155,7 @@ wss.on("connection", async (ws, req) => {
           if (gemini && typeof gemini.sendTextTurn === "function") {
             scheduleTutorTurn(
               gemini,
-              `I am now auto-solving the cube. The solution is: ${solutionMoves.join(" ")}. Coach the user through each move enthusiastically! Start with the first move ${solutionMoves[0]}.`,
+              `I am now auto-solving the cube. The solution is: ${solutionMoves.join(" ")}. Coach the user through each move enthusiastically! Start with the first move ${solutionMoves[0]}.`
             );
           }
 

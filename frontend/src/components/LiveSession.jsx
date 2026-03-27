@@ -1,4 +1,11 @@
-import { forwardRef, useEffect, useEffectEvent, useImperativeHandle, useRef, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useEffectEvent,
+  useImperativeHandle,
+  useRef,
+  useState
+} from "react";
 
 import {
   captureVideoFrame,
@@ -577,7 +584,9 @@ const LiveSession = forwardRef(function LiveSession(
     },
 
     reportMoveApplied(move) {
-      const normalized = String(move || "").trim().toUpperCase();
+      const normalized = String(move || "")
+        .trim()
+        .toUpperCase();
       if (!normalized) {
         return;
       }

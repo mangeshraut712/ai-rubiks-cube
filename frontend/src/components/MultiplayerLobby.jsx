@@ -52,36 +52,31 @@ function resolveStatus(connectionState, error) {
     case "connected":
       return {
         label: "Peer connected",
-        tone:
-          "border-[color:rgba(52,168,83,0.22)] bg-[rgba(52,168,83,0.12)] text-[#166534] dark:text-green-200",
+        tone: "border-[color:rgba(52,168,83,0.22)] bg-[rgba(52,168,83,0.12)] text-[#166534] dark:text-green-200",
         icon: FiWifi
       };
     case "connecting":
       return {
         label: "Connecting",
-        tone:
-          "border-[color:rgba(251,188,5,0.24)] bg-[rgba(251,188,5,0.14)] text-[#8a6100] dark:text-yellow-200",
+        tone: "border-[color:rgba(251,188,5,0.24)] bg-[rgba(251,188,5,0.14)] text-[#8a6100] dark:text-yellow-200",
         icon: FiLoader
       };
     case "error":
       return {
         label: error || "Connection error",
-        tone:
-          "border-[color:rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] text-[#b42318] dark:text-red-200",
+        tone: "border-[color:rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] text-[#b42318] dark:text-red-200",
         icon: FiAlertCircle
       };
     case "disconnected":
       return {
         label: "Disconnected",
-        tone:
-          "border-[color:rgba(148,163,184,0.2)] bg-[rgba(148,163,184,0.14)] text-slate-600 dark:text-slate-300",
+        tone: "border-[color:rgba(148,163,184,0.2)] bg-[rgba(148,163,184,0.14)] text-slate-600 dark:text-slate-300",
         icon: FiWifiOff
       };
     default:
       return {
         label: "Create a room or join one to start.",
-        tone:
-          "border-[color:rgba(66,133,244,0.18)] bg-[rgba(66,133,244,0.12)] text-[#1a73e8] dark:text-blue-200",
+        tone: "border-[color:rgba(66,133,244,0.18)] bg-[rgba(66,133,244,0.12)] text-[#1a73e8] dark:text-blue-200",
         icon: FiUsers
       };
   }
@@ -93,8 +88,16 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
   const [copied, setCopied] = useState(false);
   const [gameMode, setGameMode] = useState("race");
 
-  const { connectionState, error, latency, connect, disconnect, sendGameState, isConnected, localId } =
-    useMultiplayer();
+  const {
+    connectionState,
+    error,
+    latency,
+    connect,
+    disconnect,
+    sendGameState,
+    isConnected,
+    localId
+  } = useMultiplayer();
 
   const status = resolveStatus(connectionState, error);
   const StatusIcon = status.icon;
@@ -174,19 +177,28 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
             <p className="modal-eyebrow">Multiplayer lab</p>
             <h2 className="modal-title">Bring a second cube into the same stage.</h2>
             <p className="modal-subtitle">
-              This rewrite turns multiplayer into a Labs-style control room and fixes the host flow so
-              creating a room now also connects the host to signaling.
+              This rewrite turns multiplayer into a Labs-style control room and fixes the host flow
+              so creating a room now also connects the host to signaling.
             </p>
           </div>
 
-          <button type="button" onClick={onClose} className="modal-close" aria-label="Close multiplayer">
+          <button
+            type="button"
+            onClick={onClose}
+            className="modal-close"
+            aria-label="Close multiplayer"
+          >
             <FiX className="h-5 w-5" />
           </button>
         </header>
 
         <div className="modal-body space-y-5">
-          <div className={`flex items-center gap-3 rounded-[24px] border px-4 py-3 text-sm ${status.tone}`}>
-            <StatusIcon className={`h-4 w-4 ${connectionState === "connecting" ? "animate-spin" : ""}`} />
+          <div
+            className={`flex items-center gap-3 rounded-[24px] border px-4 py-3 text-sm ${status.tone}`}
+          >
+            <StatusIcon
+              className={`h-4 w-4 ${connectionState === "connecting" ? "animate-spin" : ""}`}
+            />
             <span>{status.label}</span>
             {latency > 0 ? (
               <span className="ml-auto rounded-full bg-black/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] dark:bg-white/5">
@@ -202,10 +214,15 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
                 Spin up a code and invite another solver.
               </h3>
               <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-slate-400">
-                The host is now connected as soon as the room is created. No extra join step is required.
+                The host is now connected as soon as the room is created. No extra join step is
+                required.
               </p>
 
-              <button type="button" onClick={createRoom} className="surface-button-primary mt-5 sm:w-auto">
+              <button
+                type="button"
+                onClick={createRoom}
+                className="surface-button-primary mt-5 sm:w-auto"
+              >
                 <FiUsers className="h-4 w-4" />
                 Create room
               </button>
@@ -217,7 +234,11 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
                     <div className="flex-1 rounded-[22px] bg-white px-4 py-4 text-center font-['IBM_Plex_Mono'] text-2xl font-semibold tracking-[0.28em] text-[#1a73e8] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:bg-[rgba(8,18,32,0.82)] dark:text-blue-200">
                       {roomId}
                     </div>
-                    <button type="button" onClick={copyRoomId} className="surface-button-secondary sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={copyRoomId}
+                      className="surface-button-secondary sm:w-auto"
+                    >
                       {copied ? <FiCheck className="h-4 w-4" /> : <FiCopy className="h-4 w-4" />}
                       {copied ? "Copied" : "Copy"}
                     </button>
@@ -250,7 +271,9 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
                   disabled={roomId.trim().length < 4 || connectionState === "connecting"}
                   className="surface-button-secondary sm:w-auto"
                 >
-                  {connectionState === "connecting" ? <FiLoader className="h-4 w-4 animate-spin" /> : null}
+                  {connectionState === "connecting" ? (
+                    <FiLoader className="h-4 w-4 animate-spin" />
+                  ) : null}
                   Join room
                 </button>
               </div>
@@ -263,8 +286,8 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
               ) : null}
 
               <div className="mt-5 rounded-[24px] bg-white/60 px-4 py-4 text-sm leading-7 text-slate-500 dark:bg-white/5 dark:text-slate-300">
-                Room codes stay short for live demos and pair tests. The UI is optimized for quick host/join flows,
-                not account-based lobbies.
+                Room codes stay short for live demos and pair tests. The UI is optimized for quick
+                host/join flows, not account-based lobbies.
               </div>
             </section>
           </div>
@@ -324,7 +347,11 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 {connectionState !== "idle" && connectionState !== "disconnected" ? (
-                  <button type="button" onClick={disconnect} className="surface-button-danger sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={disconnect}
+                    className="surface-button-danger sm:w-auto"
+                  >
                     Disconnect
                   </button>
                 ) : null}

@@ -14,12 +14,18 @@ vi.mock("../reasoning/reasoningEngine.js", () => ({
         chainOfThought: `Step 1: Analyze state\nStep 2: Execute R U R'`,
         steps: [
           { step: 1, thought: "Analyze state", action: "", verification: "", verified: true },
-          { step: 2, thought: "Execute move", action: "R U R'", verification: "Looks correct", verified: true },
+          {
+            step: 2,
+            thought: "Execute move",
+            action: "R U R'",
+            verification: "Looks correct",
+            verified: true
+          }
         ],
         moves: ["R", "U", "R'"],
         explanation: "Step 1: Analyze state\nStep 2: Execute move → R U R'",
         treeOfThought: null,
-        verification: { totalSteps: 2, verifiedSteps: 2, confidence: 1.0 },
+        verification: { totalSteps: 2, verifiedSteps: 2, confidence: 1.0 }
       };
     }
 
@@ -33,11 +39,11 @@ vi.mock("../reasoning/reasoningEngine.js", () => ({
         treeOfThought: {
           branches: [
             { id: 1, description: "CFOP", score: 90, selected: true },
-            { id: 2, description: "Roux", score: 70, selected: false },
+            { id: 2, description: "Roux", score: 70, selected: false }
           ],
-          totalExplored: 2,
+          totalExplored: 2
         },
-        verification: { totalSteps: 0, verifiedSteps: 0, confidence: 0 },
+        verification: { totalSteps: 0, verifiedSteps: 0, confidence: 0 }
       };
     }
 
@@ -48,10 +54,10 @@ vi.mock("../reasoning/reasoningEngine.js", () => ({
           move: m,
           found: true,
           valid: true,
-          reason: "Appears valid",
+          reason: "Appears valid"
         })),
         suggestions: [],
-        alternatives: [],
+        alternatives: []
       };
     }
 
@@ -62,8 +68,8 @@ vi.mock("../reasoning/reasoningEngine.js", () => ({
         explanation: `${name} works by cycling pieces using commutators.`,
         sections: [
           { title: "What It Does", content: "Cycles three pieces" },
-          { title: "Recognition", content: "Look for matching blocks" },
-        ],
+          { title: "Recognition", content: "Look for matching blocks" }
+        ]
       };
     }
 
@@ -72,14 +78,14 @@ vi.mock("../reasoning/reasoningEngine.js", () => ({
         strategy: method,
         chainOfThought: "Full guided solve...",
         steps: [
-          { step: 1, thought: "Cross", action: "R U R' U'", verification: "done", verified: true },
+          { step: 1, thought: "Cross", action: "R U R' U'", verification: "done", verified: true }
         ],
         moves: ["R", "U", "R'", "U'"],
         explanation: "Step 1: Cross → R U R' U'",
-        verification: { totalSteps: 1, verifiedSteps: 1, confidence: 1.0 },
+        verification: { totalSteps: 1, verifiedSteps: 1, confidence: 1.0 }
       };
     }
-  },
+  }
 }));
 
 import { createReasoningRouter } from "./reasoningRoutes.js";
@@ -103,7 +109,10 @@ describe("reasoning routes", () => {
     it("returns reasoning result for valid input", async () => {
       const response = await request(createApp())
         .post("/api/reasoning/chain-of-thought")
-        .send({ cubeState: "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB", method: "CFOP" });
+        .send({
+          cubeState: "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB",
+          method: "CFOP"
+        });
 
       expect(response.status).toBe(200);
       expect(response.body.reasoning).toBe("chain-of-thought");
@@ -113,9 +122,7 @@ describe("reasoning routes", () => {
     });
 
     it("returns 400 when cubeState is missing", async () => {
-      const response = await request(createApp())
-        .post("/api/reasoning/chain-of-thought")
-        .send({});
+      const response = await request(createApp()).post("/api/reasoning/chain-of-thought").send({});
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe("missing_cube_state");
@@ -143,9 +150,7 @@ describe("reasoning routes", () => {
     });
 
     it("returns 400 when cubeState is missing", async () => {
-      const response = await request(createApp())
-        .post("/api/reasoning/tree-of-thought")
-        .send({});
+      const response = await request(createApp()).post("/api/reasoning/tree-of-thought").send({});
 
       expect(response.status).toBe(400);
     });
@@ -177,13 +182,11 @@ describe("reasoning routes", () => {
     });
 
     it("accepts proposedMoves as a string", async () => {
-      const response = await request(createApp())
-        .post("/api/reasoning/self-verify")
-        .send({
-          cubeState: "test",
-          proposedMoves: "R U R'",
-          subGoal: "Insert pair"
-        });
+      const response = await request(createApp()).post("/api/reasoning/self-verify").send({
+        cubeState: "test",
+        proposedMoves: "R U R'",
+        subGoal: "Insert pair"
+      });
 
       expect(response.status).toBe(200);
     });
@@ -213,7 +216,11 @@ describe("reasoning routes", () => {
     it("returns guided solve result", async () => {
       const response = await request(createApp())
         .post("/api/reasoning/guided-solve")
-        .send({ cubeState: "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB", method: "CFOP", maxSteps: 10 });
+        .send({
+          cubeState: "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB",
+          method: "CFOP",
+          maxSteps: 10
+        });
 
       expect(response.status).toBe(200);
       expect(response.body.reasoning).toBe("guided-solve");

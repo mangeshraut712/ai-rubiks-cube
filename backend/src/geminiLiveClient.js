@@ -1,8 +1,7 @@
 import { EventEmitter } from "events";
 import { GoogleGenAI, Modality } from "@google/genai";
 
-const DEFAULT_PRIMARY_MODEL =
-  process.env.GEMINI_LIVE_MODEL || "gemini-live-2.5-flash-preview";
+const DEFAULT_PRIMARY_MODEL = process.env.GEMINI_LIVE_MODEL || "gemini-live-2.5-flash-preview";
 const DEFAULT_FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash";
 const DEFAULT_SILENCE_DURATION_MS = 1800;
 const DEFAULT_MAX_OUTPUT_TOKENS = 1536;
@@ -343,7 +342,10 @@ export class GeminiLiveClient {
         ]
       });
 
-      return response?.text || "I could not detect the mistake clearly. Please rotate the cube and ask again.";
+      return (
+        response?.text ||
+        "I could not detect the mistake clearly. Please rotate the cube and ask again."
+      );
     } catch (error) {
       console.error("[gemini-live] requestHint failed", error);
       return "I couldn't generate a visual hint right now. Please try again in a moment.";

@@ -10,7 +10,10 @@ import { describe, expect, it } from "vitest";
 
 // Helper: simulate what #parseReasoningResponse does
 function parseReasoningResponse(rawText, reasoningType, method) {
-  const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = rawText
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 
   const steps = [];
   const moves = [];
@@ -42,7 +45,7 @@ function parseReasoningResponse(rawText, reasoningType, method) {
         thought: stepMatch[2],
         action: "",
         verification: "",
-        verified: false,
+        verified: false
       };
     }
 
@@ -81,24 +84,25 @@ function parseReasoningResponse(rawText, reasoningType, method) {
     verification: {
       totalSteps: steps.length,
       verifiedSteps: steps.filter((s) => s.verified).length,
-      confidence: steps.length > 0
-        ? steps.filter((s) => s.verified).length / steps.length
-        : 0,
+      confidence: steps.length > 0 ? steps.filter((s) => s.verified).length / steps.length : 0
     },
     rawText,
-    reasoningType,
+    reasoningType
   };
 }
 
 function parseVerificationResponse(rawText, proposedMoves) {
-  const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = rawText
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 
   const results = {
     overallValid: true,
     moveVerifications: [],
     suggestions: [],
     alternatives: [],
-    rawText,
+    rawText
   };
 
   for (const move of proposedMoves) {
@@ -112,7 +116,7 @@ function parseVerificationResponse(rawText, proposedMoves) {
       move,
       found,
       valid: found && !invalid,
-      reason: invalid ? "May not be legal in this position" : "Appears valid",
+      reason: invalid ? "May not be legal in this position" : "Appears valid"
     });
   }
 
@@ -140,7 +144,7 @@ function extractTreeOfThought(rawText) {
       id: parseInt(match[1], 10),
       description: match[2].trim(),
       score: 0,
-      selected: false,
+      selected: false
     });
   }
 
@@ -180,7 +184,7 @@ describe("Reasoning Engine Parsing", () => {
         "Verify: This is correct, cross piece is now in place",
         "",
         "Step 2: Insert first F2L pair",
-        "Move: U R U' R'",
+        "Move: U R U' R'"
       ].join("\n");
 
       const result = parseReasoningResponse(rawText, "chain-of-thought", "CFOP");
@@ -211,7 +215,7 @@ describe("Reasoning Engine Parsing", () => {
       const rawText = [
         "Step 1: Do R - Verify: correct",
         "Step 2: Do U - Verify: wrong",
-        "Step 3: Do R' - Verify: confirmed",
+        "Step 3: Do R' - Verify: confirmed"
       ].join("\n");
 
       const result = parseReasoningResponse(rawText, "chain-of-thought", "CFOP");
@@ -273,7 +277,7 @@ describe("Reasoning Engine Parsing", () => {
         "Branch 1: CFOP with cross-first approach",
         "Branch 2: Roux with block building",
         "Branch 3: ZZ with edge orientation",
-        "Best strategy: Branch 1 is optimal",
+        "Best strategy: Branch 1 is optimal"
       ].join("\n");
 
       const result = extractTreeOfThought(rawText);

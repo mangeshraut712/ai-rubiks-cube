@@ -1,5 +1,4 @@
-const DEFAULT_PRODUCTION_BACKEND_ORIGIN =
-  "https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app";
+const DEFAULT_PRODUCTION_BACKEND_ORIGIN = "https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app";
 
 function normalizeOrigin(origin) {
   return String(origin || "")

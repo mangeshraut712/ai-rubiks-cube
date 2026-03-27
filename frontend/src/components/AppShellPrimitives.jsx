@@ -10,7 +10,10 @@ export function BrandWordmark({ word = "Cubey", className = "" }) {
       />
       <span className="brand-wordmark">
         {word.split("").map((letter, index) => (
-          <span key={`${letter}-${index}`} style={{ color: BRAND_COLORS[index % BRAND_COLORS.length] }}>
+          <span
+            key={`${letter}-${index}`}
+            style={{ color: BRAND_COLORS[index % BRAND_COLORS.length] }}
+          >
             {letter}
           </span>
         ))}
@@ -68,14 +71,12 @@ export function QuickActionButton({
   const toneStyles = {
     default:
       "border-[color:rgba(15,23,42,0.08)] bg-white/80 text-slate-700 hover:border-[color:rgba(66,133,244,0.24)] hover:text-slate-950 dark:border-white/10 dark:bg-slate-950/30 dark:text-slate-200 dark:hover:text-white",
-    blue:
-      "border-[color:rgba(66,133,244,0.25)] bg-[rgba(66,133,244,0.12)] text-[#1a73e8] hover:bg-[rgba(66,133,244,0.18)] dark:text-blue-300",
+    blue: "border-[color:rgba(66,133,244,0.25)] bg-[rgba(66,133,244,0.12)] text-[#1a73e8] hover:bg-[rgba(66,133,244,0.18)] dark:text-blue-300",
     green:
       "border-[color:rgba(52,168,83,0.28)] bg-[rgba(52,168,83,0.12)] text-[#19733c] hover:bg-[rgba(52,168,83,0.18)] dark:text-green-300",
     yellow:
       "border-[color:rgba(251,188,5,0.28)] bg-[rgba(251,188,5,0.14)] text-[#9a6800] hover:bg-[rgba(251,188,5,0.2)] dark:text-yellow-200",
-    red:
-      "border-[color:rgba(234,67,53,0.28)] bg-[rgba(234,67,53,0.12)] text-[#b3261e] hover:bg-[rgba(234,67,53,0.18)] dark:text-red-300"
+    red: "border-[color:rgba(234,67,53,0.28)] bg-[rgba(234,67,53,0.12)] text-[#b3261e] hover:bg-[rgba(234,67,53,0.18)] dark:text-red-300"
   };
 
   return (

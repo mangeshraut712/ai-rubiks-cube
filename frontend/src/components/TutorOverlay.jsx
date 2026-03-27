@@ -24,8 +24,7 @@ function resolveStatus(connectionStatus, errorText, isLocalEnvironment) {
   if (errorText) {
     return {
       label: "Backend issue",
-      tone:
-        "border-[color:rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] text-[#b42318] dark:text-red-200",
+      tone: "border-[color:rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] text-[#b42318] dark:text-red-200",
       empty: isLocalEnvironment
         ? "Backend is not reachable yet. Start the local backend, then retry the live session."
         : "Tutor backend is not reachable right now. Retry in a moment."
@@ -35,8 +34,7 @@ function resolveStatus(connectionStatus, errorText, isLocalEnvironment) {
   if (connectionStatus === "connecting") {
     return {
       label: "Connecting",
-      tone:
-        "border-[color:rgba(251,188,5,0.24)] bg-[rgba(251,188,5,0.14)] text-[#8a6100] dark:text-yellow-200",
+      tone: "border-[color:rgba(251,188,5,0.24)] bg-[rgba(251,188,5,0.14)] text-[#8a6100] dark:text-yellow-200",
       empty: "Connecting to the live tutor. Camera memory and transcript will appear here shortly."
     };
   }
@@ -44,8 +42,7 @@ function resolveStatus(connectionStatus, errorText, isLocalEnvironment) {
   if (connectionStatus === "permission_denied") {
     return {
       label: "Permissions blocked",
-      tone:
-        "border-[color:rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] text-[#b42318] dark:text-red-200",
+      tone: "border-[color:rgba(234,67,53,0.22)] bg-[rgba(234,67,53,0.12)] text-[#b42318] dark:text-red-200",
       empty: "Camera or microphone access is blocked. Allow permissions and restart the session."
     };
   }
@@ -53,8 +50,7 @@ function resolveStatus(connectionStatus, errorText, isLocalEnvironment) {
   if (connectionStatus === "demo_mode") {
     return {
       label: "Demo mode",
-      tone:
-        "border-[color:rgba(66,133,244,0.22)] bg-[rgba(66,133,244,0.12)] text-[#1a73e8] dark:text-blue-200",
+      tone: "border-[color:rgba(66,133,244,0.22)] bg-[rgba(66,133,244,0.12)] text-[#1a73e8] dark:text-blue-200",
       empty: "Demo mode is ready. Ask for guidance without needing a live camera feed."
     };
   }
@@ -62,16 +58,14 @@ function resolveStatus(connectionStatus, errorText, isLocalEnvironment) {
   if (connectionStatus === "connected") {
     return {
       label: "Connected",
-      tone:
-        "border-[color:rgba(52,168,83,0.22)] bg-[rgba(52,168,83,0.12)] text-[#166534] dark:text-green-200",
+      tone: "border-[color:rgba(52,168,83,0.22)] bg-[rgba(52,168,83,0.12)] text-[#166534] dark:text-green-200",
       empty: "Connection established. Speak or type to start the coaching loop."
     };
   }
 
   return {
     label: "Offline",
-    tone:
-      "border-[color:rgba(148,163,184,0.22)] bg-[rgba(148,163,184,0.14)] text-slate-600 dark:text-slate-300",
+    tone: "border-[color:rgba(148,163,184,0.22)] bg-[rgba(148,163,184,0.14)] text-slate-600 dark:text-slate-300",
     empty: "Start a live session to populate the tutor memory and transcript timeline."
   };
 }

@@ -6,8 +6,18 @@ import { WebSocketServer } from "ws";
 import { z } from "zod";
 
 const MAX_SIGNALING_MESSAGE_BYTES = 64 * 1024;
-const RoomIdSchema = z.string().trim().min(4).max(16).regex(/^[A-Z0-9_-]+$/i);
-const ClientIdSchema = z.string().trim().min(8).max(64).regex(/^[A-Z0-9_-]+$/i);
+const RoomIdSchema = z
+  .string()
+  .trim()
+  .min(4)
+  .max(16)
+  .regex(/^[A-Z0-9_-]+$/i);
+const ClientIdSchema = z
+  .string()
+  .trim()
+  .min(8)
+  .max(64)
+  .regex(/^[A-Z0-9_-]+$/i);
 const JoinMessageSchema = z.object({
   type: z.literal("join"),
   roomId: RoomIdSchema,
@@ -161,15 +171,21 @@ class SignalingServer {
 
       case "offer":
         parsed = OfferMessageSchema.safeParse(message);
-        return parsed.success ? { ...parsed.data, roomId: parsed.data.roomId.trim().toUpperCase() } : null;
+        return parsed.success
+          ? { ...parsed.data, roomId: parsed.data.roomId.trim().toUpperCase() }
+          : null;
 
       case "answer":
         parsed = AnswerMessageSchema.safeParse(message);
-        return parsed.success ? { ...parsed.data, roomId: parsed.data.roomId.trim().toUpperCase() } : null;
+        return parsed.success
+          ? { ...parsed.data, roomId: parsed.data.roomId.trim().toUpperCase() }
+          : null;
 
       case "ice-candidate":
         parsed = IceCandidateMessageSchema.safeParse(message);
-        return parsed.success ? { ...parsed.data, roomId: parsed.data.roomId.trim().toUpperCase() } : null;
+        return parsed.success
+          ? { ...parsed.data, roomId: parsed.data.roomId.trim().toUpperCase() }
+          : null;
 
       case "leave":
         parsed = LeaveMessageSchema.safeParse(message);

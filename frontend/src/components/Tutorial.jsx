@@ -32,7 +32,8 @@ const TUTORIAL_STEPS = [
   {
     id: "cube-structure",
     title: "Understand the cube",
-    summary: "Six faces, fixed centers, and repeatable notation still anchor the entire tutor flow.",
+    summary:
+      "Six faces, fixed centers, and repeatable notation still anchor the entire tutor flow.",
     bullets: [
       "Each center defines its face color permanently.",
       "Cubey reasons about the current state from those face positions.",
@@ -97,7 +98,8 @@ const TUTORIAL_STEPS = [
   {
     id: "challenge",
     title: "Turn practice into a challenge",
-    summary: "Challenge mode and multiplayer now feel like extensions of the main stage, not separate tools.",
+    summary:
+      "Challenge mode and multiplayer now feel like extensions of the main stage, not separate tools.",
     bullets: [
       "Enable challenge mode to race the tutor.",
       "Open multiplayer to create or join a WebRTC room.",
@@ -183,12 +185,17 @@ export default function Tutorial({ onClose, onComplete }) {
               <p className="modal-eyebrow">Tutorial</p>
               <h2 className="modal-title">A cleaner onboarding flow for the new stage.</h2>
               <p className="modal-subtitle">
-                I replaced the old slideshow with a guided control-room walkthrough so the interface reads
-                like one product from the first screen onward.
+                I replaced the old slideshow with a guided control-room walkthrough so the interface
+                reads like one product from the first screen onward.
               </p>
             </div>
 
-            <button type="button" onClick={handleSkip} className="modal-close" aria-label="Close tutorial">
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="modal-close"
+              aria-label="Close tutorial"
+            >
               <FiX className="h-5 w-5" />
             </button>
           </header>
@@ -243,7 +250,8 @@ export default function Tutorial({ onClose, onComplete }) {
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
                         <div className="surface-kicker">
-                          Step {(currentStep + 1).toString().padStart(2, "0")} of {TUTORIAL_STEPS.length}
+                          Step {(currentStep + 1).toString().padStart(2, "0")} of{" "}
+                          {TUTORIAL_STEPS.length}
                         </div>
                         <h3 className="mt-3 text-3xl font-semibold tracking-[-0.07em] text-slate-950 dark:text-white">
                           {step.title}
@@ -297,18 +305,31 @@ export default function Tutorial({ onClose, onComplete }) {
 
             <div className="flex flex-col gap-3 sm:flex-row">
               {!isFirst ? (
-                <button type="button" onClick={handleRestart} className="surface-button-secondary sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleRestart}
+                  className="surface-button-secondary sm:w-auto"
+                >
                   <FiRotateCcw className="h-4 w-4" />
                   Restart
                 </button>
               ) : null}
 
-              <button type="button" onClick={handlePrev} disabled={isFirst} className="surface-button-secondary sm:w-auto">
+              <button
+                type="button"
+                onClick={handlePrev}
+                disabled={isFirst}
+                className="surface-button-secondary sm:w-auto"
+              >
                 <FiChevronLeft className="h-4 w-4" />
                 Back
               </button>
 
-              <button type="button" onClick={handleNext} className="surface-button-primary sm:w-auto">
+              <button
+                type="button"
+                onClick={handleNext}
+                className="surface-button-primary sm:w-auto"
+              >
                 {isLast ? (
                   <>
                     Get started

@@ -38,7 +38,9 @@ function SettingCard({ icon: Icon, title, description, accent, soft, children })
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-lg font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">{title}</h3>
+          <h3 className="text-lg font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
+            {title}
+          </h3>
           <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">{description}</p>
         </div>
       </div>
@@ -108,7 +110,12 @@ export default function Settings({ onClose }) {
               </p>
             </div>
 
-            <button type="button" onClick={onClose} className="modal-close" aria-label="Close settings">
+            <button
+              type="button"
+              onClick={onClose}
+              className="modal-close"
+              aria-label="Close settings"
+            >
               <FiX className="h-5 w-5" />
             </button>
           </header>
@@ -197,7 +204,11 @@ export default function Settings({ onClose }) {
                       <ToggleControl
                         checked={settings.voiceEnabled !== false}
                         onChange={(event) => updateSettings({ voiceEnabled: event.target.checked })}
-                        label={settings.voiceEnabled !== false ? "Voice commands on" : "Voice commands off"}
+                        label={
+                          settings.voiceEnabled !== false
+                            ? "Voice commands on"
+                            : "Voice commands off"
+                        }
                       />
                     </SettingCard>
 
@@ -211,7 +222,8 @@ export default function Settings({ onClose }) {
                             Animation speed
                           </h3>
                           <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">
-                            Tune cube animations between a snappier demo feel and a slower learning pace.
+                            Tune cube animations between a snappier demo feel and a slower learning
+                            pace.
                           </p>
                         </div>
                       </div>
@@ -223,7 +235,9 @@ export default function Settings({ onClose }) {
                           step="50"
                           value={settings.animationSpeed}
                           onChange={(event) =>
-                            updateSettings({ animationSpeed: Number.parseInt(event.target.value, 10) })
+                            updateSettings({
+                              animationSpeed: Number.parseInt(event.target.value, 10)
+                            })
                           }
                           className="range-input"
                         />
@@ -262,7 +276,9 @@ export default function Settings({ onClose }) {
                     >
                       <ToggleControl
                         checked={settings.hapticsEnabled}
-                        onChange={(event) => updateSettings({ hapticsEnabled: event.target.checked })}
+                        onChange={(event) =>
+                          updateSettings({ hapticsEnabled: event.target.checked })
+                        }
                         label={settings.hapticsEnabled ? "Haptics on" : "Haptics off"}
                       />
                     </SettingCard>
@@ -291,8 +307,8 @@ export default function Settings({ onClose }) {
                             Persistence
                           </h3>
                           <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">
-                            All toggles persist through the existing local Zustand store. No extra settings
-                            layer was added in the rewrite.
+                            All toggles persist through the existing local Zustand store. No extra
+                            settings layer was added in the rewrite.
                           </p>
                         </div>
                       </div>
@@ -330,8 +346,8 @@ export default function Settings({ onClose }) {
                     <section className="modal-card p-5">
                       <div className="surface-kicker">Rewrite note</div>
                       <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-slate-400">
-                        The shortcut reference now lives inside the same modal system as the rest of the
-                        product, instead of feeling like a detached developer panel.
+                        The shortcut reference now lives inside the same modal system as the rest of
+                        the product, instead of feeling like a detached developer panel.
                       </p>
                     </section>
                   </>
