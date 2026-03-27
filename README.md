@@ -383,3 +383,21 @@ Latest verified ready revision:
 - Part 2 is the deterministic cube-core product.
 - They live together because they share product language, deployment infrastructure, and problem space, even though their interaction models are different.
 - This README is written to explain the repository accurately as a GitHub project, not as a one-off demo page.
+
+---
+
+<!-- codex:project-diagram:start -->
+
+## Project Diagram
+
+```mermaid
+flowchart LR
+    A["Browser"] --> B["Frontend"]
+    B --> C["Backend / API"]
+    C --> D["Data / Services"]
+    B -. feedback .-> A
+```
+
+_Main application path from user interface through backend services._
+
+<!-- codex:project-diagram:end -->
