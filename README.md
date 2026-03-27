@@ -99,6 +99,39 @@ Main files:
 | Gemini integration | `@google/genai` |
 | Hosting | Google Cloud Run, Cloud Build, Artifact Registry, Secret Manager |
 
+### 🧠 Reasoning Engine (NEW)
+
+The backend now includes a **reasoning engine** that wraps the Gemini API with structured reasoning prompts. It demonstrates 2026 LLM reasoning patterns applied to Rubik's Cube solving:
+
+| Pattern | Endpoint | What It Does |
+| --- | --- | --- |
+| **Chain-of-Thought** | `POST /api/reasoning/chain-of-thought` | Step-by-step decomposition — observe, sub-goal, reason, move, verify |
+| **Tree-of-Thought** | `POST /api/reasoning/tree-of-thought` | Explores CFOP/Roux/ZZ strategies in parallel, selects optimal |
+| **Self-Verification** | `POST /api/reasoning/self-verify` | Validates proposed moves against cube state and sub-goals |
+| **Algorithm Explanation** | `POST /api/reasoning/explain-algorithm` | Deep causal explanation — commutator analysis, recognition, mnemonics |
+| **Guided Solve** | `POST /api/reasoning/guided-solve` | Full explained solve with reasoning at every step |
+
+**Example — Chain-of-Thought:**
+```bash
+curl -X POST http://localhost:8080/api/reasoning/chain-of-thought \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cubeState": "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB",
+    "method": "CFOP"
+  }'
+```
+
+**How it works:**
+1. The engine wraps user input in structured reasoning prompts
+2. The LLM must show work at each step (observe → reason → act → verify)
+3. Self-verification catches invalid moves before execution
+4. Tree-of-Thought explores multiple strategies before committing
+
+Files:
+- [backend/src/reasoning/reasoningEngine.js](backend/src/reasoning/reasoningEngine.js)
+- [backend/src/reasoning/prompts.js](backend/src/reasoning/prompts.js)
+- [backend/src/routes/reasoningRoutes.js](backend/src/routes/reasoningRoutes.js)
+
 Source of truth:
 - [frontend/package.json](frontend/package.json)
 - [backend/package.json](backend/package.json)

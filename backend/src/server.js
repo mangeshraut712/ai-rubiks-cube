@@ -15,6 +15,7 @@ import { z } from "zod";
 import { GeminiLiveClient } from "./geminiLiveClient.js";
 import { CubeState, generateScramble, solveCube } from "./cubeStateManager.js";
 import { createSystemRouter } from "./routes/systemRoutes.js";
+import { createReasoningRouter } from "./routes/reasoningRoutes.js";
 import { buildHealthPayload, buildRuntimePayload } from "./runtimeInfo.js";
 import { TUTOR_SYSTEM_PROMPT } from "./tutorPrompt.js";
 import SignalingServer from "./signalingServer.js";
@@ -415,6 +416,15 @@ app.use(
   createSystemRouter({
     getHealthPayload: getSystemHealthPayload,
     getRuntimePayload: getSystemRuntimePayload
+  })
+);
+
+// Reasoning engine routes (CoT, ToT, Self-Verify, Algorithm Explanation)
+app.use(
+  "/api/reasoning",
+  createReasoningRouter({
+    apiKey: API_KEY,
+    model: process.env.REASONING_MODEL || "gemini-2.5-flash"
   })
 );
 
