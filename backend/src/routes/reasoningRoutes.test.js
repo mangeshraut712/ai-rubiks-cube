@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 // Mock the ReasoningEngine to avoid real API calls
 vi.mock("../reasoning/reasoningEngine.js", () => ({
   ReasoningEngine: class MockReasoningEngine {
-    async chainOfThought(cubeState, method) {
+    async chainOfThought(_cubeState, method) {
       return {
         strategy: method,
         chainOfThought: `Step 1: Analyze state\nStep 2: Execute R U R'`,
@@ -29,7 +29,7 @@ vi.mock("../reasoning/reasoningEngine.js", () => ({
       };
     }
 
-    async treeOfThought(cubeState) {
+    async treeOfThought(_cubeState) {
       return {
         strategy: "CFOP",
         chainOfThought: "Evaluated CFOP, Roux, ZZ",
@@ -47,7 +47,7 @@ vi.mock("../reasoning/reasoningEngine.js", () => ({
       };
     }
 
-    async selfVerify(cubeState, proposedMoves, subGoal) {
+    async selfVerify(_cubeState, proposedMoves, _subGoal) {
       return {
         overallValid: true,
         moveVerifications: proposedMoves.map((m) => ({
@@ -73,7 +73,7 @@ vi.mock("../reasoning/reasoningEngine.js", () => ({
       };
     }
 
-    async guidedSolve(cubeState, method, maxSteps) {
+    async guidedSolve(_cubeState, method, _maxSteps) {
       return {
         strategy: method,
         chainOfThought: "Full guided solve...",
@@ -107,12 +107,10 @@ function createAppNoKey() {
 describe("reasoning routes", () => {
   describe("POST /api/reasoning/chain-of-thought", () => {
     it("returns reasoning result for valid input", async () => {
-      const response = await request(createApp())
-        .post("/api/reasoning/chain-of-thought")
-        .send({
-          cubeState: "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB",
-          method: "CFOP"
-        });
+      const response = await request(createApp()).post("/api/reasoning/chain-of-thought").send({
+        cubeState: "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB",
+        method: "CFOP"
+      });
 
       expect(response.status).toBe(200);
       expect(response.body.reasoning).toBe("chain-of-thought");
@@ -214,13 +212,11 @@ describe("reasoning routes", () => {
 
   describe("POST /api/reasoning/guided-solve", () => {
     it("returns guided solve result", async () => {
-      const response = await request(createApp())
-        .post("/api/reasoning/guided-solve")
-        .send({
-          cubeState: "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB",
-          method: "CFOP",
-          maxSteps: 10
-        });
+      const response = await request(createApp()).post("/api/reasoning/guided-solve").send({
+        cubeState: "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB",
+        method: "CFOP",
+        maxSteps: 10
+      });
 
       expect(response.status).toBe(200);
       expect(response.body.reasoning).toBe("guided-solve");
