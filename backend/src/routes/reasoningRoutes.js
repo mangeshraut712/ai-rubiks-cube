@@ -53,37 +53,32 @@ const GuidedSolveSchema = z.object({
   maxSteps: z.number().int().min(1).max(50).default(20)
 });
 
-// ---------------------------------------------------------------------------
-// Rate limiting for reasoning endpoints
-// ---------------------------------------------------------------------------
-
-const reasoningRateLimit = new Map();
-const REASONING_RATE_LIMIT_WINDOW = 60_000; // 1 minute
-const REASONING_MAX_REQUESTS = 10; // per window
-
-function checkReasoningRateLimit(ip) {
-  const now = Date.now();
-  const data = reasoningRateLimit.get(ip);
-
-  if (!data || now > data.resetTime) {
-    reasoningRateLimit.set(ip, { count: 1, resetTime: now + REASONING_RATE_LIMIT_WINDOW });
-    return true;
-  }
-
-  if (data.count >= REASONING_MAX_REQUESTS) {
-    return false;
-  }
-
-  data.count++;
-  return true;
-}
-
 /**
  * @param {{ apiKey: string, model?: string }} options
  * @returns {express.Router}
  */
 export function createReasoningRouter({ apiKey, model }) {
   const router = express.Router();
+  const reasoningRateLimit = new Map();
+  const REASONING_RATE_LIMIT_WINDOW = 60_000;
+  const REASONING_MAX_REQUESTS = 10;
+
+  function checkReasoningRateLimit(ip) {
+    const now = Date.now();
+    const data = reasoningRateLimit.get(ip);
+
+    if (!data || now > data.resetTime) {
+      reasoningRateLimit.set(ip, { count: 1, resetTime: now + REASONING_RATE_LIMIT_WINDOW });
+      return true;
+    }
+
+    if (data.count >= REASONING_MAX_REQUESTS) {
+      return false;
+    }
+
+    data.count++;
+    return true;
+  }
 
   // Lazy-init the engine (only when first request arrives)
   let engine = null;
