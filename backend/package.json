@@ -2,6 +2,7 @@
   "name": "gemini-rubiks-tutor-backend",
   "version": "2.0.0",
   "private": true,
+  "author": "Mangesh Raut <mbr63@drexel.edu>",
   "type": "module",
   "main": "src/server.js",
   "scripts": {

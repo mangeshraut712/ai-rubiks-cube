@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": false
+  },
+  "github": {
+    "enabled": false,
+    "silent": true
+  },
+  "ignoreCommand": "echo 'Skipping Vercel: frontend is hosted on GitHub Pages.' && exit 0"
+}

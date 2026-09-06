@@ -9,8 +9,8 @@ function createLocation(url) {
 }
 
 describe("backend origin selection", () => {
-  it("prefers the hosted Cloud Run backend when the frontend is served from Vercel", () => {
-    const location = createLocation("https://ai-rubiks-cube.vercel.app/");
+  it("prefers the hosted Cloud Run backend when the frontend is served from GitHub Pages", () => {
+    const location = createLocation("https://mangeshraut712.github.io/ai-rubiks-cube/");
 
     expect(getRuntimeUrlCandidates(location)[0]).toBe(
       "https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime"
