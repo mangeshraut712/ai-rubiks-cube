@@ -37,6 +37,7 @@ jobs:
         run: npm install --global npm@11.11.0
 
       - name: Setup Pages
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: Install frontend deps
