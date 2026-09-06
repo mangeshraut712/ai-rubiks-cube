@@ -30,13 +30,14 @@ async function launchBrowser() {
     args: ["--no-sandbox", "--disable-dev-shm-usage", "--font-render-hinting=none"]
   };
 
+  if (process.env.CHROME_PATH) {
+    return chromium.launch({ ...common, executablePath: process.env.CHROME_PATH });
+  }
+
   try {
     return await chromium.launch({ ...common, channel: "chrome" });
   } catch {
-    return await chromium.launch({
-      ...common,
-      executablePath: process.env.CHROME_PATH || "/usr/bin/google-chrome-stable"
-    });
+    return chromium.launch(common);
   }
 }
 
