@@ -1,4 +1,5 @@
-const { FACE_ORDER, SOLVED_STATE, STICKER_LAYOUT, validateState } = window.CubeCore2x2;
+(function (root) {
+const { FACE_ORDER, SOLVED_STATE, STICKER_LAYOUT, validateState } = root.CubeCore2x2;
 
 const STICKER_COLORS = {
   W: 0xf8fafc,
@@ -262,4 +263,5 @@ function faceToColor(face) {
   }
 }
 
-window.CubeEngine = CubeEngine;
+root.CubeEngine = CubeEngine;
+})(typeof globalThis !== "undefined" ? globalThis : this);

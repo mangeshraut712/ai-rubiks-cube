@@ -1,14 +1,12 @@
 # AI Rubik's Tutor
 
 <p align="center">
-  <img src="frontend/public/rubiks-ai-logo.png" width="148" alt="AI Rubik's Tutor logo" />
-</p>
-
-<p align="center">
   <strong>Two Rubik's Cube products in one monorepo: a realtime Gemini tutor and a deterministic 2x2 solver lab.</strong>
 </p>
 
 <p align="center">
+  <a href="https://mangeshraut712.github.io/ai-rubiks-cube/">Live demo</a>
+  ·
   <a href="https://react.dev">React 19</a>
   ·
   <a href="https://vite.dev">Vite 7</a>
@@ -21,6 +19,16 @@
   ·
   <a href="https://ai.google.dev">Google GenAI SDK</a>
 </p>
+
+<p align="center">
+  <img src="docs/screenshots/01-home.png" alt="Cubey overview home with the live 3x3 cube stage" width="900" />
+</p>
+<p align="center"><sub>Home — Part 1 / Part 2 entry and the live 3x3 cube stage.</sub></p>
+
+<p align="center">
+  <img src="docs/screenshots/02-feature.png" alt="Cubey Core 2x2 lab mid-solve with BFS solution playback" width="900" />
+</p>
+<p align="center"><sub>Solver — scramble, BFS solution, and step-by-step playback on the 2x2 lab.</sub></p>
 
 <p align="center">
   <a href="#products">Products</a>
@@ -409,6 +417,8 @@ gcloud builds submit --config cloudbuild.yaml .
 Current public frontend (GitHub Pages, free):
 
 - `https://mangeshraut712.github.io/ai-rubiks-cube/`
+
+README product shots in `docs/screenshots/` are Playwright captures of the live overview home and the 2x2 solver during playback (`scripts/capture-readme-screenshots.mjs`).
 
 Author:
 
