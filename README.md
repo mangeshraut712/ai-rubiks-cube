@@ -343,7 +343,7 @@ Public app:
 
 - `https://mangeshraut712.github.io/ai-rubiks-cube/`
 
-The paused Vercel host (`https://ai-rubiks-cube.vercel.app`) is no longer used.
+The paused Vercel host (`https://ai-rubiks-cube.vercel.app`) is no longer used. This repo includes a `vercel.json` that turns off Vercel Git deployments. If GitHub still shows a red **Vercel** check (“Account is blocked”), disconnect the project in the Vercel dashboard (Settings → Git → Disconnect) so the blocked account stops posting commit statuses.
 
 How it deploys:
 
