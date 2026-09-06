@@ -15,6 +15,8 @@
   ·
   <a href="https://tailwindcss.com">Tailwind CSS 4</a>
   ·
+  <a href="https://pages.github.com">GitHub Pages</a>
+  ·
   <a href="https://cloud.google.com/run">Google Cloud Run</a>
   ·
   <a href="https://ai.google.dev">Google GenAI SDK</a>
@@ -101,7 +103,7 @@ Main files:
 | Realtime transport       | `ws` websockets, WebRTC signaling                                |
 | Validation and hardening | Zod 4, Helmet, compression, express-rate-limit                   |
 | Gemini integration       | `@google/genai`                                                  |
-| Hosting                  | Google Cloud Run, Cloud Build, Artifact Registry, Secret Manager |
+| Hosting                  | Frontend on GitHub Pages (free); live tutor backend on Google Cloud Run |
 
 ### 🧠 Reasoning Engine (NEW)
 
@@ -213,7 +215,8 @@ flowchart LR
 │   ├── start-core.sh
 │   └── start-gemini.sh
 ├── .github/workflows/
-│   └── ci.yml
+│   ├── ci.yml
+│   └── github-pages.yml
 ├── .env.example
 ├── Dockerfile
 ├── cloudbuild.yaml
@@ -255,7 +258,7 @@ VITE_BACKEND_ORIGIN=http://localhost:8080
 Optional values:
 
 ```bash
-CORS_ORIGIN=https://*.run.app,https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173
+CORS_ORIGIN=https://*.run.app,https://mangeshraut712.github.io,https://*.github.io,http://localhost:5173,http://127.0.0.1:5173
 VITE_WS_URL=ws://localhost:8080/ws
 VITE_SIGNALING_SERVER=ws://localhost:8080
 VITE_ICE_SERVERS_JSON=[{"urls":"stun:stun.l.google.com:19302"}]
@@ -323,16 +326,58 @@ GitHub Actions runs:
 - frontend lint
 - frontend tests
 - frontend build
+- GitHub Pages production build (`base` `/ai-rubiks-cube/`)
 
-Workflow:
+Workflows:
 
 - [.github/workflows/ci.yml](.github/workflows/ci.yml)
+- [.github/workflows/github-pages.yml](.github/workflows/github-pages.yml)
 
 ## Deployment
 
-This repo is designed for a single Google Cloud Run deployment where the backend serves the built frontend.
+The public **frontend** is a static Vite app hosted on **GitHub Pages** (free). The **backend** is not part of Pages: live tutoring, websockets, and reasoning APIs stay on Google Cloud Run (or `localhost` during development).
 
-### Manual deploy
+### Frontend — GitHub Pages (free)
+
+Public app:
+
+- `https://mangeshraut712.github.io/ai-rubiks-cube/`
+
+The paused Vercel host (`https://ai-rubiks-cube.vercel.app`) is no longer used.
+
+How it deploys:
+
+1. [`.github/workflows/github-pages.yml`](.github/workflows/github-pages.yml) builds `frontend/` with Vite `base` `/ai-rubiks-cube/`
+2. `frontend/dist` is uploaded as a Pages artifact
+3. GitHub Pages serves it at the project URL above
+
+Repo Settings → Pages should use **GitHub Actions** as the source. The first deploy from `main` creates the `github-pages` environment.
+
+Local production-base check:
+
+```bash
+cd frontend
+npm ci
+npm run build:pages
+npm run preview:pages
+```
+
+Then open `http://localhost:4173/ai-rubiks-cube/`.
+
+### Backend — Cloud Run (separate, not GitHub Pages)
+
+Live Gemini tutoring needs the Express backend, API keys, and websockets. GitHub Pages cannot host that. The static frontend talks to the hosted backend:
+
+- `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/`
+
+Useful backend URLs:
+
+- health: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
+- runtime: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime`
+
+If Cloud Run is unavailable, the GitHub Pages UI still loads; Part 1 live features stay offline.
+
+### Manual Cloud Run deploy (backend + optional bundled frontend)
 
 ```bash
 ./deploy.sh YOUR_GCP_PROJECT_ID
@@ -361,19 +406,27 @@ gcloud builds submit --config cloudbuild.yaml .
 
 ## Public Deployment
 
-Current public service:
+Current public frontend (GitHub Pages, free):
+
+- `https://mangeshraut712.github.io/ai-rubiks-cube/`
+
+Author:
+
+- Mangesh Raut \<mbr63@drexel.edu\>
+
+Current public backend (Cloud Run, not Pages):
 
 - `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/`
 
 Useful URLs:
 
-- app root: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/`
-- health: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
-- runtime: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime`
-- Part 1 live: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/part-1/live`
-- Part 2: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/part-2`
+- app root: `https://mangeshraut712.github.io/ai-rubiks-cube/`
+- Part 1 live: `https://mangeshraut712.github.io/ai-rubiks-cube/part-1/live`
+- Part 2: `https://mangeshraut712.github.io/ai-rubiks-cube/part-2`
+- backend health: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/health`
+- backend runtime: `https://gemini-rubiks-tutor-vnc62azkwq-uc.a.run.app/api/runtime`
 
-Latest verified ready revision:
+Latest verified Cloud Run revision:
 
 - `gemini-rubiks-tutor-00011-mn2`
 

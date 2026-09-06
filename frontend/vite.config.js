@@ -8,8 +8,13 @@ const backendWsOrigin = backendHttpOrigin.startsWith("https://")
   ? backendHttpOrigin.replace("https://", "wss://")
   : backendHttpOrigin.replace("http://", "ws://");
 const enableSourceMaps = process.env.VITE_SOURCEMAP === "true";
+const githubPagesBase = "/ai-rubiks-cube/";
+const base =
+  process.env.VITE_BASE ||
+  (process.env.GITHUB_PAGES === "true" ? githubPagesBase : "/");
 
 export default defineConfig({
+  base,
   plugins: [
     react(),
     tailwindcss(),
@@ -69,36 +74,36 @@ export default defineConfig({
         background_color: "#ffffff",
         display: "standalone",
         orientation: "any",
-        scope: "/",
-        start_url: "/",
+        scope: base,
+        start_url: base,
         icons: [
           {
-            src: "/icon-72x72.png",
+            src: "icon-72x72.png",
             sizes: "72x72",
             type: "image/png"
           },
           {
-            src: "/icon-96x96.png",
+            src: "icon-96x96.png",
             sizes: "96x96",
             type: "image/png"
           },
           {
-            src: "/icon-144x144.png",
+            src: "icon-144x144.png",
             sizes: "144x144",
             type: "image/png"
           },
           {
-            src: "/icon-192x192.png",
+            src: "icon-192x192.png",
             sizes: "192x192",
             type: "image/png"
           },
           {
-            src: "/icon-512x512.png",
+            src: "icon-512x512.png",
             sizes: "512x512",
             type: "image/png"
           },
           {
-            src: "/icon-512x512-maskable.png",
+            src: "icon-512x512-maskable.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable"

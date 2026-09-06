@@ -318,7 +318,7 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 
 const DEFAULT_CORS_ORIGINS =
-  "https://*.run.app,https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173";
+  "https://*.run.app,https://mangeshraut712.github.io,https://*.github.io,http://localhost:5173,http://127.0.0.1:5173";
 
 function normalizeOrigin(value) {
   return String(value || "")
