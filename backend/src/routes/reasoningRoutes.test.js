@@ -123,7 +123,7 @@ describe("reasoning routes", () => {
       const response = await request(createApp()).post("/api/reasoning/chain-of-thought").send({});
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe("missing_cube_state");
+      expect(response.body.error).toBe("validation_error");
     });
 
     it("returns 503 when API key is not configured", async () => {
@@ -176,7 +176,7 @@ describe("reasoning routes", () => {
         .send({ cubeState: "test" });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe("missing_fields");
+      expect(response.body.error).toBe("validation_error");
     });
 
     it("accepts proposedMoves as a string", async () => {

@@ -18,6 +18,201 @@ import { REASONING_PROMPTS } from "./prompts.js";
 
 const DEFAULT_MODEL = "gemini-2.5-flash";
 
+/** Face turns such as R, U', F2. A trailing word-boundary cannot follow ', so (?!\\w) is used. */
+const CUBE_MOVE_PATTERN = /\b([UDLRFB](?:2|')?)(?!\w)/g;
+const CLAUSE_SPLIT = /\s*(?:,|;|\.| but | however )\s*/i;
+
+/**
+ * Extract Singmaster moves from free text, keeping inverses (R') and doubles (F2).
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function extractCubeMoves(text) {
+  return [...String(text).matchAll(new RegExp(CUBE_MOVE_PATTERN.source, "g"))].map((m) => m[1]);
+}
+
+function moveTokenRegex(move) {
+  const escaped = String(move).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?<![A-Za-z0-9])${escaped}(?![A-Za-z0-9])`, "i");
+}
+
+function clausesFromText(rawText) {
+  return String(rawText)
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .flatMap((line) => line.split(CLAUSE_SPLIT).filter(Boolean));
+}
+
+/**
+ * Parse a model reasoning trace into structured steps, moves, and verification.
+ * @param {string} rawText
+ * @param {string} reasoningType
+ * @param {string} method
+ */
+export function parseReasoningResponse(rawText, reasoningType, method) {
+  const lines = String(rawText)
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const steps = [];
+  const moves = [];
+  let strategy = method;
+  let treeOfThought = null;
+
+  for (const line of lines) {
+    const stratMatch = line.match(/(?:strategy|method|approach):\s*(.+)/i);
+    if (stratMatch) {
+      strategy = stratMatch[1].trim();
+    }
+  }
+
+  const stepPattern = /^(?:step\s+)?(\d+)[:.]\s*(.+)/i;
+  let currentStep = null;
+
+  for (const line of lines) {
+    const stepMatch = line.match(stepPattern);
+    if (stepMatch) {
+      if (currentStep) {
+        steps.push(currentStep);
+      }
+      currentStep = {
+        step: parseInt(stepMatch[1], 10),
+        thought: stepMatch[2],
+        action: "",
+        verification: "",
+        verified: false
+      };
+    }
+
+    const lineMoves = extractCubeMoves(line);
+
+    if (currentStep) {
+      if (lineMoves.length > 0 && !currentStep.action) {
+        currentStep.action = lineMoves.join(" ");
+      }
+
+      if (/verify|check|confirm/i.test(line)) {
+        currentStep.verification = line;
+        currentStep.verified = /correct|valid|confirmed|pass/i.test(line);
+      }
+    }
+
+    moves.push(...lineMoves);
+  }
+
+  if (currentStep) {
+    steps.push(currentStep);
+  }
+
+  const explanation = steps
+    .map((s) => `Step ${s.step}: ${s.thought}${s.action ? ` → ${s.action}` : ""}`)
+    .join("\n");
+
+  if (reasoningType === "tree-of-thought") {
+    treeOfThought = extractTreeOfThought(rawText);
+  }
+
+  return {
+    strategy,
+    chainOfThought: rawText,
+    steps,
+    moves: [...new Set(moves)],
+    explanation,
+    treeOfThought,
+    verification: {
+      totalSteps: steps.length,
+      verifiedSteps: steps.filter((s) => s.verified).length,
+      confidence: steps.length > 0 ? steps.filter((s) => s.verified).length / steps.length : 0
+    },
+    rawText,
+    reasoningType
+  };
+}
+
+/**
+ * Attribute validity per proposed move using local clauses, not the whole line.
+ * @param {string} rawText
+ * @param {string[]} proposedMoves
+ */
+export function parseVerificationResponse(rawText, proposedMoves) {
+  const clauses = clausesFromText(rawText);
+  const results = {
+    overallValid: true,
+    moveVerifications: [],
+    suggestions: [],
+    alternatives: [],
+    rawText
+  };
+
+  for (const move of proposedMoves) {
+    const moveRegex = moveTokenRegex(move);
+    const found = clauses.some((clause) => moveRegex.test(clause));
+    const invalid = clauses.some(
+      (clause) => moveRegex.test(clause) && /invalid|illegal|impossible|wrong/i.test(clause)
+    );
+
+    results.moveVerifications.push({
+      move,
+      found,
+      valid: found && !invalid,
+      reason: invalid ? "May not be legal in this position" : "Appears valid"
+    });
+  }
+
+  results.overallValid = results.moveVerifications.every((v) => v.valid);
+
+  const lines = String(rawText)
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  for (const line of lines) {
+    if (/suggest|recommend|instead|consider/i.test(line)) {
+      results.suggestions.push(line);
+    }
+    if (/alternative|other option|try/i.test(line)) {
+      results.alternatives.push(line);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * @param {string} rawText
+ * @returns {{ branches: Array<{id: number, description: string, score: number, selected: boolean}>, totalExplored: number }}
+ */
+export function extractTreeOfThought(rawText) {
+  const branches = [];
+  const branchPattern = /(?:branch|path|option|strategy)\s*(\d+)[:.]\s*(.+)/gi;
+  let match;
+
+  while ((match = branchPattern.exec(rawText)) !== null) {
+    branches.push({
+      id: parseInt(match[1], 10),
+      description: match[2].trim(),
+      score: 0,
+      selected: false
+    });
+  }
+
+  for (const line of rawText.split("\n")) {
+    if (/best|optimal|recommend|choose|select/i.test(line)) {
+      const numMatch = line.match(/(\d+)/);
+      if (numMatch) {
+        const selectedId = parseInt(numMatch[1], 10);
+        for (const branch of branches) {
+          branch.selected = branch.id === selectedId;
+        }
+      }
+    }
+  }
+
+  return { branches, totalExplored: branches.length };
+}
+
 /**
  * @typedef {Object} ReasoningStep
  * @property {number} step
@@ -197,138 +392,11 @@ export class ReasoningEngine {
   // ---------------------------------------------------------------------------
 
   #parseReasoningResponse(rawText, reasoningType, method) {
-    const lines = rawText
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
-
-    const steps = [];
-    const moves = [];
-    let strategy = method;
-    let chainOfThought = "";
-    let explanation = "";
-    let treeOfThought = null;
-
-    // Extract strategy
-    for (const line of lines) {
-      const stratMatch = line.match(/(?:strategy|method|approach):\s*(.+)/i);
-      if (stratMatch) {
-        strategy = stratMatch[1].trim();
-      }
-    }
-
-    // Extract numbered reasoning steps
-    const stepPattern = /^(?:step\s+)?(\d+)[:.]\s*(.+)/i;
-    const movePattern = /\b([UDLRFB](?:2|')?)\b/g;
-    let currentStep = null;
-
-    for (const line of lines) {
-      const stepMatch = line.match(stepPattern);
-      if (stepMatch) {
-        if (currentStep) {
-          steps.push(currentStep);
-        }
-        currentStep = {
-          step: parseInt(stepMatch[1], 10),
-          thought: stepMatch[2],
-          action: "",
-          verification: "",
-          verified: false
-        };
-      }
-
-      if (currentStep) {
-        const lineMoves = [...line.matchAll(movePattern)].map((m) => m[1]);
-        if (lineMoves.length > 0 && !currentStep.action) {
-          currentStep.action = lineMoves.join(" ");
-        }
-
-        if (/verify|check|confirm/i.test(line)) {
-          currentStep.verification = line;
-          currentStep.verified = /correct|valid|confirmed|pass/i.test(line);
-        }
-      }
-
-      // Collect all moves
-      const lineMoves = [...line.matchAll(movePattern)].map((m) => m[1]);
-      moves.push(...lineMoves);
-    }
-
-    if (currentStep) {
-      steps.push(currentStep);
-    }
-
-    chainOfThought = rawText;
-
-    // Build explanation from thoughts
-    explanation = steps
-      .map((s) => `Step ${s.step}: ${s.thought}${s.action ? ` → ${s.action}` : ""}`)
-      .join("\n");
-
-    if (reasoningType === "tree-of-thought") {
-      treeOfThought = this.#extractTreeOfThought(rawText);
-    }
-
-    return {
-      strategy,
-      chainOfThought,
-      steps,
-      moves: [...new Set(moves)], // deduplicate while preserving order
-      explanation,
-      treeOfThought,
-      verification: {
-        totalSteps: steps.length,
-        verifiedSteps: steps.filter((s) => s.verified).length,
-        confidence: steps.length > 0 ? steps.filter((s) => s.verified).length / steps.length : 0
-      },
-      rawText,
-      reasoningType
-    };
+    return parseReasoningResponse(rawText, reasoningType, method);
   }
 
   #parseVerificationResponse(rawText, proposedMoves) {
-    const lines = rawText
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
-
-    const results = {
-      overallValid: true,
-      moveVerifications: [],
-      suggestions: [],
-      alternatives: [],
-      rawText
-    };
-
-    for (const move of proposedMoves) {
-      const moveRegex = new RegExp(move.replace("'", "\\'"), "i");
-      const found = lines.some((l) => moveRegex.test(l));
-      const invalid = lines.some(
-        (l) => moveRegex.test(l) && /invalid|illegal|impossible|wrong/i.test(l)
-      );
-
-      results.moveVerifications.push({
-        move,
-        found,
-        valid: found && !invalid,
-        reason: invalid ? "May not be legal in this position" : "Appears valid"
-      });
-    }
-
-    // Check overall validity
-    results.overallValid = results.moveVerifications.every((v) => v.valid);
-
-    // Extract suggestions
-    for (const line of lines) {
-      if (/suggest|recommend|instead|consider/i.test(line)) {
-        results.suggestions.push(line);
-      }
-      if (/alternative|other option|try/i.test(line)) {
-        results.alternatives.push(line);
-      }
-    }
-
-    return results;
+    return parseVerificationResponse(rawText, proposedMoves);
   }
 
   #parseAlgorithmExplanation(rawText, algorithmName, algorithmMoves) {
@@ -338,36 +406,6 @@ export class ReasoningEngine {
       explanation: rawText,
       sections: this.#extractSections(rawText)
     };
-  }
-
-  #extractTreeOfThought(rawText) {
-    const branches = [];
-    const branchPattern = /(?:branch|path|option|strategy)\s*(\d+)[:.]\s*(.+)/gi;
-    let match;
-
-    while ((match = branchPattern.exec(rawText)) !== null) {
-      branches.push({
-        id: parseInt(match[1], 10),
-        description: match[2].trim(),
-        score: 0,
-        selected: false
-      });
-    }
-
-    // Try to identify which branch was selected
-    for (const line of rawText.split("\n")) {
-      if (/best|optimal|recommend|choose|select/i.test(line)) {
-        const numMatch = line.match(/(\d+)/);
-        if (numMatch) {
-          const selectedId = parseInt(numMatch[1], 10);
-          for (const branch of branches) {
-            branch.selected = branch.id === selectedId;
-          }
-        }
-      }
-    }
-
-    return { branches, totalExplored: branches.length };
   }
 
   #extractSections(text) {
