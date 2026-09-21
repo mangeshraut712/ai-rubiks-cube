@@ -25,7 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "kociemba": "^1.0.1",
     "winston": "^3.17.0",
-    "ws": "^8.19.0",
+    "ws": "^8.21.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
