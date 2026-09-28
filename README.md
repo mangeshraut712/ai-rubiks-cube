@@ -21,16 +21,8 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/01-home.png" alt="Cubey overview home with the live 3x3 cube stage" width="900" />
-</p>
-<p align="center"><sub>Home — Part 1 / Part 2 entry and the live 3x3 cube stage.</sub></p>
-
-<p align="center">
-  <img src="docs/screenshots/02-feature.png" alt="Cubey Core 2x2 lab mid-solve with BFS solution playback" width="900" />
-</p>
-<p align="center"><sub>Solver — scramble, BFS solution, and step-by-step playback on the 2x2 lab.</sub></p>
-
-<p align="center">
+  <a href="#screenshots">Screenshots</a>
+  ·
   <a href="#products">Products</a>
   ·
   <a href="#stack">Stack</a>
@@ -54,6 +46,22 @@ AI Rubik's Tutor is a GitHub-first monorepo with two related applications:
   A deterministic 2x2 cube lab built around shared cube-state logic, manual controls, and exact BFS, A*, and IDA* playback.
 
 The repo is organized so both products share one deployment model, one visual language, and one codebase story, while still being easy to work on separately.
+
+## Screenshots
+
+Framed captures of the live app (current UI).
+
+<div align="center">
+
+<img src="docs/screenshots/01-home.webp" alt="Overview home with Cubey 3x3 cube stage" width="720" />
+
+<img src="docs/screenshots/02-live.webp" alt="Gemini live tutor coaching stage" width="720" />
+
+<img src="docs/screenshots/03-solver.webp" alt="Cubey Core 2x2 lab with BFS playback" width="720" />
+
+<img src="docs/screenshots/04-multiplayer.webp" alt="Multiplayer lab host and join room" width="720" />
+
+</div>
 
 ## Products
 
@@ -418,7 +426,7 @@ Current public frontend (GitHub Pages, free):
 
 - `https://mangeshraut712.github.io/ai-rubiks-cube/`
 
-README product shots in `docs/screenshots/` are Playwright captures of the live overview home and the 2x2 solver during playback (`scripts/capture-readme-screenshots.mjs`).
+README product shots in `docs/screenshots/` are framed Mac 1440×900 WebP exports of the current UI.
 
 Author:
 
