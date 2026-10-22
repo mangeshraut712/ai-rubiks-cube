@@ -46,3 +46,6 @@ frontend.log
 # Generated solver cache tables
 cache/
 backend/cache/
+# Local agent tooling
+.agents/
+skills-lock.json
