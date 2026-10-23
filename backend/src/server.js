@@ -13,7 +13,9 @@ import { URL, fileURLToPath } from "url";
 import { z } from "zod";
 
 import { GeminiLiveClient } from "./geminiLiveClient.js";
-import { CubeState, generateScramble, solveCube } from "./cubeStateManager.js";
+import { CubeState, generateScramble, hasValidColorCounts, solveCube } from "./cubeStateManager.js";
+import { startMovePlayback } from "./solvePlayback.js";
+import { parseMoveFromTutorText } from "./tutorMoves.js";
 import { createSystemRouter } from "./routes/systemRoutes.js";
 import { createReasoningRouter } from "./routes/reasoningRoutes.js";
 import { buildHealthPayload, buildRuntimePayload } from "./runtimeInfo.js";
@@ -249,6 +251,13 @@ function checkRateLimit(ip, bucket, maxRequests, windowMs = RATE_LIMIT_WINDOW) {
 
   data.count++;
   rateLimitData.set(key, data);
+  if (rateLimitData.size > 256) {
+    for (const [rateKey, entry] of rateLimitData) {
+      if (now > entry.resetTime) {
+        rateLimitData.delete(rateKey);
+      }
+    }
+  }
   return true;
 }
 
@@ -257,7 +266,8 @@ function getConnectionCount() {
 }
 
 function isServerOverloaded() {
-  return getConnectionCount() >= MAX_CONNECTIONS;
+  // The connecting socket is already included in the client count.
+  return getConnectionCount() > MAX_CONNECTIONS;
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -546,34 +556,6 @@ function decodeBinaryEnvelope(buffer) {
   return { header, payload };
 }
 
-function parseMoveFromTutorText(text) {
-  if (!text || typeof text !== "string") {
-    return null;
-  }
-
-  const direct = text.match(/\b([UDLRFB](?:2|')?)\b/);
-  if (direct) {
-    return direct[1].toUpperCase();
-  }
-
-  const prime = text.match(/\b([UDLRFB])\s*(?:prime|counter[- ]?clockwise)\b/i);
-  if (prime) {
-    return `${prime[1].toUpperCase()}'`;
-  }
-
-  const double = text.match(/\b([UDLRFB])\s*(?:double|2)\b/i);
-  if (double) {
-    return `${double[1].toUpperCase()}2`;
-  }
-
-  const clockwise = text.match(/\b([UDLRFB])\s*(?:clockwise)\b/i);
-  if (clockwise) {
-    return clockwise[1].toUpperCase();
-  }
-
-  return null;
-}
-
 function createSessionRecord() {
   return {
     sessionId: crypto.randomUUID(),
@@ -662,6 +644,7 @@ wss.on("connection", async (ws, req) => {
   let lastVideoFrame = null;
   let closed = false;
   let demoAutoplayTimer = null;
+  let stopAutoSolve = null;
   let tutorIsThinking = false;
   let lastTutorResponseAt = 0;
   let lastTutorNormalizedText = "";
@@ -685,6 +668,11 @@ wss.on("connection", async (ws, req) => {
     if (demoAutoplayTimer) {
       clearInterval(demoAutoplayTimer);
       demoAutoplayTimer = null;
+    }
+
+    if (stopAutoSolve) {
+      stopAutoSolve();
+      stopAutoSolve = null;
     }
   };
 
@@ -1016,6 +1004,15 @@ wss.on("connection", async (ws, req) => {
             break;
           }
 
+          if (!hasValidColorCounts(parsed.data.cubeState)) {
+            sendClientError(
+              ws,
+              "invalid_cube_state",
+              "Cube state must contain nine stickers of each color."
+            );
+            break;
+          }
+
           cubeState.replaceState(parsed.data.cubeState);
 
           sendJson(ws, {
@@ -1159,62 +1156,66 @@ wss.on("connection", async (ws, req) => {
             );
           }
 
-          // Execute moves one-by-one with delay for animation
-          let solveIndex = 0;
-          const solveInterval = setInterval(() => {
-            if (closed || solveIndex >= solutionMoves.length) {
-              clearInterval(solveInterval);
-              if (!closed && solveIndex >= solutionMoves.length) {
-                sendJson(ws, {
-                  type: "text_response",
-                  text: "🎉 Cube solved! Great job watching along!",
-                  ts: new Date().toISOString()
+          if (stopAutoSolve) {
+            stopAutoSolve();
+            stopAutoSolve = null;
+          }
+
+          // Execute moves one-by-one with delay for animation.
+          stopAutoSolve = startMovePlayback({
+            moves: solutionMoves,
+            intervalMs: 1800,
+            isStopped: () => closed,
+            onMove(move, step, total) {
+              try {
+                cubeState.applyMove(move);
+                sessionRecord.moveHistory.push({
+                  move,
+                  ts: new Date().toISOString(),
+                  source: "auto_solve"
                 });
+
                 sendJson(ws, {
-                  type: "solve_complete",
-                  totalMoves: solutionMoves.length
+                  type: "move_instruction",
+                  move,
+                  face: move[0],
+                  autoSolve: true,
+                  step: step + 1,
+                  total
                 });
-                pushTranscript(sessionRecord, "cubey", "Cube solved!");
+
+                sendJson(ws, {
+                  type: "cube_state_update",
+                  cubeState: cubeState.getSnapshot(),
+                  move
+                });
+
+                sendJson(ws, {
+                  type: "move_history_update",
+                  moveHistory: sessionRecord.moveHistory
+                });
+              } catch (error) {
+                console.error("[ws] auto-solve move failed", { move, error });
               }
-              return;
+            },
+            onComplete(totalMoves) {
+              stopAutoSolve = null;
+              if (closed) {
+                return;
+              }
+
+              sendJson(ws, {
+                type: "text_response",
+                text: "🎉 Cube solved! Great job watching along!",
+                ts: new Date().toISOString()
+              });
+              sendJson(ws, {
+                type: "solve_complete",
+                totalMoves
+              });
+              pushTranscript(sessionRecord, "cubey", "Cube solved!");
             }
-
-            const move = solutionMoves[solveIndex];
-            try {
-              cubeState.applyMove(move);
-              sessionRecord.moveHistory.push({
-                move,
-                ts: new Date().toISOString(),
-                source: "auto_solve"
-              });
-
-              // Send move instruction to trigger 3D animation
-              sendJson(ws, {
-                type: "move_instruction",
-                move,
-                face: move[0],
-                autoSolve: true,
-                step: solveIndex + 1,
-                total: solutionMoves.length
-              });
-
-              // Send updated cube state
-              sendJson(ws, {
-                type: "cube_state_update",
-                cubeState: cubeState.getSnapshot(),
-                move
-              });
-
-              sendJson(ws, {
-                type: "move_history_update",
-                moveHistory: sessionRecord.moveHistory
-              });
-            } catch (error) {
-              console.error("[ws] auto-solve move failed", { move, error });
-            }
-
-            solveIndex += 1;
-          }, 1800); // 1.8s per move for smooth animation
+          });
 
           break;
         }

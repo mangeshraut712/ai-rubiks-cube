@@ -1524,7 +1524,13 @@
               <span id="themeToggleIcon">🌙</span>
               <span class="theme-toggle-label" id="themeToggleLabel">Dark</span>
             </button>
-            <button class="btn btn-ghost btn-icon" id="helpBtn" title="Help & Shortcuts">
+            <button
+              class="btn btn-ghost btn-icon"
+              id="helpBtn"
+              type="button"
+              title="Help and shortcuts"
+              aria-label="Help and shortcuts"
+            >
               <svg
                 width="20"
                 height="20"
@@ -1661,7 +1667,11 @@
           <!-- 3D Cube Viewport with Embedded Solution Strip -->
           <div class="card cube-card animate-scale-in delay-200">
             <div class="cube-viewport">
-              <canvas id="cubeCanvas"></canvas>
+              <canvas
+                id="cubeCanvas"
+                role="img"
+                aria-label="Interactive 3D 2x2 cube. Drag to rotate."
+              ></canvas>
 
               <!-- Current Move Overlay (shows during solve) -->
               <div class="move-overlay" id="moveOverlay">
@@ -1753,11 +1763,17 @@
     <div class="state-display" id="stateDisplay"></div>
 
     <!-- Help Modal -->
-    <div class="modal-overlay" id="helpModal">
+    <div
+      class="modal-overlay"
+      id="helpModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="helpModalTitle"
+    >
       <div class="modal">
         <div class="modal-header">
-          <h2>📚 Help & Guide</h2>
-          <button class="btn btn-ghost btn-icon" id="closeHelpBtn">
+          <h2 id="helpModalTitle">📚 Help & Guide</h2>
+          <button class="btn btn-ghost btn-icon" id="closeHelpBtn" type="button" aria-label="Close help">
             <svg
               width="20"
               height="20"

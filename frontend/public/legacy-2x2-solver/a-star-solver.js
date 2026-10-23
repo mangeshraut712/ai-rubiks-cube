@@ -107,7 +107,7 @@
       }
     }
 
-    return Math.floor(mismatchCount / 8);
+    return Math.floor(mismatchCount / 12);
   }
 
   function reconstructPath(targetState, visited) {
@@ -177,7 +177,7 @@
       const lastMove = currentInfo.move || "";
 
       for (const move of ALL_MOVES) {
-        if (lastMove && (INVERSE[move] === lastMove || move[0] === lastMove[0])) {
+        if (lastMove && INVERSE[move] === lastMove) {
           continue;
         }
 

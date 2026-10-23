@@ -66,18 +66,26 @@ export const useCubeStore = create(
         // Actions
         setCubeState: (state) => set({ cubeState: state }),
 
-        applyMove: (move, source = "user") => {
+        applyMove: (move, source = "user", stateBefore = null) => {
           set((state) => {
             state.moveHistory.push({
               move,
               source,
               timestamp: Date.now(),
-              stateBefore: JSON.parse(JSON.stringify(state.cubeState))
+              stateBefore: JSON.parse(JSON.stringify(stateBefore ?? state.cubeState))
             });
             state.redoStack = []; // Clear redo on new move
             state.statistics.totalMoves++;
           });
         },
+
+        loadCubeState: (nextState) =>
+          set({
+            cubeState: nextState,
+            moveHistory: [],
+            redoStack: [],
+            activeMove: ""
+          }),
 
         undoMove: () => {
           const { moveHistory } = get();
@@ -89,6 +97,9 @@ export const useCubeStore = create(
             state.moveHistory.pop();
             if (lastMove.stateBefore) {
               state.cubeState = lastMove.stateBefore;
+            }
+            if (state.statistics.totalMoves > 0) {
+              state.statistics.totalMoves -= 1;
             }
           });
           return lastMove;
@@ -102,6 +113,7 @@ export const useCubeStore = create(
           set((state) => {
             state.moveHistory.push(move);
             state.redoStack.pop();
+            state.statistics.totalMoves += 1;
           });
           return move;
         },

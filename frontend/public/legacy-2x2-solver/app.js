@@ -133,6 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Help modal
   document.getElementById("helpBtn").addEventListener("click", () => {
     document.getElementById("helpModal").classList.add("visible");
+    document.getElementById("closeHelpBtn").focus();
   });
 
   document.getElementById("closeHelpBtn").addEventListener("click", () => {
@@ -155,7 +156,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
-    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+    const tag = e.target?.tagName;
+    if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || tag === "BUTTON" || tag === "A") {
+      return;
+    }
+
+    const helpOpen = document.getElementById("helpModal").classList.contains("visible");
+    if (helpOpen && e.key !== "Escape") {
+      return;
+    }
 
     switch (e.key.toLowerCase()) {
       case " ":
@@ -173,6 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       case "h":
       case "?":
         document.getElementById("helpModal").classList.add("visible");
+        document.getElementById("closeHelpBtn").focus();
         break;
       case "escape":
         document.getElementById("helpModal").classList.remove("visible");

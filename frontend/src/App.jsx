@@ -148,6 +148,7 @@ export default function App({ routeView = "home" }) {
     settings,
     setCubeState,
     applyMove,
+    loadCubeState,
     undoMove,
     redoMove,
     resetCube,
@@ -247,8 +248,8 @@ export default function App({ routeView = "home" }) {
         const nextState = applyMoveToState(cubeState, move);
         setActiveMoveLocal(move);
         setActiveMove(move);
+        applyMove(move, "user", cubeState);
         setCubeState(nextState);
-        applyMove(move, "user");
         setSessionMoveHistory((prev) => [
           ...prev,
           { move, source: "user", ts: new Date().toISOString() }
@@ -291,7 +292,7 @@ export default function App({ routeView = "home" }) {
   const handleRedo = useCallback(() => {
     const move = redoMove();
     if (move) {
-      const nextState = applyMoveToState(cubeState, move.move);
+      const nextState = applyMoveToState(move.stateBefore ?? cubeState, move.move);
       setCubeState(nextState);
       syncSessionCubeState(nextState, "redo");
       toast.success("Redo");
@@ -307,11 +308,11 @@ export default function App({ routeView = "home" }) {
     scramble.forEach((move) => {
       currentState = applyMoveToState(currentState, move);
     });
-    setCubeState(currentState);
+    loadCubeState(currentState);
     setSessionMoveHistory([]);
     syncSessionCubeState(currentState, "scramble");
     toast.success("Cube scrambled!");
-  }, [setCubeState, syncSessionCubeState]);
+  }, [loadCubeState, syncSessionCubeState]);
 
   const handleReset = useCallback(() => {
     resetCube();

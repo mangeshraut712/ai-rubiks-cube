@@ -35,6 +35,8 @@ python3 -m http.server 8080
 2. **A\*** - Heuristic search, good for short scrambles
 3. **IDA\*** - Memory efficient, heuristic pruning
 
+Search keeps consecutive quarter turns on the same face. A half turn such as `U2` is two `U` moves, and BFS, A*, and IDA* can all solve that position.
+
 ## 🎨 Features
 
 - ☀️ Apple-style white theme

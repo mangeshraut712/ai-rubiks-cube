@@ -118,13 +118,48 @@ describe("useKeyboardShortcuts", () => {
     expect(mockHandlers.onToggleChallenge).toHaveBeenCalled();
   });
 
-  it("should handle dark mode toggle", () => {
+  it("should handle dark mode toggle without taking the D prime move", () => {
     renderHook(() => useKeyboardShortcuts(mockHandlers));
 
-    const event = new KeyboardEvent("keydown", { key: "D", shiftKey: true });
-    window.dispatchEvent(event);
-
+    const themeEvent = new KeyboardEvent("keydown", { key: "T", shiftKey: true });
+    window.dispatchEvent(themeEvent);
     expect(mockHandlers.onToggleDarkMode).toHaveBeenCalled();
+
+    const downPrime = new KeyboardEvent("keydown", { key: "D", shiftKey: true });
+    window.dispatchEvent(downPrime);
+    expect(mockHandlers.onMove).toHaveBeenCalledWith("D'");
+  });
+
+  it("should apply a double turn after the 2 key", () => {
+    renderHook(() => useKeyboardShortcuts(mockHandlers));
+
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "2" }));
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "u" }));
+
+    expect(mockHandlers.onMove).toHaveBeenCalledWith("U2");
+  });
+
+  it("should leave button and dialog keys to the focused control", () => {
+    const onStartSession = vi.fn();
+    renderHook(() => useKeyboardShortcuts({ ...mockHandlers, onStartSession }));
+
+    const button = document.createElement("button");
+    const dialog = document.createElement("div");
+    dialog.setAttribute("role", "dialog");
+
+    try {
+      document.body.appendChild(button);
+      button.focus();
+      button.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+      expect(onStartSession).not.toHaveBeenCalled();
+
+      document.body.appendChild(dialog);
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "u" }));
+      expect(mockHandlers.onMove).not.toHaveBeenCalled();
+    } finally {
+      button.remove();
+      dialog.remove();
+    }
   });
 
   it("should not trigger shortcuts when typing in input", () => {

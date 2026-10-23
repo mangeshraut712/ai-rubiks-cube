@@ -127,6 +127,11 @@ const CubeViewer = memo(function CubeViewer({ cubeState, activeMove }) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
+    renderer.domElement.setAttribute("role", "img");
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive 3D Rubik's cube. Drag to rotate."
+    );
     containerRef.current.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);

@@ -10,7 +10,7 @@ function expandFrontier(frontier, visited, otherVisited) {
     const lastMove = parentInfo ? parentInfo.move : null;
 
     for (const move of ALL_MOVES) {
-      if (lastMove && (INVERSE[move] === lastMove || move[0] === lastMove[0])) {
+      if (lastMove && INVERSE[move] === lastMove) {
         continue;
       }
 

@@ -126,6 +126,15 @@ describe("reasoning routes", () => {
       expect(response.body.error).toBe("validation_error");
     });
 
+    it("returns 400 when cubeState exceeds the size limit", async () => {
+      const response = await request(createApp())
+        .post("/api/reasoning/chain-of-thought")
+        .send({ cubeState: "U".repeat(8001) });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("validation_error");
+    });
+
     it("returns 503 when API key is not configured", async () => {
       const response = await request(createAppNoKey())
         .post("/api/reasoning/chain-of-thought")

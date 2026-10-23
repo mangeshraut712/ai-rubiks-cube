@@ -171,11 +171,22 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
         exit={{ opacity: 0, scale: 0.96, y: 18 }}
         transition={{ type: "spring", stiffness: 250, damping: 24 }}
         className="modal-shell max-w-5xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="multiplayer-title"
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.stopPropagation();
+            onClose();
+          }
+        }}
       >
         <header className="modal-header">
           <div>
             <p className="modal-eyebrow">Multiplayer lab</p>
-            <h2 className="modal-title">Bring a second cube into the same stage.</h2>
+            <h2 id="multiplayer-title" className="modal-title">
+              Bring a second cube into the same stage.
+            </h2>
             <p className="modal-subtitle">
               This rewrite turns multiplayer into a Labs-style control room and fixes the host flow
               so creating a room now also connects the host to signaling.
@@ -187,6 +198,7 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
             onClick={onClose}
             className="modal-close"
             aria-label="Close multiplayer"
+            autoFocus
           >
             <FiX className="h-5 w-5" />
           </button>
@@ -261,6 +273,7 @@ export default function MultiplayerLobby({ onClose, onStartGame }) {
                   type="text"
                   value={roomId}
                   onChange={(event) => setRoomId(event.target.value.toUpperCase())}
+                  aria-label="Room code"
                   placeholder="Enter room code"
                   maxLength={8}
                   className="min-h-[3.2rem] flex-1 rounded-full border border-[rgba(15,23,42,0.08)] bg-white/80 px-5 text-center font-['IBM_Plex_Mono'] text-lg tracking-[0.25em] text-slate-900 outline-none placeholder:tracking-[0.18em] placeholder:text-slate-400 dark:border-white/10 dark:bg-[rgba(8,18,32,0.84)] dark:text-white dark:placeholder:text-slate-500"

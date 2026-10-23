@@ -48,4 +48,18 @@ describe("legacy 2x2 cube core", () => {
     expect(result.solution).toBeTruthy();
     expect(applySequence(scrambledState, result.solution)).toBe(cubeCore.SOLVED_STATE);
   });
+
+  it("solves a half turn, which needs two quarter turns on the same face", async () => {
+    const scrambledState = applySequence(cubeCore.SOLVED_STATE, ["U", "U"]);
+    const bfs = await legacySolver.solveBFS(scrambledState);
+    const astar = await legacyAStar.solveAStar(scrambledState);
+    const ida = await legacySolver.solveIDS(scrambledState);
+
+    expect(applySequence(scrambledState, bfs.solution)).toBe(cubeCore.SOLVED_STATE);
+    expect(bfs.solution).toHaveLength(2);
+    expect(astar.solution).toHaveLength(bfs.solution.length);
+    expect(applySequence(scrambledState, astar.solution)).toBe(cubeCore.SOLVED_STATE);
+    expect(ida.solution).toHaveLength(bfs.solution.length);
+    expect(applySequence(scrambledState, ida.solution)).toBe(cubeCore.SOLVED_STATE);
+  });
 });

@@ -116,11 +116,22 @@ export default function Statistics({ onClose }) {
         exit={{ opacity: 0, scale: 0.96, y: 18 }}
         transition={{ type: "spring", stiffness: 250, damping: 24 }}
         className="modal-shell max-w-6xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="statistics-title"
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.stopPropagation();
+            onClose();
+          }
+        }}
       >
         <header className="modal-header">
           <div>
             <p className="modal-eyebrow">Statistics</p>
-            <h2 className="modal-title">Practice metrics with a cleaner signal.</h2>
+            <h2 id="statistics-title" className="modal-title">
+              Practice metrics with a cleaner signal.
+            </h2>
             <p className="modal-subtitle">
               The redesign turns the old analytics screen into a compact dashboard with progress,
               efficiency, and session volume visible at a glance.
@@ -132,6 +143,7 @@ export default function Statistics({ onClose }) {
             onClick={onClose}
             className="modal-close"
             aria-label="Close statistics"
+            autoFocus
           >
             <FiX className="h-5 w-5" />
           </button>

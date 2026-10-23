@@ -44,7 +44,8 @@ const LeaveMessageSchema = z.object({
 });
 
 class SignalingServer {
-  constructor() {
+  constructor(options = {}) {
+    this.maxRooms = options.maxRooms ?? 500;
     this.wss = new WebSocketServer({
       noServer: true,
       perMessageDeflate: false
@@ -218,11 +219,47 @@ class SignalingServer {
   /**
    * Handle client joining a room
    */
-  handleJoin(ws, roomId, clientId) {
-    ws.clientId = clientId;
-    ws.roomId = roomId;
+  clientInRoom(ws, roomId) {
+    const room = this.rooms.get(roomId);
+    if (!room || ws.roomId !== roomId || !room.clients.includes(ws)) {
+      return null;
+    }
 
-    // Create room if doesn't exist
+    return room;
+  }
+
+  handleJoin(ws, roomId, clientId) {
+    const switching = Boolean(ws.roomId && ws.roomId !== roomId);
+    const destination = this.rooms.get(roomId);
+
+    if (
+      destination &&
+      !destination.clients.includes(ws) &&
+      destination.clients.length >= 2
+    ) {
+      this.sendError(ws, "Room is full");
+      return;
+    }
+
+    if (!this.rooms.has(roomId)) {
+      const currentRoom = switching ? this.rooms.get(ws.roomId) : null;
+      const freesRoom = Boolean(
+        currentRoom && currentRoom.clients.length === 1 && currentRoom.clients[0] === ws
+      );
+      const roomsAfterSwitch = this.rooms.size - (freesRoom ? 1 : 0);
+
+      if (roomsAfterSwitch >= this.maxRooms) {
+        this.sendError(ws, "Server is at room capacity");
+        return;
+      }
+    }
+
+    if (switching) {
+      this.removeClientFromRoom(ws, ws.roomId);
+      ws.roomId = undefined;
+      ws.isHost = false;
+    }
+
     if (!this.rooms.has(roomId)) {
       this.rooms.set(roomId, {
         clients: [],
@@ -232,16 +269,28 @@ class SignalingServer {
 
     const room = this.rooms.get(roomId);
 
-    // Check if room is full
-    if (room.clients.length >= 2) {
+    if (room.clients.includes(ws)) {
+      ws.clientId = clientId;
       ws.send(
         JSON.stringify({
-          type: "error",
-          message: "Room is full"
-        })
+          type: "joined",
+          roomId,
+          isHost: Boolean(ws.isHost),
+          clientCount: room.clients.length
+        }),
+        { compress: false }
       );
       return;
     }
+
+    // Check if room is full before assigning this socket to it.
+    if (room.clients.length >= 2) {
+      this.sendError(ws, "Room is full");
+      return;
+    }
+
+    ws.clientId = clientId;
+    ws.roomId = roomId;
 
     // Add client to room
     room.clients.push(ws);
@@ -281,8 +330,10 @@ class SignalingServer {
    * Handle WebRTC offer
    */
   handleOffer(ws, roomId, offer) {
-    const room = this.rooms.get(roomId);
-    if (!room) return;
+    if (!this.clientInRoom(ws, roomId)) {
+      this.sendError(ws, "Not in room");
+      return;
+    }
 
     // Forward offer to other clients
     this.broadcastToRoom(
@@ -300,8 +351,10 @@ class SignalingServer {
    * Handle WebRTC answer
    */
   handleAnswer(ws, roomId, answer) {
-    const room = this.rooms.get(roomId);
-    if (!room) return;
+    if (!this.clientInRoom(ws, roomId)) {
+      this.sendError(ws, "Not in room");
+      return;
+    }
 
     // Forward answer to other clients
     this.broadcastToRoom(
@@ -319,8 +372,10 @@ class SignalingServer {
    * Handle ICE candidate
    */
   handleIceCandidate(ws, roomId, candidate) {
-    const room = this.rooms.get(roomId);
-    if (!room) return;
+    if (!this.clientInRoom(ws, roomId)) {
+      this.sendError(ws, "Not in room");
+      return;
+    }
 
     // Forward ICE candidate to other clients
     this.broadcastToRoom(

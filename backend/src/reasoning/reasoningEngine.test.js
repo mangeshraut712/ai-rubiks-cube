@@ -104,6 +104,14 @@ describe("Reasoning Engine Parsing", () => {
       expect(result.overallValid).toBe(false);
     });
 
+    it("does not treat R' as the move R", () => {
+      const rawText = "R' is invalid. R is valid.";
+      const result = parseVerificationResponse(rawText, ["R", "R'"]);
+
+      expect(result.moveVerifications[0].valid).toBe(true);
+      expect(result.moveVerifications[1].valid).toBe(false);
+    });
+
     it("extracts suggestions", () => {
       const rawText = "Instead try F' as an alternative. Consider using U2 instead.";
       const result = parseVerificationResponse(rawText, ["R"]);
@@ -134,6 +142,19 @@ describe("Reasoning Engine Parsing", () => {
 
       expect(result.branches).toHaveLength(0);
       expect(result.totalExplored).toBe(0);
+    });
+
+    it("does not select a branch only because its description says best", () => {
+      const rawText = [
+        "Branch 1: a slow cross",
+        "Branch 2: best for beginners, about 20 moves",
+        "Selected strategy: Branch 1"
+      ].join("\n");
+
+      const result = extractTreeOfThought(rawText);
+
+      expect(result.branches[0].selected).toBe(true);
+      expect(result.branches[1].selected).toBe(false);
     });
   });
 });
