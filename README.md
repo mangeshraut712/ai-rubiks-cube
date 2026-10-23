@@ -79,6 +79,12 @@ What it does:
 - supports hints, auto-solve, challenge mode, and multiplayer
 - exposes runtime health and connection metadata to the frontend
 
+Keyboard controls in the Part 1 workspace:
+
+- `U D L R F B` turn that face. Hold `Shift` for a counterclockwise turn, or press `2` and then the face key for a double turn.
+- `Shift+T` toggles the theme, so `Shift+D` stays available as the down-face counterclockwise turn.
+- `Space` starts or ends a session when focus is not inside a control or dialog.
+
 Main files:
 
 - [frontend/src/App.jsx](frontend/src/App.jsx)
@@ -250,6 +256,9 @@ Key notes:
 ### Install dependencies
 
 ```bash
+# Clang 15+ rejects kociemba's strnlen call unless the POSIX prototype is visible.
+export CFLAGS="-D_POSIX_C_SOURCE=200809L"
+export CXXFLAGS="-D_POSIX_C_SOURCE=200809L"
 npm ci --prefix backend
 npm ci --prefix frontend
 ```

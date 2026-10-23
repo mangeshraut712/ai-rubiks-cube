@@ -99,11 +99,22 @@ export default function Settings({ onClose }) {
           exit={{ opacity: 0, scale: 0.96, y: 18 }}
           transition={{ type: "spring", stiffness: 250, damping: 24 }}
           className="modal-shell max-w-5xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settings-title"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              onClose();
+            }
+          }}
         >
           <header className="modal-header">
             <div>
               <p className="modal-eyebrow">Settings</p>
-              <h2 className="modal-title">A quieter control surface for the tutor.</h2>
+              <h2 id="settings-title" className="modal-title">
+                A quieter control surface for the tutor.
+              </h2>
               <p className="modal-subtitle">
                 I rewrote settings into grouped cards, persistent toggles, and a shortcut reference
                 that matches the new search-first interface.
@@ -115,6 +126,7 @@ export default function Settings({ onClose }) {
               onClick={onClose}
               className="modal-close"
               aria-label="Close settings"
+              autoFocus
             >
               <FiX className="h-5 w-5" />
             </button>
@@ -233,6 +245,7 @@ export default function Settings({ onClose }) {
                           min="100"
                           max="1000"
                           step="50"
+                          aria-label="Animation speed"
                           value={settings.animationSpeed}
                           onChange={(event) =>
                             updateSettings({
@@ -339,7 +352,7 @@ export default function Settings({ onClose }) {
                       title="Interface"
                       rows={[
                         { label: "Open settings", keys: "Ctrl + ," },
-                        { label: "Toggle theme", keys: "Shift + D" },
+                        { label: "Toggle theme", keys: "Shift + T" },
                         { label: "Toggle challenge mode", keys: "Shift + C" }
                       ]}
                     />

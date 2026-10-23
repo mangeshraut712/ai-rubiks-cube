@@ -336,7 +336,7 @@ const PLL_CASES = [
     difficulty: 3,
     category: "swap",
     recognition: "Mirror of Jb",
-    moveCount: 10
+    moveCount: 11
   },
   {
     id: "Rb",
@@ -345,7 +345,7 @@ const PLL_CASES = [
     difficulty: 3,
     category: "swap",
     recognition: "Edge-corner swap with block preserved",
-    moveCount: 14
+    moveCount: 13
   },
   {
     id: "Ra",
@@ -372,7 +372,7 @@ const PLL_CASES = [
     difficulty: 4,
     category: "diagonal",
     recognition: "Diagonal corner swap",
-    moveCount: 14
+    moveCount: 15
   },
   {
     id: "Y",
@@ -381,7 +381,7 @@ const PLL_CASES = [
     difficulty: 3,
     category: "diagonal",
     recognition: "Diagonal corner swap (Y pattern)",
-    moveCount: 16
+    moveCount: 17
   },
   {
     id: "E",
@@ -390,7 +390,7 @@ const PLL_CASES = [
     difficulty: 4,
     category: "diagonal",
     recognition: "All four corners swap",
-    moveCount: 16
+    moveCount: 17
   },
   {
     id: "Na",
@@ -399,7 +399,7 @@ const PLL_CASES = [
     difficulty: 5,
     category: "swap",
     recognition: "Two adjacent corner swaps",
-    moveCount: 22
+    moveCount: 21
   },
   {
     id: "Nb",
@@ -408,7 +408,7 @@ const PLL_CASES = [
     difficulty: 5,
     category: "swap",
     recognition: "Mirror of Na",
-    moveCount: 18
+    moveCount: 17
   },
   {
     id: "Gc",
@@ -453,7 +453,7 @@ const PLL_CASES = [
     difficulty: 2,
     category: "corner-cycle",
     recognition: "Three corners cycled clockwise",
-    moveCount: 9
+    moveCount: 11
   },
   {
     id: "Ab",
@@ -462,7 +462,7 @@ const PLL_CASES = [
     difficulty: 2,
     category: "corner-cycle",
     recognition: "Three corners cycled counter-clockwise",
-    moveCount: 9
+    moveCount: 11
   }
 ];
 
@@ -482,6 +482,31 @@ const DIFFICULTY_LABELS = {
 // ---------------------------------------------------------------------------
 // Analyzer class
 // ---------------------------------------------------------------------------
+
+function crossEdgesAligned(snapshot) {
+  const down = snapshot?.D;
+  const front = snapshot?.F;
+  const right = snapshot?.R;
+  const back = snapshot?.B;
+  const left = snapshot?.L;
+
+  if (!down || !front || !right || !back || !left) {
+    return false;
+  }
+
+  const center = down[1]?.[1];
+  const pairs = [
+    [down[0]?.[1], front[2]?.[1], front[1]?.[1]],
+    [down[1]?.[2], right[2]?.[1], right[1]?.[1]],
+    [down[2]?.[1], back[2]?.[1], back[1]?.[1]],
+    [down[1]?.[0], left[2]?.[1], left[1]?.[1]]
+  ];
+
+  return pairs.every(
+    ([downSticker, sideSticker, sideCenter]) =>
+      Boolean(center) && downSticker === center && sideSticker === sideCenter
+  );
+}
 
 export class CubeAnalyzer {
   /**
@@ -650,15 +675,7 @@ export class CubeAnalyzer {
   #detectPhase(snapshot) {
     if (!snapshot || !snapshot.U) return "unknown";
 
-    // Check if cross is done (D face edges match center)
-    const dCenter = snapshot.D[1][1];
-    const dEdges = [
-      snapshot.D[0][1], // top edge
-      snapshot.D[1][0], // left edge
-      snapshot.D[1][2], // right edge
-      snapshot.D[2][1] // bottom edge
-    ];
-    const crossDone = dEdges.every((e) => e === dCenter);
+    const crossDone = crossEdgesAligned(snapshot);
 
     if (!crossDone) return "cross";
 
@@ -722,21 +739,10 @@ export class CubeAnalyzer {
     }
 
     const pattern = oriented.join("");
+    const exactMatch = OLL_CASES.find((ollCase) => ollCase.pattern === pattern);
 
-    // Find best match from OLL database
-    let bestMatch = null;
-    let bestScore = 0;
-
-    for (const ollCase of OLL_CASES) {
-      const score = this.#patternSimilarity(pattern, ollCase.pattern);
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = ollCase;
-      }
-    }
-
-    if (bestMatch && bestScore >= 0.5) {
-      return { ...bestMatch, matchConfidence: bestScore };
+    if (exactMatch) {
+      return { ...exactMatch, matchConfidence: 1 };
     }
 
     // Return a generic recommendation
@@ -750,15 +756,6 @@ export class CubeAnalyzer {
       recognition: "Could not match a specific OLL case",
       matchConfidence: 0
     };
-  }
-
-  #patternSimilarity(a, b) {
-    if (a.length !== b.length) return 0;
-    let matches = 0;
-    for (let i = 0; i < a.length; i++) {
-      if (a[i] === b[i]) matches++;
-    }
-    return matches / a.length;
   }
 
   // -----------------------------------------------------------------------

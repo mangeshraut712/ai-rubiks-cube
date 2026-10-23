@@ -2,7 +2,7 @@
  * Comprehensive keyboard shortcuts hook
  * 2026: Modern keyboard handling with better accessibility
  */
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useCubeStore } from "../store/cubeStore";
 
 const MOVE_KEYS = {
@@ -35,15 +35,22 @@ export function useKeyboardShortcuts({
   onEndSession
 }) {
   const store = useCubeStore();
+  const pendingDoubleRef = useRef(false);
 
   const handleKeyDown = useCallback(
     (event) => {
-      // Don't trigger shortcuts when typing in inputs
+      const tag = event.target?.tagName;
+      // Leave keys alone for controls and while a dialog is open.
       if (
-        event.target.tagName === "INPUT" ||
-        event.target.tagName === "TEXTAREA" ||
-        event.target.isContentEditable
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        tag === "BUTTON" ||
+        tag === "A" ||
+        event.target?.isContentEditable ||
+        (typeof document !== "undefined" && document.querySelector("[role='dialog']"))
       ) {
+        pendingDoubleRef.current = false;
         return;
       }
 
@@ -51,15 +58,23 @@ export function useKeyboardShortcuts({
       const modifier = event.shiftKey ? "Shift+" : "";
       const combo = modifier + key;
 
-      // Number keys for double moves (2+key)
-      if (event.key === "2") {
-        // Wait for next key
+      if (event.key === "2" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        pendingDoubleRef.current = true;
+        event.preventDefault();
         return;
       }
 
-      // Check for non-move shortcuts first (they take priority)
-      // Dark mode toggle with Shift+D
-      if (key === "d" && event.shiftKey && onToggleDarkMode) {
+      if (pendingDoubleRef.current && /^[udlrfb]$/.test(key) && onMove) {
+        pendingDoubleRef.current = false;
+        event.preventDefault();
+        onMove(`${key.toUpperCase()}2`);
+        return;
+      }
+
+      pendingDoubleRef.current = false;
+
+      // Theme toggle must not steal the D' cube move.
+      if (key === "t" && event.shiftKey && !event.ctrlKey && !event.metaKey && onToggleDarkMode) {
         event.preventDefault();
         onToggleDarkMode();
         return;
@@ -222,7 +237,7 @@ export function useKeyboardShortcuts({
       },
       features: {
         "Shift+C": "Toggle challenge mode",
-        "Shift+D": "Toggle dark mode",
+        "Shift+T": "Toggle theme",
         H: "Request hint",
         "Ctrl+,": "Settings"
       }

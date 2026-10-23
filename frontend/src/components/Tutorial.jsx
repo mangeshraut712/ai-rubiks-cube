@@ -179,11 +179,22 @@ export default function Tutorial({ onClose, onComplete }) {
           exit={{ opacity: 0, scale: 0.96, y: 18 }}
           transition={{ type: "spring", stiffness: 250, damping: 24 }}
           className="modal-shell max-w-6xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="tutorial-title"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              handleSkip();
+            }
+          }}
         >
           <header className="modal-header">
             <div>
               <p className="modal-eyebrow">Tutorial</p>
-              <h2 className="modal-title">A cleaner onboarding flow for the new stage.</h2>
+              <h2 id="tutorial-title" className="modal-title">
+                A cleaner onboarding flow for the new stage.
+              </h2>
               <p className="modal-subtitle">
                 I replaced the old slideshow with a guided control-room walkthrough so the interface
                 reads like one product from the first screen onward.
@@ -195,13 +206,21 @@ export default function Tutorial({ onClose, onComplete }) {
               onClick={handleSkip}
               className="modal-close"
               aria-label="Close tutorial"
+              autoFocus
             >
               <FiX className="h-5 w-5" />
             </button>
           </header>
 
           <div className="px-5 pt-4">
-            <div className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+            <div
+              className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+              role="progressbar"
+              aria-label="Tutorial progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
+            >
               <div
                 className="h-full rounded-full bg-[linear-gradient(90deg,#4285F4,#34A853,#FBBC05,#EA4335)] transition-[width] duration-300"
                 style={{ width: `${progress}%` }}
@@ -222,6 +241,7 @@ export default function Tutorial({ onClose, onComplete }) {
                         key={item.id}
                         type="button"
                         onClick={() => setCurrentStep(index)}
+                        aria-current={active ? "step" : undefined}
                         className={`flex w-full items-center gap-3 rounded-[22px] px-4 py-3 text-left transition ${
                           active
                             ? "bg-[rgba(66,133,244,0.12)] text-[#1a73e8]"

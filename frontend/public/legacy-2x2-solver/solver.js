@@ -85,7 +85,8 @@
       const lastMove = parentInfo ? parentInfo.move : null;
 
       for (const move of ALL_MOVES) {
-        if (lastMove && (INVERSE[move] === lastMove || move[0] === lastMove[0])) {
+        // Skip only the immediate inverse. A second quarter turn on the same face is a half turn.
+        if (lastMove && INVERSE[move] === lastMove) {
           continue;
         }
 
@@ -145,7 +146,8 @@
         }
       }
 
-      return Math.floor(mismatchCount / 8);
+      // One quarter turn moves at most 12 stickers, so this never overestimates.
+      return Math.floor(mismatchCount / 12);
     }
 
     function search(state, depth, bound, lastMove) {
@@ -163,7 +165,8 @@
       let minimum = Infinity;
 
       for (const move of ALL_MOVES) {
-        if (lastMove && (INVERSE[move] === lastMove || move[0] === lastMove[0])) {
+        // Skip only the immediate inverse. A second quarter turn on the same face is a half turn.
+        if (lastMove && INVERSE[move] === lastMove) {
           continue;
         }
 

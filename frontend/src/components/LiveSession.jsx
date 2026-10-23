@@ -683,7 +683,14 @@ const LiveSession = forwardRef(function LiveSession(
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_top,rgba(66,133,244,0.18),transparent_45%),linear-gradient(180deg,rgba(255,255,255,0.45),rgba(255,255,255,0.12))] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:bg-[radial-gradient(circle_at_top,rgba(66,133,244,0.18),transparent_45%),linear-gradient(180deg,rgba(8,18,32,0.68),rgba(8,18,32,0.36))]">
-      <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+      <video
+        ref={videoRef}
+        className="h-full w-full object-cover"
+        autoPlay
+        muted
+        playsInline
+        aria-label="Live camera preview"
+      />
       <canvas ref={canvasRef} className="hidden" />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between gap-3 p-3">

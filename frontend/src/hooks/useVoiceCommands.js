@@ -204,7 +204,11 @@ export function useVoiceCommands({ onCommand, enabled = true }) {
   };
 }
 
-function parseCommand(transcript) {
+const PHRASES_BY_LENGTH = Object.entries(VOICE_COMMANDS).sort(
+  (left, right) => right[0].length - left[0].length
+);
+
+export function parseCommand(transcript) {
   const normalized = transcript.toLowerCase().trim();
 
   // Direct match
@@ -212,11 +216,24 @@ function parseCommand(transcript) {
     return VOICE_COMMANDS[normalized];
   }
 
-  // Fuzzy matching - check if any command is contained in transcript
-  for (const [phrase, command] of Object.entries(VOICE_COMMANDS)) {
-    if (normalized.includes(phrase)) {
-      return command;
+  const wantsPrime = /\bprime\b|\bcounter/.test(normalized);
+  const wantsDouble = /\btwice\b|\bdouble\b|\btwo\b/.test(normalized);
+
+  // Longer phrases win so "up prime" is not consumed by "up".
+  for (const [phrase, command] of PHRASES_BY_LENGTH) {
+    if (!normalized.includes(phrase)) {
+      continue;
     }
+
+    if (/^[UDLRFB]$/.test(command) && wantsPrime) {
+      return `${command}'`;
+    }
+
+    if (/^[UDLRFB]$/.test(command) && wantsDouble) {
+      return `${command}2`;
+    }
+
+    return command;
   }
 
   // Parse single letters

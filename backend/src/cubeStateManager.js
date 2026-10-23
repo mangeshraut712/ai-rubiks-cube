@@ -376,9 +376,47 @@ export class CubeState {
  * @param {string} faceString Cube string in URFDLB order with 54 chars.
  * @returns {string[]} Array of move tokens, e.g. ["R", "U", "R'"].
  */
+export function hasValidColorCounts(state) {
+  const counts = Object.fromEntries(FACE_ORDER.map((face) => [face, 0]));
+
+  for (const face of FACE_ORDER) {
+    const matrix = state?.[face];
+    if (!Array.isArray(matrix) || matrix.length !== 3) {
+      return false;
+    }
+
+    for (const row of matrix) {
+      if (!Array.isArray(row) || row.length !== 3) {
+        return false;
+      }
+
+      for (const sticker of row) {
+        if (!Object.hasOwn(counts, sticker)) {
+          return false;
+        }
+        counts[sticker] += 1;
+      }
+    }
+  }
+
+  return FACE_ORDER.every((face) => counts[face] === 9);
+}
+
 export function solveCube(faceString) {
   if (typeof faceString !== "string" || faceString.length !== 54) {
     throw new Error("solveCube expects a 54-character face string in URFDLB order.");
+  }
+
+  const counts = Object.fromEntries(FACE_ORDER.map((face) => [face, 0]));
+  for (const sticker of faceString) {
+    if (!Object.hasOwn(counts, sticker)) {
+      throw new Error("solveCube expects only U, R, F, D, L, and B stickers.");
+    }
+    counts[sticker] += 1;
+  }
+
+  if (FACE_ORDER.some((face) => counts[face] !== 9)) {
+    throw new Error("solveCube expects nine stickers of each color.");
   }
 
   const solution = kociemba.solve(faceString);

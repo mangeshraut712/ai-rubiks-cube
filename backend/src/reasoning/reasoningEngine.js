@@ -33,7 +33,8 @@ export function extractCubeMoves(text) {
 
 function moveTokenRegex(move) {
   const escaped = String(move).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`(?<![A-Za-z0-9])${escaped}(?![A-Za-z0-9])`, "i");
+  const notLongerMove = /['2]$/.test(String(move)) ? "" : "(?!['2])";
+  return new RegExp(`(?<![A-Za-z0-9])${escaped}${notLongerMove}(?![A-Za-z0-9])`, "i");
 }
 
 function clausesFromText(rawText) {
@@ -199,13 +200,21 @@ export function extractTreeOfThought(rawText) {
   }
 
   for (const line of rawText.split("\n")) {
-    if (/best|optimal|recommend|choose|select/i.test(line)) {
-      const numMatch = line.match(/(\d+)/);
-      if (numMatch) {
-        const selectedId = parseInt(numMatch[1], 10);
-        for (const branch of branches) {
-          branch.selected = branch.id === selectedId;
-        }
+    const trimmed = line.trim();
+    if (/^(?:branch|path|option|strategy)\s+\d+\b/i.test(trimmed)) {
+      continue;
+    }
+
+    if (!/best|optimal|recommend|choose|select/i.test(trimmed)) {
+      continue;
+    }
+
+    const branchMatch = trimmed.match(/branch\s+(\d+)/i);
+    const numMatch = branchMatch || trimmed.match(/(\d+)/);
+    if (numMatch) {
+      const selectedId = parseInt(numMatch[1], 10);
+      for (const branch of branches) {
+        branch.selected = branch.id === selectedId;
       }
     }
   }

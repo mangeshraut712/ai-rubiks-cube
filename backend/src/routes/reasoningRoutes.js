@@ -19,10 +19,16 @@ import { ReasoningEngine } from "../reasoning/reasoningEngine.js";
 // Validation schemas
 // ---------------------------------------------------------------------------
 
-const CubeStateInput = z.union([
-  z.string().min(1, "cubeState must be a non-empty string"),
-  z.record(z.any())
-]);
+const MAX_CUBE_STATE_CHARS = 8000;
+
+const CubeStateInput = z
+  .union([
+    z.string().min(1, "cubeState must be a non-empty string").max(MAX_CUBE_STATE_CHARS),
+    z.record(z.any())
+  ])
+  .refine((value) => typeof value === "string" || JSON.stringify(value).length <= MAX_CUBE_STATE_CHARS, {
+    message: "cubeState is too large"
+  });
 
 const ChainOfThoughtSchema = z.object({
   cubeState: CubeStateInput,
@@ -36,15 +42,15 @@ const TreeOfThoughtSchema = z.object({
 const SelfVerifySchema = z.object({
   cubeState: CubeStateInput,
   proposedMoves: z.union([
-    z.array(z.string().min(1)).min(1, "At least one move is required"),
-    z.string().min(1)
+    z.array(z.string().min(1).max(16)).min(1, "At least one move is required").max(40),
+    z.string().min(1).max(400)
   ]),
-  subGoal: z.string().min(1, "subGoal is required")
+  subGoal: z.string().min(1, "subGoal is required").max(400)
 });
 
 const ExplainAlgorithmSchema = z.object({
-  name: z.string().min(1, "Algorithm name is required"),
-  moves: z.string().min(1, "Algorithm moves are required")
+  name: z.string().min(1, "Algorithm name is required").max(120),
+  moves: z.string().min(1, "Algorithm moves are required").max(500)
 });
 
 const GuidedSolveSchema = z.object({
@@ -77,6 +83,13 @@ export function createReasoningRouter({ apiKey, model }) {
     }
 
     data.count++;
+    if (reasoningRateLimit.size > 256) {
+      for (const [key, entry] of reasoningRateLimit) {
+        if (now > entry.resetTime) {
+          reasoningRateLimit.delete(key);
+        }
+      }
+    }
     return true;
   }
 
@@ -141,7 +154,7 @@ export function createReasoningRouter({ apiKey, model }) {
       console.error("[reasoning] chain-of-thought failed:", error);
       res.status(500).json({
         error: "reasoning_failed",
-        message: error?.message || "Chain-of-thought reasoning failed."
+        message: "Chain-of-thought reasoning failed."
       });
     }
   });
@@ -173,7 +186,7 @@ export function createReasoningRouter({ apiKey, model }) {
       console.error("[reasoning] tree-of-thought failed:", error);
       res.status(500).json({
         error: "reasoning_failed",
-        message: error?.message || "Tree-of-thought reasoning failed."
+        message: "Tree-of-thought reasoning failed."
       });
     }
   });
@@ -211,7 +224,7 @@ export function createReasoningRouter({ apiKey, model }) {
       console.error("[reasoning] self-verify failed:", error);
       res.status(500).json({
         error: "verification_failed",
-        message: error?.message || "Self-verification failed."
+        message: "Self-verification failed."
       });
     }
   });
@@ -241,7 +254,7 @@ export function createReasoningRouter({ apiKey, model }) {
       console.error("[reasoning] explain-algorithm failed:", error);
       res.status(500).json({
         error: "explanation_failed",
-        message: error?.message || "Algorithm explanation failed."
+        message: "Algorithm explanation failed."
       });
     }
   });
@@ -275,7 +288,7 @@ export function createReasoningRouter({ apiKey, model }) {
       console.error("[reasoning] guided-solve failed:", error);
       res.status(500).json({
         error: "solve_failed",
-        message: error?.message || "Guided solve failed."
+        message: "Guided solve failed."
       });
     }
   });

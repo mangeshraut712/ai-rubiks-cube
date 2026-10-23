@@ -13,6 +13,10 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      # kociemba calls strnlen. Clang treats the missing POSIX prototype as an error.
+      CFLAGS: -D_POSIX_C_SOURCE=200809L
+      CXXFLAGS: -D_POSIX_C_SOURCE=200809L
 
     steps:
       - name: Checkout

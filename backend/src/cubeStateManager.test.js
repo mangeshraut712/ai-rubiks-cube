@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CubeState, generateScramble, solveCube } from "./cubeStateManager.js";
+import { CubeState, generateScramble, hasValidColorCounts, solveCube } from "./cubeStateManager.js";
 
 function inverseMove(move) {
   if (move.endsWith("2")) {
@@ -65,5 +65,18 @@ describe("cubeStateManager", () => {
 
   it("throws when solveCube receives an invalid face string", () => {
     expect(() => solveCube("short")).toThrow(/54-character face string/);
+  });
+
+  it("rejects face strings that do not have nine stickers of each color", () => {
+    expect(() => solveCube("U".repeat(54))).toThrow(/nine stickers/);
+  });
+
+  it("requires a snapshot to contain nine of each color", () => {
+    const cube = new CubeState();
+    expect(hasValidColorCounts(cube.getSnapshot())).toBe(true);
+
+    const broken = cube.getSnapshot();
+    broken.U[0][0] = "R";
+    expect(hasValidColorCounts(broken)).toBe(false);
   });
 });
