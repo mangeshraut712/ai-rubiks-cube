@@ -3,9 +3,34 @@
  * Modern state management for 2026
  */
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { createSolvedCubeState } from "../utils/cubeColors";
+
+
+function createSafeStorage() {
+  try {
+    if (typeof localStorage !== "undefined" && localStorage != null) {
+      const probe = "__cube_store_probe__";
+      localStorage.setItem(probe, "1");
+      localStorage.removeItem(probe);
+      return localStorage;
+    }
+  } catch {
+    // fall through to memory storage
+  }
+
+  const memory = new Map();
+  return {
+    getItem: (name) => memory.get(name) ?? null,
+    setItem: (name, value) => {
+      memory.set(name, value);
+    },
+    removeItem: (name) => {
+      memory.delete(name);
+    }
+  };
+}
 
 function getInitialDarkMode() {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
@@ -197,6 +222,7 @@ export const useCubeStore = create(
       }),
       {
         name: "cube-store",
+        storage: createJSONStorage(createSafeStorage),
         partialize: (state) => ({
           statistics: state.statistics,
           isDarkMode: state.isDarkMode,
