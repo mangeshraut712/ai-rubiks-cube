@@ -14,6 +14,47 @@ afterEach(() => {
   cleanup();
 });
 
+
+// Node 22+ may expose an undefined global localStorage; give Vitest a real store.
+function installLocalStorageMock() {
+  const store = new Map();
+  const memoryStorage = {
+    get length() {
+      return store.size;
+    },
+    clear() {
+      store.clear();
+    },
+    getItem(key) {
+      const value = store.get(String(key));
+      return value === undefined ? null : value;
+    },
+    key(index) {
+      return Array.from(store.keys())[index] ?? null;
+    },
+    removeItem(key) {
+      store.delete(String(key));
+    },
+    setItem(key, value) {
+      store.set(String(key), String(value));
+    }
+  };
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    enumerable: true,
+    value: memoryStorage,
+    writable: true
+  });
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    enumerable: true,
+    value: memoryStorage,
+    writable: true
+  });
+}
+
+installLocalStorageMock();
+
 // Mock window.matchMedia
 Object.defineProperty(window, "matchMedia", {
   writable: true,
