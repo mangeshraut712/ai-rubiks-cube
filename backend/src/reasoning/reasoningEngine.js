@@ -49,8 +49,10 @@ function clausesFromText(rawText) {
 const AFFIRMATION = /\b(?:correct(?:ly)?|valid(?:ly|ated)?|confirm(?:s|ed)|pass(?:es|ed)?)\b/i;
 const NEGATED_AFFIRMATION = /\bnot\s+(?:correct(?:ly)?|valid(?:ly|ated)?|confirm(?:s|ed)|pass(?:es|ed)?)\b/i;
 const FAILURE = /\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/i;
-// "no invalid moves", "nothing failed": a denied failure is not a failure.
-const DENIED_FAILURE = /\b(?:no|nothing|none|never|without)\b[^.,;]*?\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/gi;
+const FAILURE_WORDS = /\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/gi;
+// "no invalid or illegal moves", "nothing failed": failures denied within the same
+// clause are not failures.
+const DENIED_CLAUSE = /\b(?:no|nothing|none|never|without)\b[^.,;]*/gi;
 
 /**
  * Whether a verification line reports success. Whole words only, so "invalid"
@@ -59,7 +61,7 @@ const DENIED_FAILURE = /\b(?:no|nothing|none|never|without)\b[^.,;]*?\b(?:invali
  * @returns {boolean}
  */
 export function isAffirmativeCheck(line) {
-  const text = String(line).replace(DENIED_FAILURE, " ");
+  const text = String(line).replace(DENIED_CLAUSE, (clause) => clause.replace(FAILURE_WORDS, " "));
   return AFFIRMATION.test(text) && !NEGATED_AFFIRMATION.test(text) && !FAILURE.test(text);
 }
 
