@@ -51,8 +51,10 @@ const NEGATED_AFFIRMATION = /\bnot\s+(?:correct(?:ly)?|valid(?:ly|ated)?|confirm
 const FAILURE = /\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/i;
 const FAILURE_WORDS = /\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/gi;
 // "no invalid or illegal moves", "nothing failed": failures denied within the same
-// clause are not failures.
-const DENIED_CLAUSE = /\b(?:no|nothing|none|never|without)\b[^.,;]*/gi;
+// clause are not failures. The denial stops at punctuation (including ! ? : and dashes)
+// and at a contrasting conjunction, so "no invalid moves but the check failed" still fails.
+const DENIED_CLAUSE =
+  /\b(?:no|nothing|none|never|without)\b(?:(?!\b(?:but|yet|however|although|though|except)\b)[^.,;:!?\u2013\u2014])*/gi;
 
 /**
  * Whether a verification line reports success. Whole words only, so "invalid"

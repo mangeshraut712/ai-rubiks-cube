@@ -48,7 +48,11 @@ describe("Reasoning Engine Parsing", () => {
         "Confirm: the edge is flipped",
         "Confirm: the cross is still broken",
         "Check: the solver does not confirm the cross",
-        "Verify: correct, but no luck, the move is illegal"
+        "Verify: correct, but no luck, the move is illegal",
+        "Verify: correct, no invalid moves but the last turn failed",
+        "Check: valid, no invalid moves yet the edge is illegal",
+        "Verify: correct, nothing illegal! The final check failed",
+        "Verify: correct, no illegal moves \u2014 the corner twist is invalid"
       ]) {
         const result = parseReasoningResponse(
           `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,
