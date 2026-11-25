@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 // ws < 8.23.0 lets a peer flood Ping frames while not reading and buffer
