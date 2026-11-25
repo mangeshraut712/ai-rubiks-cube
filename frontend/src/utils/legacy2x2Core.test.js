@@ -11,6 +11,20 @@ function applySequence(initialState, moves) {
 }
 
 describe("legacy 2x2 cube core", () => {
+  it("turns every face clockwise in standard notation", () => {
+    // Faces are stored U R F D L B, 4 stickers each (U=W R=R F=G D=Y L=O B=B).
+    const sticker = (state, face, ...cells) =>
+      cells.map((cell) => state["URFDLB".indexOf(face) * 4 + cell]).join("");
+    const after = (move) => cubeCore.applyMove(move, cubeCore.SOLVED_STATE);
+
+    expect(sticker(after("U"), "F", 0, 1)).toBe("RR"); // front top row comes from the right
+    expect(sticker(after("D"), "F", 2, 3)).toBe("OO"); // front bottom row comes from the left
+    expect(sticker(after("R"), "U", 1, 3)).toBe("GG"); // up right column comes from the front
+    expect(sticker(after("L"), "U", 0, 2)).toBe("BB"); // up left column comes from the back
+    expect(sticker(after("F"), "U", 2, 3)).toBe("OO"); // up front row comes from the left
+    expect(sticker(after("B"), "U", 0, 1)).toBe("RR"); // up back row comes from the right
+  });
+
   it("keeps a valid 24-sticker solved state", () => {
     expect(cubeCore.SOLVED_STATE).toHaveLength(24);
     expect(cubeCore.validateState(cubeCore.SOLVED_STATE)).toBe(true);
