@@ -46,7 +46,8 @@ describe("Reasoning Engine Parsing", () => {
         "Check: the edge is not correctly aligned",
         "Verify: not validated",
         "Confirm: the edge is flipped",
-        "Confirm: the cross is still broken"
+        "Confirm: the cross is still broken",
+        "Check: the solver does not confirm the cross"
       ]) {
         const result = parseReasoningResponse(
           `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,
@@ -63,7 +64,8 @@ describe("Reasoning Engine Parsing", () => {
         "Verify: correct, and no edges face the wrong way",
         "Confirm: the cross is confirmed",
         "Verify: correct, no invalid moves were made",
-        "Check: valid, no checks failed"
+        "Check: valid, no checks failed",
+        "Check: the solver confirms the cross"
       ]) {
         const result = parseReasoningResponse(
           `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,

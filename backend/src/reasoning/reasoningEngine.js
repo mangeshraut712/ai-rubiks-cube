@@ -45,14 +45,9 @@ function clausesFromText(rawText) {
     .flatMap((line) => line.split(CLAUSE_SPLIT).filter(Boolean));
 }
 
-/**
- * Parse a model reasoning trace into structured steps, moves, and verification.
- * @param {string} rawText
- * @param {string} reasoningType
- * @param {string} method
- */
-const AFFIRMATION = /\b(?:correct(?:ly)?|valid(?:ly|ated)?|confirmed|pass(?:es|ed)?)\b/i;
-const NEGATED_AFFIRMATION = /\bnot\s+(?:correct(?:ly)?|valid(?:ly|ated)?|confirmed|pass(?:es|ed)?)\b/i;
+// Bare "confirm" is excluded: it is also the verification label itself.
+const AFFIRMATION = /\b(?:correct(?:ly)?|valid(?:ly|ated)?|confirm(?:s|ed)|pass(?:es|ed)?)\b/i;
+const NEGATED_AFFIRMATION = /\bnot\s+(?:correct(?:ly)?|valid(?:ly|ated)?|confirm(?:s|ed)|pass(?:es|ed)?)\b/i;
 const FAILURE = /\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/i;
 // "no invalid moves", "nothing failed": a denied failure is not a failure.
 const DENIED_FAILURE = /\b(?:no|nothing|none|never|without)\b[^.,;]*?\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/gi;
@@ -68,6 +63,12 @@ export function isAffirmativeCheck(line) {
   return AFFIRMATION.test(text) && !NEGATED_AFFIRMATION.test(text) && !FAILURE.test(text);
 }
 
+/**
+ * Parse a model reasoning trace into structured steps, moves, and verification.
+ * @param {string} rawText
+ * @param {string} reasoningType
+ * @param {string} method
+ */
 export function parseReasoningResponse(rawText, reasoningType, method) {
   const lines = String(rawText)
     .split("\n")
