@@ -42,7 +42,11 @@ describe("Reasoning Engine Parsing", () => {
       for (const verdict of [
         "Verify: this is invalid, it breaks the cross",
         "Check: incorrect, the edge flips",
-        "Verify: not correct yet"
+        "Verify: not correct yet",
+        "Check: the edge is not correctly aligned",
+        "Verify: not validated",
+        "Confirm: the edge is flipped",
+        "Confirm: the cross is still broken"
       ]) {
         const result = parseReasoningResponse(
           `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,
@@ -57,7 +61,9 @@ describe("Reasoning Engine Parsing", () => {
       for (const verdict of [
         "Check: the edge is correctly aligned",
         "Verify: correct, and no edges face the wrong way",
-        "Confirm: the cross is confirmed"
+        "Confirm: the cross is confirmed",
+        "Verify: correct, no invalid moves were made",
+        "Check: valid, no checks failed"
       ]) {
         const result = parseReasoningResponse(
           `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,

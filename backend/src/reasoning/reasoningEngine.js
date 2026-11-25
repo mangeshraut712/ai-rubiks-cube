@@ -51,6 +51,23 @@ function clausesFromText(rawText) {
  * @param {string} reasoningType
  * @param {string} method
  */
+const AFFIRMATION = /\b(?:correct(?:ly)?|valid(?:ly|ated)?|confirmed|pass(?:es|ed)?)\b/i;
+const NEGATED_AFFIRMATION = /\bnot\s+(?:correct(?:ly)?|valid(?:ly|ated)?|confirmed|pass(?:es|ed)?)\b/i;
+const FAILURE = /\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/i;
+// "no invalid moves", "nothing failed": a denied failure is not a failure.
+const DENIED_FAILURE = /\b(?:no|nothing|none|never|without)\b[^.,;]*?\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/gi;
+
+/**
+ * Whether a verification line reports success. Whole words only, so "invalid"
+ * and "incorrect" do not count as "valid" and "correct".
+ * @param {string} line
+ * @returns {boolean}
+ */
+export function isAffirmativeCheck(line) {
+  const text = String(line).replace(DENIED_FAILURE, " ");
+  return AFFIRMATION.test(text) && !NEGATED_AFFIRMATION.test(text) && !FAILURE.test(text);
+}
+
 export function parseReasoningResponse(rawText, reasoningType, method) {
   const lines = String(rawText)
     .split("\n")
@@ -96,10 +113,7 @@ export function parseReasoningResponse(rawText, reasoningType, method) {
 
       if (/verify|check|confirm/i.test(line)) {
         currentStep.verification = line;
-        // Whole words only: "invalid" and "incorrect" must not count as "valid"/"correct".
-        const affirmed = /\b(?:correct(?:ly)?|valid(?:ly|ated)?|confirm(?:s|ed)?|pass(?:es|ed)?)\b/i.test(line);
-        const refuted = /\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?|not\s+(?:correct|valid|confirmed))\b/i.test(line);
-        currentStep.verified = affirmed && !refuted;
+        currentStep.verified = isAffirmativeCheck(line);
       }
     }
 
