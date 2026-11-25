@@ -96,7 +96,10 @@ export function parseReasoningResponse(rawText, reasoningType, method) {
 
       if (/verify|check|confirm/i.test(line)) {
         currentStep.verification = line;
-        currentStep.verified = /correct|valid|confirmed|pass/i.test(line);
+        // Whole words only: "invalid" and "incorrect" must not count as "valid"/"correct".
+        const affirmed = /\b(?:correct|valid|confirmed|pass(?:es|ed)?)\b/i.test(line);
+        const refuted = /\b(?:invalid|incorrect|illegal|wrong|fail(?:s|ed)?|not\s+(?:correct|valid|confirmed))\b/i.test(line);
+        currentStep.verified = affirmed && !refuted;
       }
     }
 
