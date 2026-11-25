@@ -53,6 +53,21 @@ describe("Reasoning Engine Parsing", () => {
       }
     });
 
+    it("keeps affirmative checks verified, including inflected words", () => {
+      for (const verdict of [
+        "Check: the edge is correctly aligned",
+        "Verify: correct, and no edges face the wrong way",
+        "Confirm: the cross is confirmed"
+      ]) {
+        const result = parseReasoningResponse(
+          `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,
+          "chain-of-thought",
+          "CFOP"
+        );
+        expect(result.steps[0].verified, verdict).toBe(true);
+      }
+    });
+
     it("extracts all moves from response", () => {
       const rawText = "Do R U R' U' then F2 and L D'";
       const result = parseReasoningResponse(rawText, "chain-of-thought", "CFOP");
