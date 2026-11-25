@@ -38,6 +38,21 @@ describe("Reasoning Engine Parsing", () => {
       expect(result.steps[1].step).toBe(2);
     });
 
+    it("does not mark a step verified when the check reports a failure", () => {
+      for (const verdict of [
+        "Verify: this is invalid, it breaks the cross",
+        "Check: incorrect, the edge flips",
+        "Verify: not correct yet"
+      ]) {
+        const result = parseReasoningResponse(
+          `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,
+          "chain-of-thought",
+          "CFOP"
+        );
+        expect(result.steps[0].verified, verdict).toBe(false);
+      }
+    });
+
     it("extracts all moves from response", () => {
       const rawText = "Do R U R' U' then F2 and L D'";
       const result = parseReasoningResponse(rawText, "chain-of-thought", "CFOP");
