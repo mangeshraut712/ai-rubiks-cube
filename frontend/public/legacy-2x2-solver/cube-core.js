@@ -131,11 +131,11 @@
   function rotateVector([x, y, z], axis, direction) {
     switch (axis) {
       case "x":
-        return direction === 1 ? [x, -z, y] : [x, z, -y];
+        return direction === 1 ? [x, z, -y] : [x, -z, y];
       case "y":
-        return direction === 1 ? [z, y, -x] : [-z, y, x];
+        return direction === 1 ? [-z, y, x] : [z, y, -x];
       case "z":
-        return direction === 1 ? [-y, x, z] : [y, -x, z];
+        return direction === 1 ? [y, -x, z] : [-y, x, z];
       default:
         throw new Error(`Unsupported rotation axis "${axis}"`);
     }
