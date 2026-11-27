@@ -66,6 +66,7 @@
   },
   "overrides": {
     "serialize-javascript": "^7.1.4",
-    "rollup": "^4.59.0"
+    "rollup": "^4.59.0",
+    "glob": "^14.0.6"
   }
 }
