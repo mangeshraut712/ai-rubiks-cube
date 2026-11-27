@@ -45,6 +45,30 @@ function clausesFromText(rawText) {
     .flatMap((line) => line.split(CLAUSE_SPLIT).filter(Boolean));
 }
 
+// Bare "confirm" is excluded: it is also the verification label itself.
+const AFFIRMATION = /\b(?:correct(?:ly)?|valid(?:ly|ated)?|confirm(?:s|ed)|pass(?:es|ed)?)\b/i;
+const NEGATED_AFFIRMATION = /\bnot\s+(?:correct(?:ly)?|valid(?:ly|ated)?|confirm(?:s|ed)|pass(?:es|ed)?)\b/i;
+const FAILURE = /\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/i;
+const FAILURE_WORDS = /\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/gi;
+// "no invalid or illegal moves", "nothing failed": failures denied within the same
+// clause are not failures. The denial stops at punctuation (including ! ? : and dashes)
+// and at a contrasting conjunction, so "no invalid moves but the check failed" still fails.
+// A plain hyphen is a dash only when a space follows it ("moves - the twist"), which ends
+// the denial. A hyphen inside a phrase ("off-center", "3-d") is just a character.
+const DENIED_CLAUSE =
+  /\b(?:no|nothing|none|never|without)\b(?:(?!\b(?:but|yet|however|although|though|except)\b)(?:[^.,;:!?\u2013\u2014-]|-(?!\s)))*/gi;
+
+/**
+ * Whether a verification line reports success. Whole words only, so "invalid"
+ * and "incorrect" do not count as "valid" and "correct".
+ * @param {string} line
+ * @returns {boolean}
+ */
+export function isAffirmativeCheck(line) {
+  const text = String(line).replace(DENIED_CLAUSE, (clause) => clause.replace(FAILURE_WORDS, " "));
+  return AFFIRMATION.test(text) && !NEGATED_AFFIRMATION.test(text) && !FAILURE.test(text);
+}
+
 /**
  * Parse a model reasoning trace into structured steps, moves, and verification.
  * @param {string} rawText
@@ -96,7 +120,7 @@ export function parseReasoningResponse(rawText, reasoningType, method) {
 
       if (/verify|check|confirm/i.test(line)) {
         currentStep.verification = line;
-        currentStep.verified = /correct|valid|confirmed|pass/i.test(line);
+        currentStep.verified = isAffirmativeCheck(line);
       }
     }
 

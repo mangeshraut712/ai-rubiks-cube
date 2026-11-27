@@ -38,6 +38,56 @@ describe("Reasoning Engine Parsing", () => {
       expect(result.steps[1].step).toBe(2);
     });
 
+    it("does not mark a step verified when the check reports a failure", () => {
+      for (const verdict of [
+        "Verify: this is invalid, it breaks the cross",
+        "Check: incorrect, the edge flips",
+        "Verify: not correct yet",
+        "Check: the edge is not correctly aligned",
+        "Verify: not validated",
+        "Confirm: the edge is flipped",
+        "Confirm: the cross is still broken",
+        "Check: the solver does not confirm the cross",
+        "Verify: correct, but no luck, the move is illegal",
+        "Verify: correct, no invalid moves but the last turn failed",
+        "Check: valid, no invalid moves yet the edge is illegal",
+        "Verify: correct, nothing illegal! The final check failed",
+        "Verify: correct, no illegal moves \u2014 the corner twist is invalid",
+        // A plain hyphen used as a dash ends the denial the same way \u2013 and \u2014 do.
+        "Verify: correct, no invalid moves - the corner twist is invalid",
+        "Check: valid, nothing failed - the last turn was illegal"
+      ]) {
+        const result = parseReasoningResponse(
+          `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,
+          "chain-of-thought",
+          "CFOP"
+        );
+        expect(result.steps[0].verified, verdict).toBe(false);
+      }
+    });
+
+    it("keeps affirmative checks verified, including inflected words", () => {
+      for (const verdict of [
+        "Check: the edge is correctly aligned",
+        "Verify: correct, and no edges face the wrong way",
+        "Confirm: the cross is confirmed",
+        "Verify: correct, no invalid moves were made",
+        "Check: valid, no checks failed",
+        "Check: the solver confirms the cross",
+        "Verify: correct, no invalid or illegal moves were made",
+        // A hyphen between words is not a dash: the denial still covers the failure word.
+        "Verify: correct, no off-center or ill-formed invalid moves",
+        "Check: valid - nothing failed"
+      ]) {
+        const result = parseReasoningResponse(
+          `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,
+          "chain-of-thought",
+          "CFOP"
+        );
+        expect(result.steps[0].verified, verdict).toBe(true);
+      }
+    });
+
     it("extracts all moves from response", () => {
       const rawText = "Do R U R' U' then F2 and L D'";
       const result = parseReasoningResponse(rawText, "chain-of-thought", "CFOP");
