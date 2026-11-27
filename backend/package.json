@@ -37,5 +37,10 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "overrides": {
+    "nodemon": {
+      "minimatch": "^11.0.1"
+    }
   }
 }
