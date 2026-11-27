@@ -52,7 +52,10 @@ describe("Reasoning Engine Parsing", () => {
         "Verify: correct, no invalid moves but the last turn failed",
         "Check: valid, no invalid moves yet the edge is illegal",
         "Verify: correct, nothing illegal! The final check failed",
-        "Verify: correct, no illegal moves \u2014 the corner twist is invalid"
+        "Verify: correct, no illegal moves \u2014 the corner twist is invalid",
+        // A plain hyphen used as a dash ends the denial the same way \u2013 and \u2014 do.
+        "Verify: correct, no invalid moves - the corner twist is invalid",
+        "Check: valid, nothing failed - the last turn was illegal"
       ]) {
         const result = parseReasoningResponse(
           `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,
@@ -71,7 +74,10 @@ describe("Reasoning Engine Parsing", () => {
         "Verify: correct, no invalid moves were made",
         "Check: valid, no checks failed",
         "Check: the solver confirms the cross",
-        "Verify: correct, no invalid or illegal moves were made"
+        "Verify: correct, no invalid or illegal moves were made",
+        // A hyphen between words is not a dash: the denial still covers the failure word.
+        "Verify: correct, no off-center or ill-formed invalid moves",
+        "Check: valid - nothing failed"
       ]) {
         const result = parseReasoningResponse(
           `Step 1: Insert the pair\nMove: R U R'\n${verdict}`,

@@ -53,8 +53,10 @@ const FAILURE_WORDS = /\b(?:invalid|incorrect(?:ly)?|illegal|fail(?:s|ed)?)\b/gi
 // "no invalid or illegal moves", "nothing failed": failures denied within the same
 // clause are not failures. The denial stops at punctuation (including ! ? : and dashes)
 // and at a contrasting conjunction, so "no invalid moves but the check failed" still fails.
+// A plain hyphen is a dash only when a space follows it ("moves - the twist"), which ends
+// the denial. A hyphen inside a phrase ("off-center", "3-d") is just a character.
 const DENIED_CLAUSE =
-  /\b(?:no|nothing|none|never|without)\b(?:(?!\b(?:but|yet|however|although|though|except)\b)[^.,;:!?\u2013\u2014])*/gi;
+  /\b(?:no|nothing|none|never|without)\b(?:(?!\b(?:but|yet|however|although|though|except)\b)(?:[^.,;:!?\u2013\u2014-]|-(?!\s)))*/gi;
 
 /**
  * Whether a verification line reports success. Whole words only, so "invalid"
